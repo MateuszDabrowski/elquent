@@ -1,0 +1,4 @@
+pyperclip
+encodings
+requests
+colorama
