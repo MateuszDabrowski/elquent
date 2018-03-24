@@ -1,2 +1,9 @@
 # Company specific resource files
 resources
+
+# User files
+user.db
+
+# cx_Freeze
+__pycache__
+build
