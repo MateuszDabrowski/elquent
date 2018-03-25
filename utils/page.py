@@ -43,7 +43,7 @@ def file(file_path):
             return os.path.join(datadir, dir, filename)
 
     file_paths = {
-        'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
+        'blank-lp': find_data_file('WKCORP_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
         'showhide-css': find_data_file(f'WK{source_country}_showhide-css.txt'),
@@ -51,7 +51,7 @@ def file(file_path):
         'email-optin': find_data_file(f'WK{source_country}_email-optin.txt'),
         'phone-optin': find_data_file(f'WK{source_country}_phone-optin.txt'),
         'tracking-optin': find_data_file(f'WK{source_country}_tracking-optin.txt'),
-        'validation-body': find_data_file(f'WK{source_country}_validation-body.txt'),
+        'validation-body': find_data_file('WKCORP_validation-body.txt'),
         'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
         'landing-page': find_data_file(f'WK{source_country}_LP.txt', dir='outcomes')
     }
@@ -104,7 +104,7 @@ def create_landing_page():
             return lp_code
 
         print()
-        if choice == 0:  # Gets code from clipboard
+        if choice == (len(options) - 1):  # Gets code from clipboard
             input(
                 f'{Fore.WHITE}» [{Fore.YELLOW}LP{Fore.WHITE}] Copy code of the Landing Page [CTRL+C] and click [Enter]')
             lp_code = pyperclip.paste()
@@ -112,24 +112,24 @@ def create_landing_page():
             lp_code = add_showhide_css(lp_code)
         else:  # Gets code from template file
             templates = ['blank-lp', 'one-column-lp', 'two-column-lp']
-            with open(file(templates[choice - 1]), 'r') as f:
+            with open(file(templates[choice]), 'r') as f:
                 lp_code = f.read()
 
         return lp_code
 
     options = [
-        f'{Fore.WHITE}[{Fore.YELLOW}EXISTING{Fore.WHITE}] Change form in existing Landing Page',
         f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Blank Landing Page with Form',
         f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create One Column Landing Page with Form',
-        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Two Column Landing Page with Form'
+        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Two Column Landing Page with Form',
+        f'{Fore.WHITE}[{Fore.YELLOW}EXISTING{Fore.WHITE}] Change form in existing Landing Page'
     ]
 
     print(f'\n{Fore.GREEN}You can:')
     for i, option in enumerate(options):
         print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{option}')
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}R{Fore.WHITE}]\t{Fore.WHITE}Return to main menu')
-    print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
+        f'{Fore.WHITE}[{Fore.YELLOW}R{Fore.WHITE}]\t{Fore.WHITE}Return to main menu',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
         choice = input(
@@ -173,8 +173,8 @@ def swap_form(code, form):
             print(f'\t{Fore.GREEN} » Adding Form to Landing Page')
         else:
             print(
-                f'{Fore.RED}[Error] there is no form or placeholder in code.\n',
-                f'{Fore.YELLOW}Add <INSERT_FORM> where you want the form and rerun program.')
+                f'{Fore.RED}» [Error] there is no form or placeholder in code.\n',
+                f'{Fore.WHITE} (Add <INSERT_FORM> where you want the form and rerun program)')
     elif len(match) >= 1:
         print(f'{Fore.RED}[Error] there are {len(match)} forms in the code')
 
@@ -383,7 +383,7 @@ def page_gen(country):
     source_country = country
 
     # Checks if there are required source files for the source source_country
-    if not os.path.exists(file('validation-body')):
+    if not os.path.exists(file('validation-element')):
         input(
             f'\n{Fore.RED}[ERROR] No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.')
         return False
