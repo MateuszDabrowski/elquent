@@ -10,13 +10,35 @@ github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
+import os
 import re
+import sys
 import encodings
 import pyperclip
 from colorama import Fore, init
 
 # Initialize colorama
 init(autoreset=True)
+
+
+def file():
+    '''
+    Returns file path to template files
+    '''
+    def find_data_file(filename):
+        '''
+        Returns correct file path for both script and frozen app
+        '''
+        if getattr(sys, 'frozen', False):
+            datadir = os.path.dirname(sys.executable)
+        else:
+            datadir = os.path.dirname(os.path.dirname(__file__))
+        return os.path.join(datadir, 'outcomes', filename)
+
+    file_path = find_data_file(f'WK{source_country}_EML.txt')
+
+    return file_path
+
 
 '''
 =================================================================================
@@ -41,11 +63,14 @@ def get_email_code():
 '''
 
 
-def clean_elqtrack():
+def clean_elqtrack(country):
     '''
     Returns eMails code without elqTrack UTMs
     » code: long str
     '''
+    global source_country
+    source_country = country
+
     code = get_email_code()
     regex = re.compile(r'(?:\?|&)elqTrack.*?(?=")', re.UNICODE)
     occurance = len(regex.findall(code))
@@ -53,8 +78,14 @@ def clean_elqtrack():
         print(f'\t{Fore.YELLOW}» Cleaned {occurance} elqTrack instances')
         code = re.sub(regex, '', code)
         pyperclip.copy(code)
-        print(f'{Fore.GREEN}» You can now paste eMail to Eloqua [CTRL+V].',)
+        with open(file(), 'w', encoding='utf-8') as f:
+            f.write(code)
+        print(
+            f'\n{Fore.GREEN}» You can now paste eMail to Eloqua [CTRL+V].',
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)\n')
+        input(f'{Fore.WHITE}» Click [Enter] to continue.')
+        return True
     else:
-        print(f'\t{Fore.RED}» elqTrack not found')
-    input(f'{Fore.WHITE}Click [Enter] to continue.')
-    return code
+        print(f'\t{Fore.RED}» elqTrack not found\n')
+        input(f'{Fore.WHITE}» Click [Enter] to continue.')
+        return False

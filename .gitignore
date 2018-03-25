@@ -1,7 +1,8 @@
 # Company specific resource files
-resources
+templates
 
 # User files
+outcomes
 user.db
 
 # cx_Freeze

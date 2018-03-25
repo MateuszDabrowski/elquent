@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils'],
                     packages=['pyperclip', 're', 'os', 'sys',
                               'platform', 'encodings', 'colorama'],
-                    excludes=['test', 'user.db', '.gitignore', 'requirements.txt'])
+                    excludes=['user.db', '.gitignore', 'requirements.txt', 'outcomes'])
 
 base = 'Console'
 

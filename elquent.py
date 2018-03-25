@@ -19,6 +19,7 @@ from colorama import Fore, init
 
 # ELQuent imports
 import utils.mail as mail
+import utils.page as page
 
 # Initialize colorama
 init(autoreset=True)
@@ -36,6 +37,7 @@ def find_data_file(filename):
 
 
 # File paths
+os.makedirs(find_data_file('outcomes'), exist_ok=True)
 USER_DATA = find_data_file('user.db')
 
 '''
@@ -50,14 +52,16 @@ def get_source_country():
     Returns source country of the user from input
     » source_country: two char str
     '''
+
     print(f'\n{Fore.WHITE}What is your Source Country?')
     source_country_list = [
         'AK', 'BE', 'CZ', 'DE', 'ES', 'FR',
         'HU', 'IT', 'LSW', 'NL', 'PL', 'SK'
     ]
     for i, country in enumerate(source_country_list):
-        index = f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t'
-        print(f'{index}{Fore.GREEN}WK{Fore.WHITE}{country}')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{Fore.GREEN}WK{Fore.WHITE}{country}')
+
     while True:
         print(f'{Fore.WHITE}Enter number associated with you country: ', end='')
         try:
@@ -94,18 +98,22 @@ def menu():
     '''
     Allows to choose ELQuent utility 
     '''
+
     utils = [
-        (mail.clean_elqtrack, f'Cleans elqTrack code from eMail')
+        (mail.clean_elqtrack,
+         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Delete elqTrack code from Email links'),
+        (page.page_gen,
+         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create or modify Landing Page with new Form')
     ]
+
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
     for i, function in enumerate(utils):
-        index = f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t'
-        print(f'{index}{Fore.WHITE}{function[1]}')
+        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{function[1]}')
     print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
-        print(f'{Fore.YELLOW}Enter number associated with choosen utility: ', end='')
-        choice = input(' ')
+        choice = input(
+            f'{Fore.YELLOW}Enter number associated with choosen utility: ')
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')
             raise SystemExit
@@ -118,7 +126,7 @@ def menu():
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
-    utils[choice][0]()
+    utils[choice][0](SOURCE_COUNTRY)
 
 
 '''
@@ -135,9 +143,7 @@ if not os.path.isfile(USER_DATA):
         auth_file['SourceCountry'] = SOURCE_COUNTRY
 SOURCE_COUNTRY = auth_shelve()
 print(
-    f'\n{Fore.YELLOW}User »',
-    f'{Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]'
-)
+    f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]')
 
 # Menu for choosing utils
 while True:
