@@ -14,7 +14,6 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import sys
 import pickle
-import shelve
 import encodings
 import pyperclip
 from colorama import Fore, init

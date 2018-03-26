@@ -53,6 +53,8 @@ def file(file_path):
         'tracking-optin': find_data_file(f'WK{source_country}_tracking-optin.txt'),
         'validation-body': find_data_file('WKCORP_validation-body.txt'),
         'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
+        'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
+        'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'landing-page': find_data_file(f'WK{source_country}_LP.txt', dir='outcomes')
     }
 
@@ -197,6 +199,68 @@ def get_form():
         f'{Fore.WHITE}» [{Fore.YELLOW}FORM{Fore.WHITE}] Copy code of the new Form [CTRL+C] and click [Enter]', end='')
     input(' ')
     return pyperclip.paste()
+
+
+def get_form_fields(form):
+    '''
+    Returns code of each form field of the new Form
+    '''
+    form_field = re.compile(
+        r'(<div id="formElement[\s\S\n]*?([\s]*?</div>){3})', re.UNICODE)
+    form_fields = re.findall(form_field, form)
+
+    return form_fields
+
+
+def lead_phone(form):
+    '''
+    Returns code of the new Form with phone-based lead mechanism
+    '''
+    def prepare_lead_by_phone(id_name):
+        '''
+        Returns lead by phone code to be swapped into form code
+        '''
+        with open(file('lead-by-phone'), 'r', encoding='utf-8') as f:
+            code = f.read()
+        regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
+        code = re.sub(regex_id, id_name[0][0], code)
+        regex_name = re.compile(r'(<FIELD_NAME>)', re.UNICODE)
+        code = re.sub(regex_name, id_name[0][1], code)
+
+        return code
+
+    phone_field = ''
+    # Gets the code of phone field
+    search_phone_field = re.compile(r'(Numer telefonu)', re.UNICODE)
+    for field in get_form_fields(form):
+        is_phone_field = re.search(search_phone_field, field[0])  # Boolean
+        if is_phone_field:
+            phone_field = field[0]
+            break
+
+    # If there was no phone field in form, skip
+    if phone_field == '':
+        return form
+
+    # Gets id, name and value (field merge) of phone field
+    search_id_name = re.compile(
+        r'"formElement(.+?)"[\s\S\n]*?name="(.+?)"', re.UNICODE)
+    id_name = re.findall(search_id_name, phone_field)  # List of tuples
+
+    # Asks if phone field should be changed to lead mechanism
+    swapping = ''
+    while swapping.lower() != 'y' and swapping.lower() != 'n':
+        print(
+            f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? (Y/N):', end='')
+        swapping = input(' ')
+    if swapping.lower() == 'y':
+        regex_phone_field = re.compile(
+            rf'((<div id="formElement{id_name[0][0]}"[\s\S\n]*?</p>))', re.UNICODE)
+        form = re.sub(
+            regex_phone_field, prepare_lead_by_phone(id_name), form)
+        print(f'\t{Fore.CYAN} » Adding lead-by-phone mechanism')
+
+    return form
 
 
 def optin_version(form, optin_path_names):
@@ -365,6 +429,17 @@ def validation_js(code, required):
     code = del_validation_js(code)
     code = add_validation_js(code, required)
 
+    # TODO: Fix script cleaning colisions
+
+    # Adds lead by phone javascript below validation
+    search_lead_script = re.compile(r'(#lead_input)', re.UNICODE)
+    is_lead_script = re.search(search_lead_script, code)
+    if not is_lead_script:
+        with open(file('showhide-lead'), 'r', encoding='utf-8') as f:
+            lead_script = f.read()
+        regex_lead_script = re.compile(r'(</body>)', re.UNICODE)
+        code = re.sub(regex_lead_script, lead_script, code)
+
     return code
 
 
@@ -402,6 +477,8 @@ def page_gen(country):
     # Landing Page code manipulation
     code = create_landing_page()
     form = get_form()
+    if source_country == 'PL':
+        form = lead_phone(form)
     optins = optin_version(form, optin_path_names)
     form, required = swap_optins(form, optins, optin_path_names)
     code = swap_form(code, form)

@@ -3,9 +3,10 @@ Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Au
 
 ---
 ## ELQuent.mail
-__Fix your mail__ [_under develompent_]
+__Fix your mail__
 - RegEx helper
 - One click cleaning Eloqua Tracking from links
+- Additional functions [_under develompent_]
 ---
 ## ELQuent.webinar
 __Add viewers to Eloqua__ [_under develompent_]
@@ -15,8 +16,9 @@ __Add viewers to Eloqua__ [_under develompent_]
 - naming convention and instance structure compliant with Eloqua
 ---
 ## ELQuent.page
-__Create landing page__ [_under develompent_]
+__Create landing page__
 - RegEx work automator
 - allows user automatically swap Eloqua Form in Landing Page
 - allows to use built-in landing page templates for quick deployment
-- cleans code, append snippets, adds needed changes to form code
+- cleans code, appends snippets, changes form code
+- Additional functions [_under develompent_]
