@@ -3,7 +3,7 @@ templates
 
 # User files
 outcomes
-user.db
+user.p
 
 # cx_Freeze
 __pycache__

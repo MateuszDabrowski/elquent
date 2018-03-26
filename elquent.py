@@ -13,7 +13,9 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 # Python imports
 import os
 import sys
+import pickle
 import shelve
+import encodings
 import pyperclip
 from colorama import Fore, init
 
@@ -38,7 +40,7 @@ def find_data_file(filename):
 
 # File paths
 os.makedirs(find_data_file('outcomes'), exist_ok=True)
-USER_DATA = find_data_file('user.db')
+USER_DATA = find_data_file('user.p')
 
 '''
 =================================================================================
@@ -77,13 +79,16 @@ def get_source_country():
     return source_country_list[source_country]
 
 
-def auth_shelve():
+def auth_pickle():
     '''
     Returns authenticaton data from shelve
     » source_country: two char str
     '''
-    with shelve.open(USER_DATA[:-3]) as auth_file:
-        source_country = auth_file['SourceCountry']
+    if not os.path.isfile(USER_DATA):
+        source_country = get_source_country()
+        pickle.dump(source_country, open(USER_DATA, 'wb'))
+    source_country = pickle.load(open(USER_DATA, 'rb'))
+
     return source_country
 
 
@@ -112,8 +117,8 @@ def menu():
     print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
-        choice = input(
-            f'{Fore.YELLOW}Enter number associated with choosen utility: ')
+        print(f'{Fore.YELLOW}Enter number associated with choosen utility:', end='')
+        choice = input(' ')
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')
             raise SystemExit
@@ -136,12 +141,8 @@ def menu():
 '''
 print(f'\n{Fore.GREEN}Ahoj!')
 
-# Gets required auth data
-if not os.path.isfile(USER_DATA):
-    SOURCE_COUNTRY = get_source_country()
-    with shelve.open(USER_DATA[:-3]) as auth_file:
-        auth_file['SourceCountry'] = SOURCE_COUNTRY
-SOURCE_COUNTRY = auth_shelve()
+# Gets required auth data and prints them
+SOURCE_COUNTRY = auth_pickle()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]')
 

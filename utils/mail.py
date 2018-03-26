@@ -52,7 +52,9 @@ def get_email_code():
     Returns eMail code to be cleaned
     » code: long str
     '''
-    input(f'\n{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]')
+    print(
+        f'\n{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
+    input(' ')
     return pyperclip.paste()
 
 
@@ -82,10 +84,12 @@ def clean_elqtrack(country):
             f.write(code)
         print(
             f'\n{Fore.GREEN}» You can now paste eMail to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)\n')
-        input(f'{Fore.WHITE}» Click [Enter] to continue.')
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)',
+            f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
         return True
     else:
-        print(f'\t{Fore.RED}» elqTrack not found\n')
-        input(f'{Fore.WHITE}» Click [Enter] to continue.')
+        print(f'\t{Fore.RED}» elqTrack not found',
+              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
         return False

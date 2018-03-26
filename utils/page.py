@@ -104,15 +104,16 @@ def create_landing_page():
             return lp_code
 
         print()
-        if choice == (len(options) - 1):  # Gets code from clipboard
-            input(
-                f'{Fore.WHITE}» [{Fore.YELLOW}LP{Fore.WHITE}] Copy code of the Landing Page [CTRL+C] and click [Enter]')
+        if choice == (len(options) - 1):  # Gets code from
+            print(
+                f'{Fore.WHITE}» [{Fore.YELLOW}LP{Fore.WHITE}] Copy code of the Landing Page [CTRL+C] and click [Enter]', end='')
+            input(' ')
             lp_code = pyperclip.paste()
             lp_code = clean_custom_css(lp_code)
             lp_code = add_showhide_css(lp_code)
         else:  # Gets code from template file
             templates = ['blank-lp', 'one-column-lp', 'two-column-lp']
-            with open(file(templates[choice]), 'r') as f:
+            with open(file(templates[choice]), 'r', encoding='utf-8') as f:
                 lp_code = f.read()
 
         return lp_code
@@ -132,8 +133,8 @@ def create_landing_page():
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
-        choice = input(
-            f'{Fore.YELLOW}Enter number associated with your choice: ')
+        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
+        choice = input(' ')
         if choice.lower() == 'r':
             return False
         if choice.lower() == 'q':
@@ -192,8 +193,9 @@ def get_form():
     '''
     Returns code of new Form
     '''
-    input(
-        f'{Fore.WHITE}» [{Fore.YELLOW}FORM{Fore.WHITE}] Copy code of the new Form [CTRL+C] and click [Enter]')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}FORM{Fore.WHITE}] Copy code of the new Form [CTRL+C] and click [Enter]', end='')
+    input(' ')
     return pyperclip.paste()
 
 
@@ -384,8 +386,9 @@ def page_gen(country):
 
     # Checks if there are required source files for the source source_country
     if not os.path.exists(file('validation-element')):
-        input(
-            f'\n{Fore.RED}[ERROR] No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.')
+        print(
+            f'\n{Fore.RED}[ERROR] No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
+        input(' ')
         return False
 
     # Collects possible HTML names of opt-in form fields
@@ -410,7 +413,8 @@ def page_gen(country):
         f.write(code)
     print(
         f'\n{Fore.GREEN}» You can now paste new Landing Page to Eloqua [CTRL+V].',
-        f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_LP.txt in Outcomes folder)\n')
-    input(f'{Fore.WHITE}» Click [Enter] to continue.')
+        f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_LP.txt in Outcomes folder)',
+        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
 
     return True
