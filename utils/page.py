@@ -43,6 +43,7 @@ def file(file_path):
             return os.path.join(datadir, dir, filename)
 
     file_paths = {
+        'jquery': find_data_file('WKCORP_jquery.txt'),
         'blank-lp': find_data_file('WKCORP_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
@@ -51,6 +52,7 @@ def file(file_path):
         'email-optin': find_data_file(f'WK{source_country}_email-optin.txt'),
         'phone-optin': find_data_file(f'WK{source_country}_phone-optin.txt'),
         'tracking-optin': find_data_file(f'WK{source_country}_tracking-optin.txt'),
+        'gdpr-info': find_data_file(f'WK{source_country}_gdpr-info.txt'),
         'validation-body': find_data_file('WKCORP_validation-body.txt'),
         'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
         'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
@@ -73,38 +75,37 @@ def create_landing_page():
     Returns code of the Landing Page
     '''
 
+    def clean_custom_css(lp_code):
+        '''
+        Returns LP code without Custom Form CSS
+        '''
+        regex = re.compile(
+            r'<!-- StartFormCustomCSS[\s\S]*?EndFormCustomCSS -->', re.UNICODE)
+        if regex.findall(lp_code):
+            print(f'\t{Fore.CYAN}» Cleaning Custom Form CSS')
+        lp_code = re.sub(regex, '', lp_code)
+
+        return lp_code
+
+    def add_showhide_css(lp_code):
+        '''
+        Returns LP code with CSS ShowHide solution
+        '''
+        regex = re.compile(r'\.read-more-state', re.UNICODE)
+        match = regex.findall(lp_code)
+        if not match:
+            print(f'\t{Fore.CYAN}» Adding ShowHide CSS')
+            with open(file('showhide-css'), 'r', encoding='utf-8') as f:
+                css = f.read()
+            regex = re.compile(r'</style>', re.UNICODE)
+            lp_code = re.sub(regex, css, lp_code, 1)
+
+        return lp_code
+
     def get_code(choice):
         '''
         Returns Landing Page Code either form clipoard or from template
         '''
-
-        def clean_custom_css(lp_code):
-            '''
-            Returns LP code without Custom Form CSS
-            '''
-            regex = re.compile(
-                r'<!-- StartFormCustomCSS[\s\S]*?EndFormCustomCSS -->', re.UNICODE)
-            if regex.findall(lp_code):
-                print(f'\t{Fore.CYAN}» Cleaning Custom Form CSS')
-            lp_code = re.sub(regex, '', lp_code)
-
-            return lp_code
-
-        def add_showhide_css(lp_code):
-            '''
-            Returns LP code with CSS ShowHide solution
-            '''
-            regex = re.compile(r'\.read-more-state', re.UNICODE)
-            match = regex.findall(lp_code)
-            if not match:
-                print(f'\t{Fore.CYAN}» Adding ShowHide CSS')
-                with open(file('showhide-css'), 'r', encoding='utf-8') as f:
-                    css = f.read()
-                regex = re.compile(r'</style>', re.UNICODE)
-                lp_code = re.sub(regex, css, lp_code, 1)
-
-            return lp_code
-
         print()
         if choice == (len(options) - 1):  # Gets code from
             print(
@@ -212,6 +213,26 @@ def get_form_fields(form):
     return form_fields
 
 
+def get_checkboxes(form):
+    '''
+    Returns list of checkboxes in form of tuples (id, name)
+    '''
+    # Gets formElement ID, input name and input type
+    regex_id_name = re.compile(
+        r'formElement(.|..)"[\s\S]*?name="(.+?)"', re.UNICODE)
+    id_name = regex_id_name.findall(form)
+
+    # Gets input name and type
+    regex_name_type = re.compile(r'name="(.*?)".*?type="(.*?)"', re.UNICODE)
+    name_type = regex_name_type.findall(form)
+
+    # Builds list of checkboxes with formElement ID and input name
+    checkbox = [x for (x, y) in name_type if y == 'checkbox']
+    checkbox = [(x, y) for (x, y) in id_name if y in checkbox]
+
+    return checkbox
+
+
 def lead_phone(form):
     '''
     Returns code of the new Form with phone-based lead mechanism
@@ -221,13 +242,13 @@ def lead_phone(form):
         Returns lead by phone code to be swapped into form code
         '''
         with open(file('lead-by-phone'), 'r', encoding='utf-8') as f:
-            code = f.read()
+            snippet = f.read()
         regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
-        code = re.sub(regex_id, id_name[0][0], code)
+        snippet = re.sub(regex_id, id_name[0][0], snippet)
         regex_name = re.compile(r'(<FIELD_NAME>)', re.UNICODE)
-        code = re.sub(regex_name, id_name[0][1], code)
+        snippet = re.sub(regex_name, id_name[0][1], snippet)
 
-        return code
+        return snippet
 
     phone_field = ''
     # Gets the code of phone field
@@ -259,6 +280,49 @@ def lead_phone(form):
         form = re.sub(
             regex_phone_field, prepare_lead_by_phone(id_name), form)
         print(f'\t{Fore.CYAN} » Adding lead-by-phone mechanism')
+
+    return form
+
+
+def gdpr_info(form):
+    '''
+    Returns code of the new Form with rodo info about data administrator
+    '''
+    def gdpr_info_place(form):
+        '''
+        Returns place where gdpr information should be appended
+        '''
+        checkboxes = []
+        for checkbox in get_checkboxes(form):
+            checkbox_id = int(checkbox[0])
+            checkboxes.append(checkbox_id)
+
+        return min(checkboxes)
+
+    def prepare_gdpr_info(id):
+        '''
+        Returns lead by phone code to be swapped into form code
+        '''
+        with open(file('gdpr-info'), 'r', encoding='utf-8') as f:
+            snippet = f.read()
+        regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
+        snippet = re.sub(regex_id, str(id), snippet)
+
+        return snippet
+
+    # Asks if information about data administrator should be appended
+    swapping = ''
+    while swapping.lower() != 'y' and swapping.lower() != 'n':
+        print(
+            f'\t{Fore.WHITE}Add information about data administrator? (Y/N):', end='')
+        swapping = input(' ')
+    if swapping.lower() == 'y':
+        form_number = gdpr_info_place(form)
+        regex_administrator = re.compile(
+            rf'(<div id="formElement{form_number}")', re.UNICODE)
+        form = re.sub(
+            regex_administrator, prepare_gdpr_info(form_number), form)
+        print(f'\t{Fore.CYAN} » Adding information about data administrator')
 
     return form
 
@@ -336,18 +400,7 @@ def additional_required_checkboxes(form, optins, required):
     Returns full list of required checkboxes
     '''
 
-    # Gets formElement ID, input name and input type
-    regex_id_name = re.compile(
-        r'formElement(.|..)"[\s\S]*?name="(.+?)"', re.UNICODE)
-    id_name = regex_id_name.findall(form)
-
-    # Gets input name and type
-    regex_name_type = re.compile(r'name="(.*?)".*?type="(.*?)"', re.UNICODE)
-    name_type = regex_name_type.findall(form)
-
-    # Builds list of checkboxes with formElement ID and input name
-    checkbox = [x for (x, y) in name_type if y == 'checkbox']
-    checkbox = [(x, y) for (x, y) in id_name if y in checkbox]
+    checkbox = get_checkboxes(form)
     required_checkbox = [(x, y) for (x, y) in checkbox if y in required]
     unknown_checkbox = [(x, y)
                         for (x, y) in checkbox if y not in optins.values()]
@@ -377,12 +430,12 @@ def additional_required_checkboxes(form, optins, required):
 
 '''
 =================================================================================
-                           Validation focused functions
+                           JavaScript focused functions
 =================================================================================
 '''
 
 
-def validation_js(code, required):
+def js(code, required):
     '''
     Returns Landing Page code with proper checkbox js validation
     '''
@@ -392,10 +445,25 @@ def validation_js(code, required):
         Returns LP code without JavaScript checkbox validation
         '''
         regex = re.compile(
-            r'<script.*?\n\s*?\$\(document\)[\s\S]*?requiredChecked[\s\S]*?script>', re.UNICODE)
+            r'(<script type="text/javascript">[\s\n]*\$\(document\)[\s\S\n]*?requiredChecked[\s\S\n]*?</script>)', re.UNICODE)
         if regex.findall(code):
             print(f'\t{Fore.CYAN} » Cleaning Checkbox Validation')
         code = re.sub(regex, '', code)
+
+        return code
+
+    def check_jquery(code):
+        '''
+        Returns LP code with jQuery import
+        '''
+        search_jquery = re.compile(r'(jquery)', re.UNICODE)
+        is_jquery = re.search(search_jquery, code)
+        if not is_jquery:
+            with open(file('jquery'), 'r', encoding='utf-8') as f:
+                jquery = f.read()
+            regex_jquery = re.compile(r'(<script)', re.UNICODE)
+            code = re.sub(regex_jquery, jquery, code, 1)
+            print(f'\t{Fore.GREEN} » Adding jQuery import')
 
         return code
 
@@ -426,19 +494,30 @@ def validation_js(code, required):
 
         return code
 
+    def add_lead_phone_js(code):
+        '''
+        Returns Landing Page code with lead phone script appended
+        '''
+        # Checks if there already is that code
+        search_lead_script = re.compile(r'(#lead_input)', re.UNICODE)
+        is_lead_script = re.search(search_lead_script, code)
+        if not is_lead_script:
+            with open(file('showhide-lead'), 'r', encoding='utf-8') as f:
+                lead_script = f.read()
+            regex_lead_script = re.compile(r'(</body>)', re.UNICODE)
+            code = re.sub(regex_lead_script, lead_script, code)
+
+        return code
+
     code = del_validation_js(code)
-    code = add_validation_js(code, required)
-
-    # TODO: Fix script cleaning colisions
-
-    # Adds lead by phone javascript below validation
-    search_lead_script = re.compile(r'(#lead_input)', re.UNICODE)
-    is_lead_script = re.search(search_lead_script, code)
-    if not is_lead_script:
-        with open(file('showhide-lead'), 'r', encoding='utf-8') as f:
-            lead_script = f.read()
-        regex_lead_script = re.compile(r'(</body>)', re.UNICODE)
-        code = re.sub(regex_lead_script, lead_script, code)
+    code = check_jquery(code)
+    if required:  # Add script only if there is at least one required
+        code = add_validation_js(code, required)
+    # Checks if there is lead-by-phone mechanism
+    search_lead_phone = re.compile(r'(name="lead_input")', re.UNICODE)
+    is_lead_phone = re.search(search_lead_phone, code)
+    if is_lead_phone:
+        code = add_lead_phone_js(code)
 
     return code
 
@@ -479,10 +558,11 @@ def page_gen(country):
     form = get_form()
     if source_country == 'PL':
         form = lead_phone(form)
+        form = gdpr_info(form)
     optins = optin_version(form, optin_path_names)
     form, required = swap_optins(form, optins, optin_path_names)
     code = swap_form(code, form)
-    code = validation_js(code, required)
+    code = js(code, required)
 
     # Two way return of new code
     pyperclip.copy(code)
