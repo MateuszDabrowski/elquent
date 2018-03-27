@@ -52,10 +52,17 @@ def get_email_code():
     Returns eMail code to be cleaned
     » code: long str
     '''
-    print(
-        f'\n{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
-    input(' ')
-    return pyperclip.paste()
+    while True:
+        print(
+            f'{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        email_code = pyperclip.paste()
+        is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
+        if is_html.findall(email_code):
+            break
+        print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not Email')
+
+    return email_code
 
 
 '''
@@ -89,7 +96,7 @@ def clean_elqtrack(country):
         input(' ')
         return True
     else:
-        print(f'\t{Fore.RED}» elqTrack not found',
+        print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found',
               f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
         input(' ')
         return False
