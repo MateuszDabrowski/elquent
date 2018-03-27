@@ -54,15 +54,15 @@ def get_email_code():
     '''
     while True:
         print(
-            f'{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
+            f'\n{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
         input(' ')
-        email_code = pyperclip.paste()
+        code = pyperclip.paste()
         is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
-        if is_html.findall(email_code):
+        if is_html.findall(code):
             break
         print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not Email')
 
-    return email_code
+    return code
 
 
 '''
@@ -72,25 +72,25 @@ def get_email_code():
 '''
 
 
-def clean_elqtrack(country):
+def clean_elq_track(country):
     '''
-    Returns eMails code without elqTrack UTMs
+    Returns Email code without elqTrack UTMs
     » code: long str
     '''
     global source_country
     source_country = country
 
     code = get_email_code()
-    regex = re.compile(r'(?:\?|&)elqTrack.*?(?=")', re.UNICODE)
-    occurance = len(regex.findall(code))
-    if occurance:
-        print(f'\t{Fore.YELLOW}» Cleaned {occurance} elqTrack instances')
-        code = re.sub(regex, '', code)
+    elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
+    if elq_track.findall(code):
+        print(
+            f'\t{Fore.YELLOW}» Cleaned {len(elq_track.findall(code))} elqTrack instances')
+        code = re.sub(elq_track, '', code)
         pyperclip.copy(code)
         with open(file(), 'w', encoding='utf-8') as f:
             f.write(code)
         print(
-            f'\n{Fore.GREEN}» You can now paste eMail to Eloqua [CTRL+V].',
+            f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
             f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)',
             f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
         input(' ')
@@ -98,5 +98,70 @@ def clean_elqtrack(country):
     else:
         print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found',
               f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
+        return False
+
+
+'''
+=================================================================================
+                            Swapping functions
+=================================================================================
+'''
+
+
+def swap_utm_track(country):
+    '''
+    Returns Email code with swapped tracking scripts in links
+    » code: long str
+    '''
+
+    global source_country
+    source_country = country
+
+    # Gets Email code
+    code = get_email_code()
+
+    # Cleans ELQ tracking
+    elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
+    if elq_track.findall(code):
+        code = re.sub(elq_track, '', code)
+
+    # Gets new UTM tracking
+    utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
+    while True:
+        print(
+            f'{Fore.WHITE}» Copy new UTM tracking script [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        new_utm = pyperclip.paste()
+        if utm_track.findall(new_utm + '"'):
+            break
+        print(
+            f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not correct UTM tracking script')
+
+    # Asks if phone field should be changed to lead mechanism
+    swapping = ''
+    while swapping.lower() != 'y' and swapping.lower() != 'n':
+        print(f'\n{Fore.WHITE}Change UTM tracking script from:',
+              f'\n{Fore.WHITE}"{Fore.CYAN}{(utm_track.findall(code))[0][0]}{Fore.WHITE}"',
+              f'\n{Fore.WHITE}to:',
+              f'\n{Fore.WHITE}"{Fore.CYAN}{new_utm}{Fore.WHITE}"',
+              f'\n{Fore.WHITE}? (Y/N)', end='')
+        swapping = input(' ')
+
+    if swapping.lower() == 'y':
+        print(
+            f'\t{Fore.YELLOW}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
+        code = re.sub(utm_track, new_utm, code)
+        pyperclip.copy(code)
+        with open(file(), 'w', encoding='utf-8') as f:
+            f.write(code)
+        print(
+            f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)',
+            f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
+        return True
+    else:
+        print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
         input(' ')
         return False

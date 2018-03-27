@@ -104,8 +104,10 @@ def menu():
     '''
 
     utils = [
-        (mail.clean_elqtrack,
-         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Delete elqTrack code from Email links'),
+        (mail.clean_elq_track,
+         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Delete elqTrack code in Email links'),
+        (mail.swap_utm_track,
+         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Swap UTM tracking code in Email links'),
         (page.page_gen,
          f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create or modify Landing Page with new Form')
     ]
