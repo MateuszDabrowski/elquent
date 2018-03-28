@@ -19,7 +19,8 @@ __Add viewers to Eloqua__ [_under develompent_]
 ## ELQuent.page
 __Create landing page__
 - RegEx work automator
-- allows user automatically swap Eloqua Form in Landing Page
+- allows user to automatically swap Eloqua Form in Landing Page
 - allows to use built-in landing page templates for quick deployment
+- built-in wizard creating all Landing Pages required for campaign
 - cleans code, appends snippets, changes form code
 - Additional functions [_under develompent_]

@@ -13,6 +13,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
+import json
 import encodings
 import pyperclip
 from colorama import Fore, init
@@ -20,8 +21,10 @@ from colorama import Fore, init
 # Initialize colorama
 init(autoreset=True)
 
+# Predefined messege elements
+ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
-def file(file_path):
+def file(file_path, name='LP'):
     '''
     Returns file path to template files
     '''
@@ -44,10 +47,14 @@ def file(file_path):
             return os.path.join(datadir, dir, filename)
 
     file_paths = {
+        'naming': find_data_file('naming.json'),
         'jquery': find_data_file('WKCORP_jquery.txt'),
         'blank-lp': find_data_file('WKCORP_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
+        'ty-lp': find_data_file(f'WK{source_country}_ty-lp.txt'),
+        'confirmation-lp': find_data_file(f'WK{source_country}_confirmation-lp.txt'),
+        'confirmation-ty-lp': find_data_file(f'WK{source_country}_confirmation-ty-lp.txt'),
         'showhide-css': find_data_file(f'WK{source_country}_showhide-css.txt'),
         'marketing-optin': find_data_file(f'WK{source_country}_marketing-optin.txt'),
         'email-optin': find_data_file(f'WK{source_country}_email-optin.txt'),
@@ -58,7 +65,9 @@ def file(file_path):
         'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
         'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
-        'landing-page': find_data_file(f'WK{source_country}_LP.txt', dir='outcomes')
+        'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
+        'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
+        'landing-page': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -92,7 +101,7 @@ def create_landing_page():
                 if is_html.findall(lp_code):
                     break
                 print(
-                    f'{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not a HTML')
+                    f'{ERROR}Copied code is not a HTML')
 
             # Modifies landing page code
             lp_code = clean_custom_css(lp_code)
@@ -159,7 +168,7 @@ def create_landing_page():
             choice = int(choice)
         except ValueError:
             print(
-                f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Please enter numeric value!')
+                f'\t{ERROR}Please enter numeric value!')
             continue
         if 0 <= choice < len(options):
             break
@@ -195,7 +204,7 @@ def create_form():
             if is_form.findall(form):
                 break
             print(
-                f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not a form')
+                f'\t{ERROR}Copied code is not a form')
 
         return form
 
@@ -345,7 +354,7 @@ def create_form():
                     form_optins[optin[0]] = name
 
         if len(form_optins) != len(optins):
-            error = f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Non standard HTML name of opt-in form field\n'
+            error = f'\t{ERROR}Non standard HTML name of opt-in form field\n'
             raise ValueError(error)
 
         for optin in form_optins.items():
@@ -463,11 +472,11 @@ def swap_form(code, form):
             print(f'\t{Fore.GREEN} » Adding Form to Landing Page')
         else:
             print(
-                f'\t{Fore.RED}[ERROR] {Fore.YELLOW}There is no form or placeholder in code.\n',
+                f'\t{ERROR}There is no form or placeholder in code.\n',
                 f'{Fore.WHITE} (Add <INSERT_FORM> where you want the form and rerun program)')
     elif len(match) >= 1:
         print(
-            f'\t{Fore.RED}[ERROR] {Fore.YELLOW}There are {len(match)} forms in the code')
+            f'\t{ERROR}There are {len(match)} forms in the code')
 
     return code
 
@@ -573,14 +582,14 @@ def javascript(code, required):
 
 '''
 =================================================================================
-                                MAIN PROGRAM FLOW
+                                SINGLE PAGE FLOW
 =================================================================================
 '''
 
 
 def page_gen(country):
     '''
-    Main menu for ELQuent.page module
+    Main flow for single page creation
     Returns new Landing page code
     '''
 
@@ -591,7 +600,7 @@ def page_gen(country):
     # Checks if there are required source files for the source source_country
     if not os.path.exists(file('validation-element')):
         print(
-            f'\t{Fore.RED}[ERROR] {Fore.YELLOW}No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
+            f'\t{ERROR}No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
         input(' ')
         return False
 
@@ -610,5 +619,195 @@ def page_gen(country):
         f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_LP.txt in Outcomes folder)',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
+
+    return code
+
+
+'''
+=================================================================================
+                                WHOLE CAMPAIGN FLOW
+=================================================================================
+'''
+
+
+def campaign_gen(country):
+    '''
+    Main flow for whole campaign creations
+    Saves multiple html codes to outcome folder
+    '''
+
+    # Create global source_country from main module
+    global source_country
+    source_country = country
+
+    # Checks if there are required source files for the source source_country
+    if not os.path.exists(file('validation-element')):
+        print(
+            f'\t{ERROR}No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
+        input(' ')
+        return False
+
+    # Loads json file with naming convention
+    with open(file('naming')) as f:
+        naming = json.load(f)
+
+    '''
+    =================================================== Gather necessary informations
+    '''
+
+    # Gets campaign name from user
+    while True:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] Copy name of the Campaign [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        campaign_name = pyperclip.paste()
+        campaign_name = campaign_name.split('_')
+        if len(campaign_name) != 5:
+            print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
+        elif campaign_name[0][:2] != 'WK':
+            print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
+        elif campaign_name[1] not in naming['WKPL']['segment']:
+            print(f'{ERROR}"{campaign_name[1]}" is not existing segment name')
+        elif campaign_name[2] not in naming['campaign']:
+            print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
+        elif campaign_name[4] not in naming['vsp']:
+            print(f'{ERROR}"{campaign_name[4]}" is not existing VSP')
+        else:
+            break
+
+    # Gets information about lead or not lead character of the form
+    print(f'\n{Fore.GREEN}After filling the form user is:',
+          f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}] Either lead or not (depending on submission)',
+          f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}] Always lead',
+          f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead',)
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
+        lead_or_contact_form = input(' ')
+        if lead_or_contact_form in ['0', '1', '2']:
+            lead_or_contact_form = int(lead_or_contact_form)
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any choice!')
+
+    # Gets product name either from campaign name or user
+    free_name = campaign_name[3].split('-')
+    if free_name[0] in naming['WKPL']['product']:
+        product_name = naming['WKPL']['product'][free_name[0]]
+    else:
+        print(
+            f'\n{Fore.WHITE}» Could not recognize product name, please write its name: ', end='')
+        product_name = input(' ')
+    regex_product_name = re.compile(r'PRODUCT_NAME', re.UNICODE)
+
+    # Gets optional text for header
+    print(
+        f'\n{Fore.WHITE}» What should be displayed on header next to product name?: ')
+    optional_text = input(' ')
+    regex_optional_text = re.compile(r'OPTIONAL_TEXT', re.UNICODE)
+
+    # Regex for GTM tag
+    regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
+
+    '''
+    =================================================== Builds main page
+    '''
+
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on Main LP')
+    file_name = (('_').join(campaign_name[1:4]) + '_LP')
+    with open(file('two-column-lp'), 'r', encoding='utf-8') as f:
+        code = f.read()
+    form, required = create_form()
+    code = swap_form(code, form)
+    code = javascript(code, required)
+    code = re.sub(regex_product_name, product_name, code)
+    code = re.sub(regex_optional_text, optional_text, code)
+    code = re.sub(regex_gtm, file_name, code)
+    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+        f.write(code)
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+
+    '''
+    =================================================== Builds TY-LP
+    '''
+
+    # Gets and prepares general TY LP structure
+    with open(file('ty-lp'), 'r', encoding='utf-8') as f:
+        code = f.read()
+    code = re.sub(regex_product_name, product_name, code)
+    code = re.sub(regex_optional_text, optional_text, code)
+
+    # Lead submission TY LP
+    if lead_or_contact_form == 0 or lead_or_contact_form == 1:
+        file_name = (('_').join(campaign_name[1:4]) + '_lead-TY-LP')
+        with open(file('conversion-lead'), 'r', encoding='utf-8') as f:
+            conversion_script = f.read()
+        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
+        lead_ty_lp = re.sub(regex_conversion_script, conversion_script, code)
+        lead_ty_lp = re.sub(regex_gtm, file_name, lead_ty_lp)
+        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+            f.write(lead_ty_lp)
+        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+
+    # Not lead submission TY LP
+    if lead_or_contact_form == 0 or lead_or_contact_form == 2:
+        file_name = (('_').join(campaign_name[1:4]) + '_contact-TY-LP')
+        with open(file('conversion-contact'), 'r', encoding='utf-8') as f:
+            conversion_script = f.read()
+        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
+        contact_ty_lp = re.sub(regex_conversion_script,
+                               conversion_script, code)
+        contact_ty_lp = re.sub(regex_gtm, file_name, contact_ty_lp)
+        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+            f.write(contact_ty_lp)
+        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+
+    '''
+    =================================================== Builds Confirmation-LP
+    '''
+
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on Confirmation LP')
+    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-LP')
+    with open(file('confirmation-lp'), 'r', encoding='utf-8') as f:
+        code = f.read()
+    form, required = create_form()
+    code = swap_form(code, form)
+    code = javascript(code, required)
+    code = re.sub(regex_product_name, product_name, code)
+    code = re.sub(regex_optional_text, optional_text, code)
+    code = re.sub(regex_gtm, file_name, code)
+    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+        f.write(code)
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+
+    '''
+    =================================================== Builds Confirmation-TY-LP
+    '''
+
+    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-TY-LP')
+    with open(file('confirmation-ty-lp'), 'r', encoding='utf-8') as f:
+        code = f.read()
+    code = re.sub(regex_product_name, product_name, code)
+    code = re.sub(regex_optional_text, optional_text, code)
+    code = re.sub(regex_gtm, file_name, code)
+    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+        f.write(code)
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+
+    '''
+    =================================================== Finished :)
+    '''
+
+    print(
+        f'\n{Fore.GREEN}» All Landing Pages saved in Outcomes folder.',
+        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
+
+    '''
+    TODO:
+    - Only one LP template with question regarding sectors that should stay
+    - Type of promoted contect ['ebook', 'webinar', 'code', 'other']
+    '''
 
     return True

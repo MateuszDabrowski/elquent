@@ -109,7 +109,9 @@ def menu():
         (mail.swap_utm_track,
          f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Swap UTM tracking code in Email links'),
         (page.page_gen,
-         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create or modify Landing Page with new Form')
+         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create or modify Landing Page with new Form'),
+        (page.campaign_gen,
+         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create set of Landing Pages for whole campaign')
     ]
 
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
