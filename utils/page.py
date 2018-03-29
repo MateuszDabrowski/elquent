@@ -648,7 +648,7 @@ def campaign_gen(country):
         return False
 
     # Loads json file with naming convention
-    with open(file('naming')) as f:
+    with open(file('naming'), 'r', encoding='utf-8') as f:
         naming = json.load(f)
 
     '''
@@ -689,6 +689,21 @@ def campaign_gen(country):
         else:
             print(f'{Fore.RED}Entered value does not belong to any choice!')
 
+    # Gets information about converter that is used in campaign
+    print(f'\n{Fore.GREEN}After filling the form user receives:')
+    converter_values = list(naming['WKPL']['converter'].keys())
+    for i, converter in enumerate(converter_values[1:]):
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
+        converter_choice = input(' ')
+        if converter_choice in ['0', '1', '2', '3', '4', '5']:
+            converter_choice = converter_values[int(converter_choice) + 1]
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any choice!')
+
     # Gets product name either from campaign name or user
     free_name = campaign_name[3].split('-')
     if free_name[0] in naming['WKPL']['product']:
@@ -723,6 +738,11 @@ def campaign_gen(country):
     code = re.sub(regex_product_name, product_name, code)
     code = re.sub(regex_optional_text, optional_text, code)
     code = re.sub(regex_gtm, file_name, code)
+    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
+        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        code = re.sub(regex_converter, rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -745,6 +765,11 @@ def campaign_gen(country):
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         lead_ty_lp = re.sub(regex_conversion_script, conversion_script, code)
         lead_ty_lp = re.sub(regex_gtm, file_name, lead_ty_lp)
+        for i in range(len(naming['WKPL']['converter']['Placeholders'])):
+            placeholder = naming['WKPL']['converter']['Placeholders'][i]
+            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+            converter_value = naming['WKPL']['converter'][converter_choice][i]
+            lead_ty_lp = re.sub(regex_converter, rf'{converter_value}', lead_ty_lp)
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -758,6 +783,11 @@ def campaign_gen(country):
         contact_ty_lp = re.sub(regex_conversion_script,
                                conversion_script, code)
         contact_ty_lp = re.sub(regex_gtm, file_name, contact_ty_lp)
+        for i in range(len(naming['WKPL']['converter']['Placeholders'])):
+            placeholder = naming['WKPL']['converter']['Placeholders'][i]
+            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+            converter_value = naming['WKPL']['converter'][converter_choice][i]
+            contact_ty_lp = re.sub(regex_converter, rf'{converter_value}', contact_ty_lp)
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -777,6 +807,11 @@ def campaign_gen(country):
     code = re.sub(regex_product_name, product_name, code)
     code = re.sub(regex_optional_text, optional_text, code)
     code = re.sub(regex_gtm, file_name, code)
+    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
+        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        code = re.sub(regex_converter, rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -791,6 +826,11 @@ def campaign_gen(country):
     code = re.sub(regex_product_name, product_name, code)
     code = re.sub(regex_optional_text, optional_text, code)
     code = re.sub(regex_gtm, file_name, code)
+    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
+        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        code = re.sub(regex_converter, rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -801,13 +841,13 @@ def campaign_gen(country):
 
     print(
         f'\n{Fore.GREEN}» All Landing Pages saved in Outcomes folder.',
+        f'\n{Fore.YELLOW}  (Remember to use file names as asset names)',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
     '''
     TODO:
     - Only one LP template with question regarding sectors that should stay
-    - Type of promoted contect ['ebook', 'webinar', 'code', 'other']
     '''
 
     return True
