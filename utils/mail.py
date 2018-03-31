@@ -85,7 +85,7 @@ def clean_elq_track(country):
     if elq_track.findall(code):
         print(
             f'\t{Fore.YELLOW}» Cleaned {len(elq_track.findall(code))} elqTrack instances')
-        code = re.sub(elq_track, '', code)
+        code = elq_track.sub('', code)
         pyperclip.copy(code)
         with open(file(), 'w', encoding='utf-8') as f:
             f.write(code)
@@ -124,7 +124,7 @@ def swap_utm_track(country):
     # Cleans ELQ tracking
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
     if elq_track.findall(code):
-        code = re.sub(elq_track, '', code)
+        code = elq_track.sub('', code)
 
     # Gets new UTM tracking
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
@@ -151,7 +151,7 @@ def swap_utm_track(country):
     if swapping.lower() == 'y':
         print(
             f'\t{Fore.YELLOW}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
-        code = re.sub(utm_track, new_utm, code)
+        code = utm_track.sub(new_utm, code)
         pyperclip.copy(code)
         with open(file(), 'w', encoding='utf-8') as f:
             f.write(code)
