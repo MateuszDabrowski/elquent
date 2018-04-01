@@ -24,6 +24,7 @@ init(autoreset=True)
 # Predefined messege elements
 ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
+
 def file(file_path, name='LP'):
     '''
     Returns file path to template files
@@ -153,15 +154,11 @@ def create_landing_page():
     print(f'\n{Fore.GREEN}You can:')
     for i, option in enumerate(options):
         print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{option}')
-    print(
-        f'{Fore.WHITE}[{Fore.YELLOW}R{Fore.WHITE}]\t{Fore.WHITE}Return to main menu',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
+    print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         choice = input(' ')
-        if choice.lower() == 'r':
-            return False
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')
             raise SystemExit
@@ -325,33 +322,38 @@ def create_form():
 
         return form
 
-    def optin_version(form, optin_path_names):
+    def optin_version(form):
         '''
         Returns names of existing marketing, email, phone and tracking optins
         '''
-
         optins = {}
         # Iterates over possible HTML names of opt-in form fields to save existing optins
-        for optin_type in optin_path_names.items():
-            for optin_name in optin_type[1]:
+        for optin_type in naming[source_country]['optins']:
+            for optin_name in naming[source_country]['optins'][optin_type]:
                 optin_search = re.compile(rf'name="{optin_name}"', re.UNICODE)
                 if optin_search.findall(form):
-                    optins[f'{optin_type[0][0]}'] = f'{optin_name}'
+                    optins[f'{optin_type}'] = f'{optin_name}'
 
         return optins
 
-    def swap_optins(form, optins, optin_path_names):
+    def swap_optins(form, optins):
         '''
         Returns code of new Form with correct opt ins text
         '''
+        optin_paths = {
+            'Marketing': file('marketing-optin'),
+            'Email': file('email-optin'),
+            'Phone': file('phone-optin'),
+            'Tracking': file('tracking-optin')
+        }
 
         requiredOptins = []
         # Creates dict of {(optin_type, optin_path): 'in_form_optin_name'}
         form_optins = {}
-        for optin in optin_path_names.items():
+        for optin in naming[source_country]['optins']:
             for name in optins.values():
-                if name in optin[1]:
-                    form_optins[optin[0]] = name
+                if name in naming[source_country]['optins'][optin]:
+                    form_optins[optin] = name
 
         if len(form_optins) != len(optins):
             error = f'\t{ERROR}Non standard HTML name of opt-in form field\n'
@@ -359,8 +361,9 @@ def create_form():
 
         for optin in form_optins.items():
             # Loads opt-in new code
-            with open(optin[0][1], 'r', encoding='utf-8') as file:
-                optin_text = file.read()
+            file_path = optin_paths[optin[0]]
+            with open(file_path, 'r', encoding='utf-8') as f:
+                optin_text = f.read()
             # Create regex to swap opt-in in form code
             regex_optin = re.compile(
                 rf'<input name="{optin[1]}"[\s\S]*?<\/p>', re.UNICODE)
@@ -373,14 +376,15 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n':
                 print(
-                    f'\t{Fore.WHITE}Is {optin[0][0]} Opt-in ({optin[1]}) required? (Y/N):', end='')
+                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? (Y/N):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 requiredOptins.append(optin[1])
                 regex_req = re.compile(r'read-more-wrap">', re.UNICODE)
-                optin_text = regex_req.sub('read-more-wrap"><span class="required">*</span> ', optin_text, 1)
+                optin_text = regex_req.sub(
+                    'read-more-wrap"><span class="required">*</span> ', optin_text, 1)
             print(
-                f'\t{Fore.CYAN} » Expanding {optin[0][0]} Opt-in ({optin[1]})')
+                f'\t{Fore.CYAN} » Expanding {optin[0]} Opt-in ({optin[1]})')
 
             # Adds new opt-ins to form code
             form = regex_optin.sub(optin_text, form)
@@ -411,7 +415,8 @@ def create_form():
                 required_checkbox += (checkbox,)
                 regex_req = re.compile(
                     rf'(formElement{checkbox[0]}[\s\S]*?checkbox-label...)(\n)', re.UNICODE)
-                form = regex_req.sub(r'\1<span class="required">*</span> ', form, 1)
+                form = regex_req.sub(
+                    r'\1<span class="required">*</span> ', form, 1)
                 print(f'\t{Fore.CYAN} » Adding {checkbox[1]} as required')
             elif required.lower() == 'n':
                 print(f'\t{Fore.CYAN} » Setting {checkbox[1]} as not required')
@@ -422,21 +427,13 @@ def create_form():
 
         return (form, required_checkbox)
 
-    # List of possible HTML names of opt-in form fields
-    optin_path_names = {
-        ('Marketing', file('marketing-optin')): ('directMailOptedIn1', 'zgoda_marketingowa', 'privacy'),
-        ('Email', file('email-optin')): ('emailOptedIn1', 'zgoda_handlowa', 'optin'),
-        ('Phone', file('phone-optin')): ('phoneOptedIn1', 'zgoda_telefoniczna'),
-        ('Tracking', file('tracking-optin')): ('Tracking',)
-    }
-
     # Gets form and modifies it
     form = get_form()
     if source_country == 'PL':
         form = gdpr_info(form)
         form = lead_phone(form)
-    optins = optin_version(form, optin_path_names)
-    form, required = swap_optins(form, optins, optin_path_names)
+    optins = optin_version(form)
+    form, required = swap_optins(form, optins)
 
     return (form, required)
 
@@ -476,15 +473,16 @@ def swap_form(code, form):
         print(
             f'\t{ERROR}There are {len(match)} forms in the code')
 
-
     # Changes CSS of submit button
-    regex_submit_css = re.compile(r'.elq-form input\[type=submit\][\s\S\n]*?}', re.UNICODE)
+    regex_submit_css = re.compile(
+        r'.elq-form input\[type=submit\][\s\S\n]*?}', re.UNICODE)
     with open(file('submit-button'), 'r', encoding='utf-8') as f:
         submit_css = f.read()
     code = regex_submit_css.sub(submit_css, code)
 
     # Appends Unicode arrow to button text
-    regex_submit_text = re.compile(r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
+    regex_submit_text = re.compile(
+        r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
     button_text = '"' + regex_submit_text.findall(code)[0] + ' →"'
     code = regex_submit_text.sub(button_text, code)
 
@@ -550,8 +548,10 @@ def javascript(code, required):
         for req in required:
             with open(file('validation-element'), 'r', encoding='utf-8') as f:
                 validation_element = f.read()
-            validation_element = regex_element_id.sub(req[0], validation_element)
-            validation_element = regex_element_name.sub(req[1], validation_element)
+            validation_element = regex_element_id.sub(
+                req[0], validation_element)
+            validation_element = regex_element_name.sub(
+                req[1], validation_element)
             code = regex_element_insert.sub(validation_element, code)
         print(f'\t{Fore.GREEN} » Adding new Checkbox Validation')
 
@@ -612,6 +612,11 @@ def page_gen(country):
         input(' ')
         return False
 
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
     # Landing Page code manipulation
     code = create_landing_page()
     form, required = create_form()
@@ -657,6 +662,7 @@ def campaign_gen(country):
 
     # Loads json file with naming convention
     with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
         naming = json.load(f)
 
     '''
@@ -674,7 +680,7 @@ def campaign_gen(country):
             print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
         elif campaign_name[0][:2] != 'WK':
             print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
-        elif campaign_name[1] not in naming['WKPL']['segment']:
+        elif campaign_name[1] not in naming[source_country]['segment']:
             print(f'{ERROR}"{campaign_name[1]}" is not existing segment name')
         elif campaign_name[2] not in naming['campaign']:
             print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
@@ -699,7 +705,7 @@ def campaign_gen(country):
 
     # Gets information about converter that is used in campaign
     print(f'\n{Fore.GREEN}After filling the form user receives:')
-    converter_values = list(naming['WKPL']['converter'].keys())
+    converter_values = list(naming[source_country]['converter'].keys())
     for i, converter in enumerate(converter_values[1:]):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
@@ -714,8 +720,8 @@ def campaign_gen(country):
 
     # Gets product name either from campaign name or user
     free_name = campaign_name[3].split('-')
-    if free_name[0] in naming['WKPL']['product']:
-        product_name = naming['WKPL']['product'][free_name[0]]
+    if free_name[0] in naming[source_country]['product']:
+        product_name = naming[source_country]['product'][free_name[0]]
     else:
         print(
             f'\n{Fore.WHITE}» Could not recognize product name, please write its name: ', end='')
@@ -746,10 +752,10 @@ def campaign_gen(country):
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
     code = regex_gtm.sub(file_name, code)
-    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
-        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
@@ -773,10 +779,10 @@ def campaign_gen(country):
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         lead_ty_lp = regex_conversion_script.sub(conversion_script, code)
         lead_ty_lp = regex_gtm.sub(file_name, lead_ty_lp)
-        for i in range(len(naming['WKPL']['converter']['Placeholders'])):
-            placeholder = naming['WKPL']['converter']['Placeholders'][i]
+        for i in range(len(naming[source_country]['converter']['Placeholders'])):
+            placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming['WKPL']['converter'][converter_choice][i]
+            converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
@@ -790,11 +796,12 @@ def campaign_gen(country):
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         contact_ty_lp = regex_conversion_script.sub(conversion_script, code)
         contact_ty_lp = regex_gtm.sub(file_name, contact_ty_lp)
-        for i in range(len(naming['WKPL']['converter']['Placeholders'])):
-            placeholder = naming['WKPL']['converter']['Placeholders'][i]
+        for i in range(len(naming[source_country]['converter']['Placeholders'])):
+            placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming['WKPL']['converter'][converter_choice][i]
-            contact_ty_lp = regex_converter.sub(rf'{converter_value}', contact_ty_lp)
+            converter_value = naming[source_country]['converter'][converter_choice][i]
+            contact_ty_lp = regex_converter.sub(
+                rf'{converter_value}', contact_ty_lp)
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
@@ -814,10 +821,10 @@ def campaign_gen(country):
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
     code = regex_gtm.sub(file_name, code)
-    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
-        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
@@ -833,10 +840,10 @@ def campaign_gen(country):
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
     code = regex_gtm.sub(file_name, code)
-    for i in range(len(naming['WKPL']['converter']['Placeholders'])):
-        placeholder = naming['WKPL']['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['WKPL']['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
@@ -856,7 +863,8 @@ def campaign_gen(country):
     TODO:
     - Only one LP template with question regarding sectors that should stay
     - Clean regex calls
-    - Move optin path names to json and make them county coded
+    - Fix Return to previous form function
+    - Copy-paste LP by LP from campaign as an option
     '''
 
     return True
