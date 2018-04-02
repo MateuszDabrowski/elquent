@@ -693,7 +693,7 @@ def campaign_gen(country):
     print(f'\n{Fore.GREEN}After filling the form user is:',
           f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}] Either lead or not (depending on submission)',
           f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}] Always lead',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead',)
+          f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         lead_or_contact_form = input(' ')
@@ -730,12 +730,15 @@ def campaign_gen(country):
 
     # Gets optional text for header
     print(
-        f'\n{Fore.WHITE}» What should be displayed on header next to product name?: ')
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}OPTIONAL{Fore.WHITE}] Text to be displayed on the left side of header bar:')
     optional_text = input(' ')
     regex_optional_text = re.compile(r'OPTIONAL_TEXT', re.UNICODE)
 
     # Regex for GTM tag
     regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
+
+    # List of created Landing Pages:
+    lp_list = []
 
     '''
     =================================================== Builds main page
@@ -760,6 +763,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    lp_list.append([file_name, code])
 
     '''
     =================================================== Builds TY-LP
@@ -787,6 +791,7 @@ def campaign_gen(country):
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        lp_list.append([file_name, code])
 
     # Not lead submission TY LP
     if lead_or_contact_form == 0 or lead_or_contact_form == 2:
@@ -805,6 +810,7 @@ def campaign_gen(country):
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        lp_list.append([file_name, code])
 
     '''
     =================================================== Builds Confirmation-LP
@@ -829,6 +835,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    lp_list.append([file_name, code])
 
     '''
     =================================================== Builds Confirmation-TY-LP
@@ -848,23 +855,45 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    lp_list.append([file_name, code])
 
     '''
     =================================================== Finished :)
     '''
 
     print(
-        f'\n{Fore.GREEN}» All Landing Pages saved in Outcomes folder.',
-        f'\n{Fore.YELLOW}  (Remember to use file names as asset names)',
-        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-    input(' ')
+        f'\n{Fore.GREEN}Would you like to copy paste code of each Landing Page now?')
+
+    choice = ''
+    while choice.lower() != 'y' and choice.lower() != 'n':
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}Y{Fore.WHITE}] Yes, I will create all Landing Pages in Eloqua now',
+            f'\n{Fore.WHITE}[{Fore.YELLOW}N{Fore.WHITE}] No, I will use files saved in Outcomes folder later')
+        choice = input(' ')
+    if choice.lower() == 'y':
+        for i, lp in enumerate(lp_list):
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}{i+1}/{len(lp_list)}: WKPL_{lp[0]}{Fore.WHITE}]')
+            pyperclip.copy(f'WK{source_country}_' + lp[0])
+            print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset name to Eloqua.',
+                  f'\n{Fore.WHITE}Click [Enter] to continue.', end='')
+            input(' ')
+            pyperclip.copy(lp[1])
+            print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset HTML code to Eloqua.',
+                  f'\n{Fore.WHITE}Click [Enter] to contiue.', end='')
+            input(' ')
+        print(f'\n{Fore.GREEN}All Landing Pages prepared!',
+              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
+    elif choice.lower() == 'n':
+        print(f'\n{Fore.YELLOW}Remember to use file names as asset names.',
+              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        input(' ')
 
     '''
     TODO:
     - Only one LP template with question regarding sectors that should stay
     - Clean regex calls
-    - Fix Return to previous form function
-    - Copy-paste LP by LP from campaign as an option
     '''
 
     return True
