@@ -896,8 +896,7 @@ def campaign_gen(country):
     TODO:
     - Only one LP template with question regarding sectors that should stay
     - Clean regex calls
-    - Update checker
-    - Asking about declination on self added product name
+    - When not recognized product, after user enters name, ask "did you mean ..." with options from naming.json
     '''
 
     return True

@@ -91,15 +91,17 @@ def clean_elq_track(country):
             f.write(code)
         print(
             f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)',
-            f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
-        return True
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
     else:
-        print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found',
-              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
-        return False
+        print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found')
+    
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.GREEN}Do you want to clean another Email? (Y/N)', end='')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        clean_elq_track(country)
+    else:
+        return True
 
 
 '''
@@ -114,7 +116,6 @@ def swap_utm_track(country):
     Returns Email code with swapped tracking scripts in links
     » code: long str
     '''
-
     global source_country
     source_country = country
 
@@ -157,11 +158,12 @@ def swap_utm_track(country):
             f.write(code)
         print(
             f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)',
-            f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
-        return True
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
+    
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.GREEN}Do you want to swap another UTM tracking? (Y/N)', end='')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        swap_utm_track(country)
     else:
-        print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
-        return False
+        return True

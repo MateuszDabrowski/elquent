@@ -179,8 +179,13 @@ SOURCE_COUNTRY = auth_pickle()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]')
 
-
-
 # Menu for choosing utils
 while True:
     menu()
+
+'''
+TODO:
+- Eloqua authentication
+- Storing countries and utils in json
+- Printing utils based on country and eloqua auth
+'''

@@ -7,7 +7,6 @@ __Fix your mail__
 - RegEx helper
 - Quick deletion of Eloqua Tracking from links
 - Quick swapping of UTM Tracking Scripts in links
-- Additional functions [_under develompent_]
 ---
 ## ELQuent.webinar
 __Add viewers to Eloqua__ [_under develompent_]
@@ -25,4 +24,4 @@ __Create landing page__
 - cleans code, appends snippets, changes form code
 - Additional functions [_under develompent_]
 
-[_Version: 1.1.3_]
+[_Version: 1.1.4_]
