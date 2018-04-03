@@ -24,3 +24,5 @@ __Create landing page__
 - built-in wizard creating all Landing Pages required for campaign
 - cleans code, appends snippets, changes form code
 - Additional functions [_under develompent_]
+
+[_Version: 1.1.3_]

@@ -12,8 +12,10 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 
 # Python imports
 import os
+import re
 import sys
 import pickle
+import requests
 import encodings
 import pyperclip
 from colorama import Fore, init
@@ -40,6 +42,8 @@ def find_data_file(filename):
 # File paths
 os.makedirs(find_data_file('outcomes'), exist_ok=True)
 USER_DATA = find_data_file('user.p')
+README = find_data_file('README.md')
+
 
 '''
 =================================================================================
@@ -89,6 +93,28 @@ def auth_pickle():
     source_country = pickle.load(open(USER_DATA, 'rb'))
 
     return source_country
+
+
+def new_version():
+    '''
+    Returns True if there is newer version of the app available
+    '''
+    # Gets current version number of running app
+    with open(README, 'r', encoding='utf-8') as f:
+        readme = f.read()
+    check_current_version = re.compile(r'\[_Version: (.*?)_\]', re.UNICODE)
+    current_version = check_current_version.findall(readme)
+
+    # Gets available version number on Github
+    github = requests.get('https://github.com/MateuszDabrowski/ELQuent')
+    check_available_version = re.compile(r'\[<em>Version: (.*?)</em>\]', re.UNICODE)
+    available_version = check_available_version.findall(github.text)
+
+    # Compares versions
+    if current_version and available_version and current_version[0] != available_version[0]:
+        return True
+    else:
+        return False
 
 
 '''
@@ -144,10 +170,16 @@ def menu():
 '''
 print(f'\n{Fore.GREEN}Ahoj!')
 
+# Checks if there is newer version of the app
+if new_version():
+    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Newer version available')
+
 # Gets required auth data and prints them
 SOURCE_COUNTRY = auth_pickle()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]')
+
+
 
 # Menu for choosing utils
 while True:

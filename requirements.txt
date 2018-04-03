@@ -2,3 +2,4 @@ pyperclip
 encodings
 requests
 colorama
+requests
