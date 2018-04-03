@@ -754,7 +754,7 @@ def campaign_gen(country):
     code = javascript(code, required)
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
-    code = regex_gtm.sub(file_name, code)
+    code = regex_gtm.sub((f'WK{source_country}_' + file_name), code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
@@ -763,7 +763,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    lp_list.append([file_name, code])
+    lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     '''
     =================================================== Builds TY-LP
@@ -782,7 +782,8 @@ def campaign_gen(country):
             conversion_script = f.read()
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         lead_ty_lp = regex_conversion_script.sub(conversion_script, code)
-        lead_ty_lp = regex_gtm.sub(file_name, lead_ty_lp)
+        lead_ty_lp = regex_gtm.sub(
+            (f'WK{source_country}_' + file_name), lead_ty_lp)
         for i in range(len(naming[source_country]['converter']['Placeholders'])):
             placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
@@ -791,7 +792,7 @@ def campaign_gen(country):
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-        lp_list.append([file_name, code])
+        lp_list.append([(f'WK{source_country}_' + file_name), lead_ty_lp])
 
     # Not lead submission TY LP
     if lead_or_contact_form == 0 or lead_or_contact_form == 2:
@@ -800,7 +801,8 @@ def campaign_gen(country):
             conversion_script = f.read()
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         contact_ty_lp = regex_conversion_script.sub(conversion_script, code)
-        contact_ty_lp = regex_gtm.sub(file_name, contact_ty_lp)
+        contact_ty_lp = regex_gtm.sub(
+            (f'WK{source_country}_' + file_name), contact_ty_lp)
         for i in range(len(naming[source_country]['converter']['Placeholders'])):
             placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
@@ -810,7 +812,7 @@ def campaign_gen(country):
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-        lp_list.append([file_name, code])
+        lp_list.append([(f'WK{source_country}_' + file_name), contact_ty_lp])
 
     '''
     =================================================== Builds Confirmation-LP
@@ -826,7 +828,7 @@ def campaign_gen(country):
     code = javascript(code, required)
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
-    code = regex_gtm.sub(file_name, code)
+    code = regex_gtm.sub((f'WK{source_country}_' + file_name), code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
@@ -835,7 +837,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    lp_list.append([file_name, code])
+    lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     '''
     =================================================== Builds Confirmation-TY-LP
@@ -846,7 +848,7 @@ def campaign_gen(country):
         code = f.read()
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
-    code = regex_gtm.sub(file_name, code)
+    code = regex_gtm.sub((f'WK{source_country}_' + file_name), code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
@@ -855,7 +857,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    lp_list.append([file_name, code])
+    lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     '''
     =================================================== Finished :)
@@ -873,7 +875,7 @@ def campaign_gen(country):
     if choice.lower() == 'y':
         for i, lp in enumerate(lp_list):
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}{i+1}/{len(lp_list)}: WKPL_{lp[0]}{Fore.WHITE}]')
+                f'\n{Fore.WHITE}[{Fore.YELLOW}{i+1}/{len(lp_list)}: {lp[0]}{Fore.WHITE}]')
             pyperclip.copy(f'WK{source_country}_' + lp[0])
             print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset name to Eloqua.',
                   f'\n{Fore.WHITE}Click [Enter] to continue.', end='')
@@ -894,6 +896,8 @@ def campaign_gen(country):
     TODO:
     - Only one LP template with question regarding sectors that should stay
     - Clean regex calls
+    - Update checker
+    - Asking about declination on self added product name
     '''
 
     return True
