@@ -1,0 +1,15 @@
+{
+    "country": ["AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
+    "AK": ["clean_elq_track", "swap_utm_track"],
+    "BE": ["clean_elq_track", "swap_utm_track"],
+    "CZ": ["clean_elq_track", "swap_utm_track"],
+    "DE": ["clean_elq_track", "swap_utm_track", "page_gen"], 
+    "ES": ["clean_elq_track", "swap_utm_track"],
+    "FR": ["clean_elq_track", "swap_utm_track"],
+    "HU": ["clean_elq_track", "swap_utm_track"],
+    "IT": ["clean_elq_track", "swap_utm_track"],
+    "LSW": ["clean_elq_track", "swap_utm_track"],
+    "NL": ["clean_elq_track", "swap_utm_track"],
+    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen"], 
+    "SK": ["clean_elq_track", "swap_utm_track"]
+}

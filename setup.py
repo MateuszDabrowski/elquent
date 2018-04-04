@@ -1,8 +1,8 @@
 from cx_Freeze import setup, Executable
 
 buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils'],
-                    packages=['pyperclip', 're', 'os', 'sys', 'pickle',
-                              'platform', 'encodings', 'colorama', 'json'],
+                    packages=['pyperclip', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
+                              'platform', 'encodings', 'colorama', 'json', 'multiprocessing'],
                     excludes=['user.db', 'requirements.txt', 'outcomes'])
 
 base = 'Console'

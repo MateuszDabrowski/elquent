@@ -14,6 +14,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
+import json
 import pickle
 import requests
 import encodings
@@ -43,6 +44,7 @@ def find_data_file(filename):
 os.makedirs(find_data_file('outcomes'), exist_ok=True)
 USER_DATA = find_data_file('user.p')
 README = find_data_file('README.md')
+UTILS = find_data_file('utils.json')
 
 
 '''
@@ -57,12 +59,8 @@ def get_source_country():
     Returns source country of the user from input
     » source_country: two char str
     '''
-
     print(f'\n{Fore.WHITE}What is your Source Country?')
-    source_country_list = [
-        'AK', 'BE', 'CZ', 'DE', 'ES', 'FR',
-        'HU', 'IT', 'LSW', 'NL', 'PL', 'SK'
-    ]
+    source_country_list = COUNTRY_UTILS['country']
     for i, country in enumerate(source_country_list):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{Fore.GREEN}WK{Fore.WHITE}{country}')
@@ -70,16 +68,16 @@ def get_source_country():
     while True:
         print(f'{Fore.WHITE}Enter number associated with you country: ', end='')
         try:
-            source_country = int(input(' '))
+            choice = int(input(' '))
         except ValueError:
             print(f'{Fore.RED}Please enter numeric value!')
             continue
-        if 0 <= source_country < len(source_country_list):
+        if 0 <= choice < len(source_country_list):
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any country!')
 
-    return source_country_list[source_country]
+    return source_country_list[choice]
 
 
 def auth_pickle():
@@ -128,21 +126,20 @@ def menu():
     '''
     Allows to choose ELQuent utility 
     '''
+    utils = {
+        'clean_elq_track': (mail.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
+        'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
+        'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
+        'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages')
+    }
 
-    utils = [
-        (mail.clean_elq_track,
-         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Delete elqTrack code in Email links'),
-        (mail.swap_utm_track,
-         f'{Fore.WHITE}[{Fore.YELLOW}MAIL{Fore.WHITE}] Swap UTM tracking code in Email links'),
-        (page.page_gen,
-         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create or modify single Landing Page with new Form'),
-        (page.campaign_gen,
-         f'{Fore.WHITE}[{Fore.YELLOW}PAGE{Fore.WHITE}] Create set of Landing Pages for whole campaign')
-    ]
+    # Gets dict of utils available for users source country
+    available_utils = {k:v for (k, v) in utils.items() if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
+    util_names = list(available_utils.keys())
 
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
-    for i, function in enumerate(utils):
-        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{function[1]}')
+    for i, function in enumerate(available_utils.values()):
+        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {Fore.YELLOW}{function[1]}')
     print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
     while True:
@@ -156,11 +153,11 @@ def menu():
         except ValueError:
             print(f'{Fore.RED}Please enter numeric value!')
             continue
-        if 0 <= choice < len(utils):
+        if 0 <= choice < len(available_utils):
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
-    utils[choice][0](SOURCE_COUNTRY)
+    available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
 
 
 '''
@@ -172,7 +169,11 @@ print(f'\n{Fore.GREEN}Ahoj!')
 
 # Checks if there is newer version of the app
 if new_version():
-    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Newer version available')
+    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available')
+
+# Loads utils.json containing source countries and utils available for them
+with open(UTILS, 'r', encoding='utf-8') as f:
+    COUNTRY_UTILS = json.load(f)
 
 # Gets required auth data and prints them
 SOURCE_COUNTRY = auth_pickle()
@@ -186,6 +187,4 @@ while True:
 '''
 TODO:
 - Eloqua authentication
-- Storing countries and utils in json
-- Printing utils based on country and eloqua auth
 '''

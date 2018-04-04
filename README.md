@@ -24,4 +24,4 @@ __Create landing page__
 - cleans code, appends snippets, changes form code
 - Additional functions [_under develompent_]
 
-[_Version: 1.1.4_]
+[_Version: 1.1.5_]
