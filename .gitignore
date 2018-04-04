@@ -3,7 +3,9 @@ templates
 
 # User files
 outcomes
-user.p
+country.p
+eloqua.p
+click.p
 
 # cx_Freeze
 __pycache__

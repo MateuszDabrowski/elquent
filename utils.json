@@ -10,6 +10,6 @@
     "IT": ["clean_elq_track", "swap_utm_track"],
     "LSW": ["clean_elq_track", "swap_utm_track"],
     "NL": ["clean_elq_track", "swap_utm_track"],
-    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen"], 
+    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "webinar"], 
     "SK": ["clean_elq_track", "swap_utm_track"]
 }

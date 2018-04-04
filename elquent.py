@@ -15,7 +15,9 @@ import os
 import re
 import sys
 import json
+import base64
 import pickle
+import getpass
 import requests
 import encodings
 import pyperclip
@@ -24,6 +26,7 @@ from colorama import Fore, init
 # ELQuent imports
 import utils.mail as mail
 import utils.page as page
+import utils.webinar as webinar
 
 # Initialize colorama
 init(autoreset=True)
@@ -42,7 +45,9 @@ def find_data_file(filename):
 
 # File paths
 os.makedirs(find_data_file('outcomes'), exist_ok=True)
-USER_DATA = find_data_file('user.p')
+COUNTRY = find_data_file('country.p')
+ELOQUA = find_data_file('eloqua.p')
+CLICK = find_data_file('click.p')
 README = find_data_file('README.md')
 UTILS = find_data_file('utils.json')
 
@@ -56,42 +61,95 @@ UTILS = find_data_file('utils.json')
 
 def get_source_country():
     '''
-    Returns source country of the user from input
+    Returns source country either from the user input or shelve
     » source_country: two char str
     '''
-    print(f'\n{Fore.WHITE}What is your Source Country?')
-    source_country_list = COUNTRY_UTILS['country']
-    for i, country in enumerate(source_country_list):
-        print(
-            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{Fore.GREEN}WK{Fore.WHITE}{country}')
+    if not os.path.isfile(COUNTRY):
+        print(f'\n{Fore.WHITE}What is your Source Country?')
+        source_country_list = COUNTRY_UTILS['country']
+        for i, country in enumerate(source_country_list):
+            print(
+                f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{Fore.GREEN}WK{Fore.WHITE}{country}')
 
-    while True:
-        print(f'{Fore.WHITE}Enter number associated with you country: ', end='')
-        try:
-            choice = int(input(' '))
-        except ValueError:
-            print(f'{Fore.RED}Please enter numeric value!')
-            continue
-        if 0 <= choice < len(source_country_list):
-            break
-        else:
-            print(f'{Fore.RED}Entered value does not belong to any country!')
-
-    return source_country_list[choice]
-
-
-def auth_pickle():
-    '''
-    Returns authenticaton data from shelve
-    » source_country: two char str
-    '''
-    if not os.path.isfile(USER_DATA):
-        source_country = get_source_country()
-        pickle.dump(source_country, open(USER_DATA, 'wb'))
-    source_country = pickle.load(open(USER_DATA, 'rb'))
+        while True:
+            print(f'{Fore.WHITE}Enter number associated with you country: ', end='')
+            try:
+                choice = int(input(' '))
+            except ValueError:
+                print(f'{Fore.RED}Please enter numeric value!')
+                continue
+            if 0 <= choice < len(source_country_list):
+                break
+            else:
+                print(f'{Fore.RED}Entered value does not belong to any country!')
+        source_country = source_country_list[choice]
+        pickle.dump(source_country, open(COUNTRY, 'wb'))
+    source_country = pickle.load(open(COUNTRY, 'rb'))
 
     return source_country
 
+
+def get_click_auth():
+    '''
+    Returns ClickMeeting API Key needed for authorization
+    '''
+    if not os.path.isfile(CLICK):
+        print(f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        click_api_key = pyperclip.paste()
+        pickle.dump(click_api_key, open(CLICK, 'wb'))
+    click_api_key = pickle.load(open(CLICK, 'rb'))
+
+    return click_api_key
+
+
+def get_eloqua_auth():
+    '''
+    Returns:
+    1. Eloqua API Key needed for authorization.
+    2. Eloqua Root URL
+    3. User name
+    '''
+    def get_eloqua_root(eloqua_auth):
+        '''
+        Returns Eloqua base URL for your instance.
+        '''
+        root = 'https://login.eloqua.com/id'
+        response = webinar.api_request(root=root, eloqua_auth=eloqua_auth)
+        base_url = response.json()
+        base_url = base_url['urls']['base']
+
+        return base_url
+
+    while True:
+        # Gets Eloqua user details if they are already stored
+        if not os.path.isfile(ELOQUA):
+            print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Company name: ', end='')
+            eloqua_domain = input(' ')
+            print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua User name: ', end='')
+            eloqua_user = input(' ')
+            eloqua_auth = (eloqua_domain, eloqua_user)
+            pickle.dump(eloqua_auth, open(ELOQUA, 'wb'))
+        eloqua_domain, eloqua_user = pickle.load(open(ELOQUA, 'rb'))
+        eloqua_password = getpass.getpass(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ')
+
+        # Converts domain, user and  to Eloqua Auth Key
+        eloqua_api_key = bytes(eloqua_domain + '\\' +
+                               eloqua_user + ':' +
+                               eloqua_password, 'utf-8')
+        eloqua_api_key = str(base64.b64encode(eloqua_api_key), 'utf-8')
+
+        # Gets Eloqua root URL
+        try:
+            eloqua_root = get_eloqua_root(eloqua_api_key)
+        except TypeError:
+            print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Login failed!')
+            os.remove(ELOQUA)
+            continue
+        if eloqua_root:
+            break
+
+    return (eloqua_api_key, eloqua_root)
 
 def new_version():
     '''
@@ -130,7 +188,8 @@ def menu():
         'clean_elq_track': (mail.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
         'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
-        'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages')
+        'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
+        'webinar': (webinar.click_to_elq, f'Upload Webinar{Fore.WHITE} registered users and attendees')
     }
 
     # Gets dict of utils available for users source country
@@ -157,7 +216,12 @@ def menu():
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
-    available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
+    if util_names[choice] == 'webinar':
+        click_auth = get_click_auth()
+        eloqua_key, eloqua_root = get_eloqua_auth()
+        available_utils.get(util_names[choice])[0](SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
+    else:
+        available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
 
 
 '''
@@ -169,22 +233,24 @@ print(f'\n{Fore.GREEN}Ahoj!')
 
 # Checks if there is newer version of the app
 if new_version():
-    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available')
+    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available\n')
 
 # Loads utils.json containing source countries and utils available for them
 with open(UTILS, 'r', encoding='utf-8') as f:
     COUNTRY_UTILS = json.load(f)
 
+# Loads 
+if os.path.isfile(ELOQUA):
+    ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(ELOQUA, 'rb'))
+else:
+    ELOQUA_DOMAIN = 'WK'
+    ELOQUA_USER = ''
+
 # Gets required auth data and prints them
-SOURCE_COUNTRY = auth_pickle()
+SOURCE_COUNTRY = get_source_country()
 print(
-    f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}WK{SOURCE_COUNTRY}{Fore.WHITE}]')
+    f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}{ELOQUA_DOMAIN} {SOURCE_COUNTRY}{Fore.WHITE}] {ELOQUA_USER}')
 
 # Menu for choosing utils
 while True:
     menu()
-
-'''
-TODO:
-- Eloqua authentication
-'''

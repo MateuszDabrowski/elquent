@@ -102,8 +102,7 @@ def create_landing_page():
                 is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
                 if is_html.findall(lp_code):
                     break
-                print(
-                    f'{ERROR}Copied code is not a HTML')
+                print(f'{ERROR}Copied code is not a HTML')
 
             # Modifies landing page code
             lp_code = clean_custom_css(lp_code)
@@ -165,8 +164,7 @@ def create_landing_page():
         try:
             choice = int(choice)
         except ValueError:
-            print(
-                f'\t{ERROR}Please enter numeric value!')
+            print(f'\t{ERROR}Please enter numeric value!')
             continue
         if 0 <= choice < len(options):
             break
@@ -201,8 +199,7 @@ def create_form():
             is_form = re.compile(r'<form[\s\S\n]*?</form>', re.UNICODE)
             if is_form.findall(form):
                 break
-            print(
-                f'\t{ERROR}Copied code is not a form')
+            print(f'\t{ERROR}Copied code is not a form')
 
         return form
 
@@ -470,8 +467,7 @@ def swap_form(code, form):
                 f'\t{ERROR}There is no form or placeholder in code.\n',
                 f'{Fore.WHITE} (Add <INSERT_FORM> where you want the form and rerun program)')
     elif len(match) >= 1:
-        print(
-            f'\t{ERROR}There are {len(match)} forms in the code')
+        print(f'\t{ERROR}There are {len(match)} forms in the code')
 
     # Changes CSS of submit button
     regex_submit_css = re.compile(
@@ -884,13 +880,11 @@ def campaign_gen(country):
             print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset HTML code to Eloqua.',
                   f'\n{Fore.WHITE}Click [Enter] to contiue.', end='')
             input(' ')
-        print(f'\n{Fore.GREEN}All Landing Pages prepared!',
-              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
+        print(f'\n{Fore.GREEN}All Landing Pages prepared!')
     elif choice.lower() == 'n':
-        print(f'\n{Fore.YELLOW}Remember to use file names as asset names.',
-              f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-        input(' ')
+        print(f'\n{Fore.YELLOW}Remember to use file names as asset names.')
+    print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
 
     '''
     TODO:
