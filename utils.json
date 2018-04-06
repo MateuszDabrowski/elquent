@@ -1,15 +1,15 @@
 {
     "country": ["AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
-    "AK": ["clean_elq_track", "swap_utm_track"],
-    "BE": ["clean_elq_track", "swap_utm_track"],
-    "CZ": ["clean_elq_track", "swap_utm_track"],
-    "DE": ["clean_elq_track", "swap_utm_track", "page_gen"], 
-    "ES": ["clean_elq_track", "swap_utm_track"],
-    "FR": ["clean_elq_track", "swap_utm_track"],
-    "HU": ["clean_elq_track", "swap_utm_track"],
-    "IT": ["clean_elq_track", "swap_utm_track"],
+    "AK": ["clean_elq_track", "swap_utm_track", "database"],
+    "BE": ["clean_elq_track", "swap_utm_track", "database"],
+    "CZ": ["clean_elq_track", "swap_utm_track", "database"],
+    "DE": ["clean_elq_track", "swap_utm_track", "page_gen", "database"],
+    "ES": ["clean_elq_track", "swap_utm_track", "database"],
+    "FR": ["clean_elq_track", "swap_utm_track", "database"],
+    "HU": ["clean_elq_track", "swap_utm_track", "database"],
+    "IT": ["clean_elq_track", "swap_utm_track", "database"],
     "LSW": ["clean_elq_track", "swap_utm_track"],
-    "NL": ["clean_elq_track", "swap_utm_track"],
-    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "webinar"], 
-    "SK": ["clean_elq_track", "swap_utm_track"]
+    "NL": ["clean_elq_track", "swap_utm_track", "database"],
+    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "database", "webinar"],
+    "SK": ["clean_elq_track", "swap_utm_track", "database"]
 }

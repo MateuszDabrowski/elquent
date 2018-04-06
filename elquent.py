@@ -27,6 +27,7 @@ from colorama import Fore, init
 import utils.mail as mail
 import utils.page as page
 import utils.webinar as webinar
+import utils.database as database
 
 # Initialize colorama
 init(autoreset=True)
@@ -94,7 +95,8 @@ def get_click_auth():
     Returns ClickMeeting API Key needed for authorization
     '''
     if not os.path.isfile(CLICK):
-        print(f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
+        print(
+            f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
         input(' ')
         click_api_key = pyperclip.paste()
         pickle.dump(click_api_key, open(CLICK, 'wb'))
@@ -131,7 +133,8 @@ def get_eloqua_auth():
             eloqua_auth = (eloqua_domain, eloqua_user)
             pickle.dump(eloqua_auth, open(ELOQUA, 'wb'))
         eloqua_domain, eloqua_user = pickle.load(open(ELOQUA, 'rb'))
-        eloqua_password = getpass.getpass(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ')
+        eloqua_password = getpass.getpass(
+            f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ')
 
         # Converts domain, user and  to Eloqua Auth Key
         eloqua_api_key = bytes(eloqua_domain + '\\' +
@@ -151,6 +154,7 @@ def get_eloqua_auth():
 
     return (eloqua_api_key, eloqua_root)
 
+
 def new_version():
     '''
     Returns True if there is newer version of the app available
@@ -163,7 +167,8 @@ def new_version():
 
     # Gets available version number on Github
     github = requests.get('https://github.com/MateuszDabrowski/ELQuent')
-    check_available_version = re.compile(r'\[<em>Version: (.*?)</em>\]', re.UNICODE)
+    check_available_version = re.compile(
+        r'\[<em>Version: (.*?)</em>\]', re.UNICODE)
     available_version = check_available_version.findall(github.text)
 
     # Compares versions
@@ -180,28 +185,31 @@ def new_version():
 '''
 
 
-def menu():
+def menu(choice=''):
     '''
-    Allows to choose ELQuent utility 
+    Allows to choose ELQuent utility
     '''
     utils = {
         'clean_elq_track': (mail.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
         'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
         'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
+        'database': (database.create_csv, f'Create contact upload{Fore.WHITE} file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Upload Webinar{Fore.WHITE} registered users and attendees')
     }
 
     # Gets dict of utils available for users source country
-    available_utils = {k:v for (k, v) in utils.items() if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
+    available_utils = {k: v for (k, v) in utils.items()
+                       if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
     util_names = list(available_utils.keys())
 
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
     for i, function in enumerate(available_utils.values()):
-        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {Fore.YELLOW}{function[1]}')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {Fore.YELLOW}{function[1]}')
     print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
-    while True:
+    while not choice:
         print(f'{Fore.YELLOW}Enter number associated with choosen utility:', end='')
         choice = input(' ')
         if choice.lower() == 'q':
@@ -219,7 +227,8 @@ def menu():
     if util_names[choice] == 'webinar':
         click_auth = get_click_auth()
         eloqua_key, eloqua_root = get_eloqua_auth()
-        available_utils.get(util_names[choice])[0](SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
+        available_utils.get(util_names[choice])[0](
+            SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
     else:
         available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
 
@@ -229,17 +238,20 @@ def menu():
                                 Main program flow
 =================================================================================
 '''
+
+
 print(f'\n{Fore.GREEN}Ahoj!')
 
 # Checks if there is newer version of the app
 if new_version():
-    print(f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available\n')
+    print(
+        f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available')
 
 # Loads utils.json containing source countries and utils available for them
 with open(UTILS, 'r', encoding='utf-8') as f:
     COUNTRY_UTILS = json.load(f)
 
-# Loads 
+# Loads
 if os.path.isfile(ELOQUA):
     ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(ELOQUA, 'rb'))
 else:
@@ -251,6 +263,29 @@ SOURCE_COUNTRY = get_source_country()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}{ELOQUA_DOMAIN} {SOURCE_COUNTRY}{Fore.WHITE}] {ELOQUA_USER}')
 
-# Menu for choosing utils
+# Checks for terminal arguments of shell function
+if len(sys.argv) < 2:
+    menu()
+elif sys.argv[1] == 'track':
+    mail.clean_elq_track(SOURCE_COUNTRY)
+elif sys.argv[1] == 'utm':
+    mail.swap_utm_track(SOURCE_COUNTRY)
+elif sys.argv[1] == 'page':
+    page.page_gen(SOURCE_COUNTRY)
+elif sys.argv[1] == 'campaign':
+    page.campaign_gen(SOURCE_COUNTRY)
+elif sys.argv[1] == 'web':
+    click_auth = get_click_auth()
+    eloqua_key, eloqua_root = get_eloqua_auth()
+    webinar.click_to_elq(SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
+elif sys.argv[1] == 'base':
+    database.create_csv(SOURCE_COUNTRY)
+
+# Allows to cycle through options after first errand
 while True:
     menu()
+
+'''
+TODO:
+- check if eloqua user data is available for logged in users
+'''

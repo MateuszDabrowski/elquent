@@ -8,14 +8,6 @@ __Fix your mail__
 - Quick deletion of Eloqua Tracking from links
 - Quick swapping of UTM Tracking Scripts in links
 ---
-## ELQuent.webinar
-__Add viewers to Eloqua__
-- API connector app from ClickWebinar to Eloqua
-- allows user specify time range for webinar data import
-- automatically gets all needed data, create shared list in Eloqua and import contacts
-- naming convention and instance structure compliant with Eloqua
-- [_resource, time and calls optimization under develompent_]
----
 ## ELQuent.page
 __Create landing page__
 - RegEx work automator
@@ -24,5 +16,20 @@ __Create landing page__
 - built-in wizard creating all Landing Pages required for campaign
 - cleans code, appends snippets, changes form code
 - Additional functions [_under develompent_]
+---
+## ELQuent.webinar
+__Add viewers to Eloqua__
+- API connector app from ClickWebinar to Eloqua
+- allows user specify time range for webinar data import
+- automatically gets all needed data, create shared list in Eloqua and import contacts
+- naming convention and instance structure compliant with Eloqua
+- [_resource, time and calls optimization under develompent_]
+---
+## ELQuent.database
+__Creates Eloqua-compliant contact upload file__
+- Gets input from user
+- Outputs .csv file with correct structure and naming convention
+- [_add, trim and intersect functions under develompent_]
+---
 
-[_Version: 1.1.6_]
+[_Version: 1.2.1_]

@@ -50,7 +50,7 @@ def file(file_path, name='LP'):
     file_paths = {
         'naming': find_data_file('naming.json'),
         'jquery': find_data_file('WKCORP_jquery.txt'),
-        'blank-lp': find_data_file('WKCORP_blank-lp.txt'),
+        'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
         'ty-lp': find_data_file(f'WK{source_country}_ty-lp.txt'),
@@ -479,7 +479,7 @@ def swap_form(code, form):
     # Appends Unicode arrow to button text
     regex_submit_text = re.compile(
         r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
-    button_text = '"' + regex_submit_text.findall(code)[0] + ' →"'
+    button_text = '"' + (4 * '&nbsp;&zwnj; ') + regex_submit_text.findall(code)[0] + ' →"'
     code = regex_submit_text.sub(button_text, code)
 
     return code
@@ -889,8 +889,8 @@ def campaign_gen(country):
     '''
     TODO:
     - Only one LP template with question regarding sectors that should stay
-    - Clean regex calls
     - When not recognized product, after user enters name, ask "did you mean ..." with options from naming.json
+    - Prepere DE version
     '''
 
     return True

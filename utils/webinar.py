@@ -517,6 +517,6 @@ def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
 
 '''
 TODO:
-- Optimization of time and numer of API calls
+- Optimization of time and number of API calls
 - Save already sent, one time rooms to not overwrite each time 
 '''
