@@ -1,15 +1,15 @@
 {
     "country": ["AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
-    "AK": ["clean_elq_track", "swap_utm_track", "database"],
-    "BE": ["clean_elq_track", "swap_utm_track", "database"],
-    "CZ": ["clean_elq_track", "swap_utm_track", "database"],
-    "DE": ["clean_elq_track", "swap_utm_track", "page_gen", "database"],
-    "ES": ["clean_elq_track", "swap_utm_track", "database"],
-    "FR": ["clean_elq_track", "swap_utm_track", "database"],
-    "HU": ["clean_elq_track", "swap_utm_track", "database"],
-    "IT": ["clean_elq_track", "swap_utm_track", "database"],
-    "LSW": ["clean_elq_track", "swap_utm_track"],
-    "NL": ["clean_elq_track", "swap_utm_track", "database"],
-    "PL": ["clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "database", "webinar"],
-    "SK": ["clean_elq_track", "swap_utm_track", "database"]
+    "AK": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "BE": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "CZ": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "DE": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "page_gen", "database"],
+    "ES": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "FR": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "HU": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "IT": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "LSW": ["clean_outcomes", "clean_elq_track", "swap_utm_track"],
+    "NL": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
+    "PL": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "database", "webinar"],
+    "SK": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"]
 }

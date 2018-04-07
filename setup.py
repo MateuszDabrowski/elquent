@@ -13,7 +13,7 @@ executables = [
 ]
 
 setup(name='ELQuent',
-      version='1.2.1',
+      version='1.2',
       description='Eloqua automation utility bundle',
       author='Mateusz Dąbrowski',
       url='https://github.com/MateuszDabrowski/',

@@ -26,10 +26,10 @@ __Add viewers to Eloqua__
 - [_resource, time and calls optimization under develompent_]
 ---
 ## ELQuent.database
-__Creates Eloqua-compliant contact upload file__
+__Create Eloqua-compliant contact upload file__
 - Gets input from user
 - Outputs .csv file with correct structure and naming convention
 - [_add, trim and intersect functions under develompent_]
 ---
 
-[_Version: 1.2.1_]
+[_Version: 1.2.2_]

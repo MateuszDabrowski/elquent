@@ -17,6 +17,7 @@ import sys
 import json
 import base64
 import pickle
+import shutil
 import getpass
 import requests
 import encodings
@@ -46,6 +47,7 @@ def find_data_file(filename):
 
 # File paths
 os.makedirs(find_data_file('outcomes'), exist_ok=True)
+OUTCOMES = find_data_file('outcomes')
 COUNTRY = find_data_file('country.p')
 ELOQUA = find_data_file('eloqua.p')
 CLICK = find_data_file('click.p')
@@ -190,6 +192,7 @@ def menu(choice=''):
     Allows to choose ELQuent utility
     '''
     utils = {
+        'clean_outcomes': (clean_outcomes, f'Clean Outcomes folder'),
         'clean_elq_track': (mail.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
         'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
@@ -231,6 +234,23 @@ def menu(choice=''):
             SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
     else:
         available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
+
+
+'''
+=================================================================================
+                                Cleaner
+=================================================================================
+'''
+
+
+def clean_outcomes(country):
+    '''
+    Cleans all content of Outcomes folder
+    '''
+    for file in os.listdir(OUTCOMES):
+        file_path = os.path.join(OUTCOMES, file)
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
 
 
 '''
