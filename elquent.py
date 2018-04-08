@@ -97,10 +97,15 @@ def get_click_auth():
     Returns ClickMeeting API Key needed for authorization
     '''
     if not os.path.isfile(CLICK):
-        print(
-            f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
-        input(' ')
-        click_api_key = pyperclip.paste()
+        while True:
+            print(
+                f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
+            input(' ')
+            click_api_key = pyperclip.paste()
+            if len(click_api_key) == 42:
+                break
+            else:
+                print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Incorrect API Key!')
         pickle.dump(click_api_key, open(CLICK, 'wb'))
     click_api_key = pickle.load(open(CLICK, 'rb'))
 
@@ -134,8 +139,8 @@ def get_eloqua_auth():
             eloqua_auth = (eloqua_domain, eloqua_user)
             pickle.dump(eloqua_auth, open(ELOQUA, 'wb'))
         eloqua_domain, eloqua_user = pickle.load(open(ELOQUA, 'rb'))
-        eloqua_password = getpass.getpass(
-            f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ')
+        print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ', end='')
+        eloqua_password = getpass.getpass(' ')
 
         # Converts domain, user and  to Eloqua Auth Key
         eloqua_api_key = bytes(eloqua_domain + '\\' +
@@ -251,6 +256,7 @@ def clean_outcomes(country):
         file_path = os.path.join(OUTCOMES, file)
         if os.path.isfile(file_path):
             os.unlink(file_path)
+    print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
     return True
@@ -272,17 +278,17 @@ if new_version():
 
 # Loads utils.json containing source countries and utils available for them
 with open(UTILS, 'r', encoding='utf-8') as f:
-    COUNTRY_UTILS = json.load(f)
+    COUNTRY_UTILS=json.load(f)
 
 # Loads
 if os.path.isfile(ELOQUA):
-    ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(ELOQUA, 'rb'))
+    ELOQUA_DOMAIN, ELOQUA_USER=pickle.load(open(ELOQUA, 'rb'))
 else:
-    ELOQUA_DOMAIN = 'WK'
-    ELOQUA_USER = ''
+    ELOQUA_DOMAIN='WK'
+    ELOQUA_USER=''
 
 # Gets required auth data and prints them
-SOURCE_COUNTRY = get_source_country()
+SOURCE_COUNTRY=get_source_country()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}{ELOQUA_DOMAIN} {SOURCE_COUNTRY}{Fore.WHITE}] {ELOQUA_USER}')
 
@@ -298,8 +304,8 @@ elif sys.argv[1] == 'page':
 elif sys.argv[1] == 'campaign':
     page.campaign_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
-    click_auth = get_click_auth()
-    eloqua_key, eloqua_root = get_eloqua_auth()
+    click_auth=get_click_auth()
+    eloqua_key, eloqua_root=get_eloqua_auth()
     webinar.click_to_elq(SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
 elif sys.argv[1] == 'base':
     database.create_csv(SOURCE_COUNTRY)

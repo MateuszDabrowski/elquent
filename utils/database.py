@@ -118,11 +118,11 @@ def create_csv(country):
             break
         elif choice == '1':
             new_contacts = get_contacts()
-            contacts.extend(new_contacts)
-            contacts = list(set(contacts))
+            contacts = [x for x in contacts if x not in new_contacts]
         elif choice == '2':
             new_contacts = get_contacts()
-            contacts = [x for x in contacts if x not in new_contacts]
+            contacts.extend(new_contacts)
+            contacts = list(set(contacts))
         elif choice == '3':
             new_contacts = get_contacts()
             contacts = [x for x in contacts if x in new_contacts]
