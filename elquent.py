@@ -120,10 +120,9 @@ def get_eloqua_auth():
         '''
         root = 'https://login.eloqua.com/id'
         response = webinar.api_request(root=root, eloqua_auth=eloqua_auth)
-        base_url = response.json()
-        base_url = base_url['urls']['base']
+        login_data = response.json()
 
-        return base_url
+        return login_data
 
     while True:
         # Gets Eloqua user details if they are already stored
@@ -146,7 +145,8 @@ def get_eloqua_auth():
 
         # Gets Eloqua root URL
         try:
-            eloqua_root = get_eloqua_root(eloqua_api_key)
+            login_data = get_eloqua_root(eloqua_api_key)
+            eloqua_root = login_data['urls']['base']
         except TypeError:
             print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Login failed!')
             os.remove(ELOQUA)
@@ -252,6 +252,9 @@ def clean_outcomes(country):
         if os.path.isfile(file_path):
             os.unlink(file_path)
 
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+    return True
+
 
 '''
 =================================================================================
@@ -304,8 +307,3 @@ elif sys.argv[1] == 'base':
 # Allows to cycle through options after first errand
 while True:
     menu()
-
-'''
-TODO:
-- check if eloqua user data is available for logged in users
-'''

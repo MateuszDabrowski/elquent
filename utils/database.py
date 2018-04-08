@@ -49,6 +49,43 @@ def file(file_path, name='LP'):
     return file_paths.get(file_path)
 
 
+'''
+=================================================================================
+                            Input functions
+=================================================================================
+'''
+
+
+def get_contacts():
+    '''
+    Returns contact list from user input
+    '''
+    print(
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}] Copy list of e-mails [CTRL+C] and click [Enter]', end='')
+    input(' ')
+    database = pyperclip.paste()
+
+    # Removes possible whitespace characters
+    database = database.replace('\r\n', '\n')
+
+    # Translates input into a list
+    database = database.split('\n')
+
+    # Deduplicates list
+    database = list(set(database))
+    print(
+        f'{Fore.WHITE}  [{Fore.GREEN}UPLOADED{Fore.WHITE}] {len(database)} unique e-mails uploaded')
+
+    return database
+
+
+'''
+=================================================================================
+                                Main program flow
+=================================================================================
+'''
+
+
 def create_csv(country):
     '''
     Takes copied database and transforms it into .csv file
@@ -61,14 +98,39 @@ def create_csv(country):
 
     # Gets contact list from user
     print(
-        f'\n  {Fore.RED}[ATTENTION]{Fore.YELLOW} Currently supports only e-mail uploads')
+        f'\n  {Fore.RED}[ATTENTION]{Fore.YELLOW} Currently only support upload of e-mails')
+    contacts = get_contacts()
 
-    print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}] Copy list of e-mails [CTRL+C] and click [Enter]', end='')
-    input(' ')
-    database_content = pyperclip.paste()
-    database_content = database_content.replace('\r\n', '\n')
-    database_content = database_content.split('\n')
+    options = [
+        f'{Fore.WHITE}[{Fore.YELLOW}NO{Fore.WHITE}] Create .csv',
+        f'{Fore.WHITE}[{Fore.YELLOW}TRIM{Fore.WHITE}] Delete new emails from previosly uploaded list',
+        f'{Fore.WHITE}[{Fore.YELLOW}APPEND{Fore.WHITE}] Add new emails to previously uploaded list',
+        f'{Fore.WHITE}[{Fore.YELLOW}INTERSECT{Fore.WHITE}] Leave only emails existing in both old and new list'
+    ]
+
+    while True:
+        print(f'\n{Fore.GREEN}Do you want to add, trim or intersect another list?')
+        for i, option in enumerate(options):
+            print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{option}')
+        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
+        choice = input(' ')
+        if choice == '0' or not choice:
+            break
+        elif choice == '1':
+            new_contacts = get_contacts()
+            contacts.extend(new_contacts)
+            contacts = list(set(contacts))
+        elif choice == '2':
+            new_contacts = get_contacts()
+            contacts = [x for x in contacts if x not in new_contacts]
+        elif choice == '3':
+            new_contacts = get_contacts()
+            contacts = [x for x in contacts if x in new_contacts]
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any option!')
+            continue
+        print(
+            f'\n{Fore.WHITE}» [{Fore.GREEN}SUCCESS{Fore.WHITE}] New database got {len(contacts)} unique e-mails')
 
     # Builds .csv file in eloqua compliant structure
     count_contact = 0
@@ -76,7 +138,7 @@ def create_csv(country):
         fieldnames = ['Source_Country', 'Email Address']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        for email in database_content:
+        for email in contacts:
             writer.writerow({
                 'Source_Country': source_country,
                 'Email Address': email
@@ -87,12 +149,13 @@ def create_csv(country):
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+
     return True
 
 
 '''
 TODO:
-- Create function to add, trim and intersect databases
 - Create validation of input
 - Create functionality to work from .xls or .csv input
 '''

@@ -15,7 +15,7 @@ __Create landing page__
 - allows to use built-in landing page templates for quick deployment
 - built-in wizard creating all Landing Pages required for campaign
 - cleans code, appends snippets, changes form code
-- Additional functions [_under develompent_]
+- [_under develompent_]
 ---
 ## ELQuent.webinar
 __Add viewers to Eloqua__
@@ -28,8 +28,9 @@ __Add viewers to Eloqua__
 ## ELQuent.database
 __Create Eloqua-compliant contact upload file__
 - Gets input from user
+- Allows appending, trimming and intersecting e-mail uploads
 - Outputs .csv file with correct structure and naming convention
-- [_add, trim and intersect functions under develompent_]
+- [_under develompent_]
 ---
 
-[_Version: 1.2.2_]
+[_Version: 1.2.3_]

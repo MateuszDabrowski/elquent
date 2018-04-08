@@ -62,6 +62,7 @@ def file(file_path, name='LP'):
 =================================================================================
 '''
 
+
 def status_code(response, root):
     '''
     Arguments:
@@ -229,7 +230,8 @@ def click_export_registered(click_rooms):
                 psp_name = naming[source_country]['webinar']['progman_psp'] if 'Progman' in room_name else naming[source_country]['webinar']['webinar_psp']
 
                 # Naming convention for shared list of uploaded registered users
-                shared_list_name = naming[source_country]['webinar']['name'] + room_name + psp_name + '_zarejestrowani'
+                shared_list_name = naming[source_country]['webinar']['name'] + \
+                    room_name + psp_name + '_zarejestrowani'
                 while '--' in shared_list_name:
                     shared_list_name = shared_list_name.replace('--', '-')
 # ========================================================================= </Company specific code>
@@ -395,7 +397,8 @@ def eloqua_import_content(contacts, list_id, uri):
         upload.append(record)
         count += 1
     root = eloqua_bulk + uri + '/data'
-    api_request(root, eloqua_auth=eloqua_key, call='post', data=json.dumps(upload))
+    api_request(root, eloqua_auth=eloqua_key,
+                call='post', data=json.dumps(upload))
 
     return count
 
@@ -456,6 +459,7 @@ def eloqua_log_sync(uri):
 =================================================================================
 '''
 
+
 def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
     '''
     Gets attendees and users registered to ClickMeeting webinars 
@@ -496,16 +500,18 @@ def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
         try:
             export_time_range = int(export_time_range)
         except ValueError:
-            print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Please enter numeric value!')
+            print(
+                f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Please enter numeric value!')
             continue
         else:
             break
-    
+
     # Function pipe
     click_rooms = click_export_rooms()
     click_sessions = click_export_sessions(click_rooms)
     click_registered_export = click_export_registered(click_rooms)
-    click_attendee_export = click_export_attendees(click_sessions, export_time_range)
+    click_attendee_export = click_export_attendees(
+        click_sessions, export_time_range)
     click_exports = {**click_registered_export, **click_attendee_export}
     click_exports = {k: v for (k, v) in click_exports.items() if len(v) != 0}
     eloqua_sharedlist = eloqua_create_sharedlist(click_exports)
@@ -514,6 +520,11 @@ def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
         print(
             f'{Fore.YELLOW}[{export[0]}] {Fore.GREEN}{export[1]}'
             f' - {Fore.BLUE}{export[2]} contacts {Fore.YELLOW}({export[3]})')
+
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+
+    return True
+
 
 '''
 TODO:

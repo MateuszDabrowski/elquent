@@ -94,13 +94,15 @@ def clean_elq_track(country):
             f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
     else:
         print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found')
-    
+
     # Asks user if he would like to repeat
     print(f'\n{Fore.GREEN}Do you want to clean another Email? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         clean_elq_track(country)
     else:
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         return True
 
 
@@ -159,11 +161,13 @@ def swap_utm_track(country):
         print(
             f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
             f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
-    
+
     # Asks user if he would like to repeat
     print(f'\n{Fore.GREEN}Do you want to swap another UTM tracking? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         swap_utm_track(country)
     else:
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         return True

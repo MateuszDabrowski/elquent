@@ -629,6 +629,8 @@ def page_gen(country):
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+
     return code
 
 
@@ -892,5 +894,7 @@ def campaign_gen(country):
     - When not recognized product, after user enters name, ask "did you mean ..." with options from naming.json
     - Prepere DE version
     '''
+
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     return True
