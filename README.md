@@ -33,4 +33,4 @@ __Create Eloqua-compliant contact upload file__
 - [_under develompent_]
 ---
 
-[_Version: 1.2.3_]
+[_Version: 1.2.4_]

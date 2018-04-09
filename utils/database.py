@@ -71,6 +71,10 @@ def get_contacts():
     # Translates input into a list
     database = database.split('\n')
 
+    # Takes care of empty line at the end of input
+    if database[-1] == '':
+        database.pop()
+
     # Deduplicates list
     database = list(set(database))
     print(
@@ -139,6 +143,8 @@ def create_csv(country):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for email in contacts:
+            if '@' not in email:
+                continue
             writer.writerow({
                 'Source_Country': source_country,
                 'Email Address': email
@@ -157,5 +163,6 @@ def create_csv(country):
 '''
 TODO:
 - Create validation of input
+- Add import to Eloqua functionality
 - Create functionality to work from .xls or .csv input
 '''

@@ -29,35 +29,52 @@ import utils.mail as mail
 import utils.page as page
 import utils.webinar as webinar
 import utils.database as database
+import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
 
 
-def find_data_file(filename):
+def file(file_path):
     '''
-    Returns correct file path for both script and frozen app
+    Returns file path to template files
     '''
-    if getattr(sys, 'frozen', False):
-        datadir = os.path.dirname(sys.executable)
-    else:
-        datadir = os.path.dirname(__file__)
-    return os.path.join(datadir, filename)
+
+    def find_data_file(filename, dir='main'):
+        '''
+        Returns correct file path for both script and frozen app
+        '''
+        if dir == 'main':  # Files in main directory
+            if getattr(sys, 'frozen', False):
+                datadir = os.path.dirname(sys.executable)
+            else:
+                datadir = os.path.dirname(os.path.dirname(__file__))
+            return os.path.join(datadir, filename)
+        elif dir == 'api':  # Auths saved in api directory
+            if getattr(sys, 'frozen', False):
+                datadir = os.path.dirname(sys.executable)
+            else:
+                datadir = os.path.dirname(os.path.dirname(__file__))
+            return os.path.join(datadir, 'utils', dir, filename)
+
+    file_paths = {
+        'outcomes': find_data_file('outcomes'),
+        'utils': find_data_file('utils.json'),
+        'readme': find_data_file('readme.md'),
+        'country': find_data_file('country.p', dir='api'),
+        'eloqua': find_data_file('eloqua.p', dir='api')
+    }
+
+    return file_paths.get(file_path)
 
 
-# File paths
-os.makedirs(find_data_file('outcomes'), exist_ok=True)
-OUTCOMES = find_data_file('outcomes')
-COUNTRY = find_data_file('country.p')
-ELOQUA = find_data_file('eloqua.p')
-CLICK = find_data_file('click.p')
-README = find_data_file('README.md')
-UTILS = find_data_file('utils.json')
+# Builds folder for outcomes
+os.makedirs(file('outcomes'), exist_ok=True)
 
 
 '''
 =================================================================================
-                            Authentication functions
+                                Checks source country
 =================================================================================
 '''
 
@@ -67,7 +84,7 @@ def get_source_country():
     Returns source country either from the user input or shelve
     » source_country: two char str
     '''
-    if not os.path.isfile(COUNTRY):
+    if not os.path.isfile(file('country')):
         print(f'\n{Fore.WHITE}What is your Source Country?')
         source_country_list = COUNTRY_UTILS['country']
         for i, country in enumerate(source_country_list):
@@ -86,80 +103,17 @@ def get_source_country():
             else:
                 print(f'{Fore.RED}Entered value does not belong to any country!')
         source_country = source_country_list[choice]
-        pickle.dump(source_country, open(COUNTRY, 'wb'))
-    source_country = pickle.load(open(COUNTRY, 'rb'))
+        pickle.dump(source_country, open(file('country'), 'wb'))
+    source_country = pickle.load(open(file('country'), 'rb'))
 
     return source_country
 
 
-def get_click_auth():
-    '''
-    Returns ClickMeeting API Key needed for authorization
-    '''
-    if not os.path.isfile(CLICK):
-        while True:
-            print(
-                f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
-            input(' ')
-            click_api_key = pyperclip.paste()
-            if len(click_api_key) == 42:
-                break
-            else:
-                print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Incorrect API Key!')
-        pickle.dump(click_api_key, open(CLICK, 'wb'))
-    click_api_key = pickle.load(open(CLICK, 'rb'))
-
-    return click_api_key
-
-
-def get_eloqua_auth():
-    '''
-    Returns:
-    1. Eloqua API Key needed for authorization.
-    2. Eloqua Root URL
-    3. User name
-    '''
-    def get_eloqua_root(eloqua_auth):
-        '''
-        Returns Eloqua base URL for your instance.
-        '''
-        root = 'https://login.eloqua.com/id'
-        response = webinar.api_request(root=root, eloqua_auth=eloqua_auth)
-        login_data = response.json()
-
-        return login_data
-
-    while True:
-        # Gets Eloqua user details if they are already stored
-        if not os.path.isfile(ELOQUA):
-            print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Company name: ', end='')
-            eloqua_domain = input(' ')
-            print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua User name: ', end='')
-            eloqua_user = input(' ')
-            eloqua_auth = (eloqua_domain, eloqua_user)
-            pickle.dump(eloqua_auth, open(ELOQUA, 'wb'))
-        eloqua_domain, eloqua_user = pickle.load(open(ELOQUA, 'rb'))
-        print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Password: ', end='')
-        eloqua_password = getpass.getpass(' ')
-
-        # Converts domain, user and  to Eloqua Auth Key
-        eloqua_api_key = bytes(eloqua_domain + '\\' +
-                               eloqua_user + ':' +
-                               eloqua_password, 'utf-8')
-        eloqua_api_key = str(base64.b64encode(eloqua_api_key), 'utf-8')
-
-        # Gets Eloqua root URL
-        try:
-            login_data = get_eloqua_root(eloqua_api_key)
-            eloqua_root = login_data['urls']['base']
-        except TypeError:
-            print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Login failed!')
-            os.remove(ELOQUA)
-            continue
-        if eloqua_root:
-            break
-
-    return (eloqua_api_key, eloqua_root)
+'''
+=================================================================================
+                            Checks update availablity
+=================================================================================
+'''
 
 
 def new_version():
@@ -167,7 +121,7 @@ def new_version():
     Returns True if there is newer version of the app available
     '''
     # Gets current version number of running app
-    with open(README, 'r', encoding='utf-8') as f:
+    with open(file('readme'), 'r', encoding='utf-8') as f:
         readme = f.read()
     check_current_version = re.compile(r'\[_Version: (.*?)_\]', re.UNICODE)
     current_version = check_current_version.findall(readme)
@@ -217,24 +171,28 @@ def menu(choice=''):
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {Fore.YELLOW}{function[1]}')
     print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
 
-    while not choice:
-        print(f'{Fore.YELLOW}Enter number associated with choosen utility:', end='')
-        choice = input(' ')
+    while True:
+        if not choice:
+            print(
+                f'{Fore.YELLOW}Enter number associated with choosen utility:', end='')
+            choice = input(' ')
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')
             raise SystemExit
         try:
             choice = int(choice)
-        except ValueError:
+        except (TypeError, ValueError):
             print(f'{Fore.RED}Please enter numeric value!')
+            choice = ''
             continue
         if 0 <= choice < len(available_utils):
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
     if util_names[choice] == 'webinar':
-        click_auth = get_click_auth()
-        eloqua_key, eloqua_root = get_eloqua_auth()
+        click_auth = api.get_click_auth()
+        eloqua_key, eloqua_root = api.get_eloqua_auth()
         available_utils.get(util_names[choice])[0](
             SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
     else:
@@ -243,7 +201,7 @@ def menu(choice=''):
 
 '''
 =================================================================================
-                                Cleaner
+                            Cleans Outcomes folder
 =================================================================================
 '''
 
@@ -252,8 +210,8 @@ def clean_outcomes(country):
     '''
     Cleans all content of Outcomes folder
     '''
-    for file in os.listdir(OUTCOMES):
-        file_path = os.path.join(OUTCOMES, file)
+    for file in os.listdir(file('outcomes')):
+        file_path = os.path.join(file('outcomes'), file)
         if os.path.isfile(file_path):
             os.unlink(file_path)
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
@@ -277,18 +235,18 @@ if new_version():
         f'\n{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}]{Fore.RED} Newer version available')
 
 # Loads utils.json containing source countries and utils available for them
-with open(UTILS, 'r', encoding='utf-8') as f:
-    COUNTRY_UTILS=json.load(f)
+with open(file('utils'), 'r', encoding='utf-8') as f:
+    COUNTRY_UTILS = json.load(f)
 
-# Loads
-if os.path.isfile(ELOQUA):
-    ELOQUA_DOMAIN, ELOQUA_USER=pickle.load(open(ELOQUA, 'rb'))
+# Loads domain and user name
+if os.path.isfile(file('eloqua')):
+    ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(file('eloqua'), 'rb'))
 else:
-    ELOQUA_DOMAIN='WK'
-    ELOQUA_USER=''
+    ELOQUA_DOMAIN = 'WK'
+    ELOQUA_USER = ''
 
 # Gets required auth data and prints them
-SOURCE_COUNTRY=get_source_country()
+SOURCE_COUNTRY = get_source_country()
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}{ELOQUA_DOMAIN} {SOURCE_COUNTRY}{Fore.WHITE}] {ELOQUA_USER}')
 
@@ -304,8 +262,8 @@ elif sys.argv[1] == 'page':
 elif sys.argv[1] == 'campaign':
     page.campaign_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
-    click_auth=get_click_auth()
-    eloqua_key, eloqua_root=get_eloqua_auth()
+    click_auth = api.get_click_auth()
+    eloqua_key, eloqua_root = api.get_eloqua_auth()
     webinar.click_to_elq(SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
 elif sys.argv[1] == 'base':
     database.create_csv(SOURCE_COUNTRY)
