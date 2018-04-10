@@ -3,21 +3,24 @@
 
 '''
 ELQuent.api
-Basic api functions for other modules
+Eloqua API functions for other modules
 
 Mateusz Dąbrowski
 github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
+# Python imports
 import os
 import sys
+import json
+import time
 import base64
 import pickle
 import getpass
 import requests
+import datetime
 import encodings
-import pyperclip
 from colorama import Fore, init
 
 # Initialize colorama
@@ -25,6 +28,13 @@ init(autoreset=True)
 
 # If you want to print API connection status codes, set debug to True
 DEBUG = False
+
+
+'''
+=================================================================================
+                            File Path Getter
+=================================================================================
+'''
 
 
 def file(file_path):
@@ -43,8 +53,10 @@ def file(file_path):
         return os.path.join(datadir, 'api', filename)
 
     file_paths = {
+        'click': find_data_file('click.p'),
         'eloqua': find_data_file('eloqua.p'),
-        'click': find_data_file('click.p')
+        'country': find_data_file('country.p'),
+        'naming': find_data_file('naming.json')
     }
 
     return file_paths.get(file_path)
@@ -81,7 +93,7 @@ def status_code(response, root):
     return connected
 
 
-def api_request(root, eloqua_auth, call='get', api='eloqua', status=DEBUG, data={}):
+def api_request(root, call='get', api='eloqua', status=DEBUG, data={}):
     '''
     Arguments:
         root - root URL of API call
@@ -92,7 +104,7 @@ def api_request(root, eloqua_auth, call='get', api='eloqua', status=DEBUG, data=
 
     # Assings correct authorization method
     if api == 'eloqua':
-        headers = {'Authorization': 'Basic ' + eloqua_auth}
+        headers = {'Authorization': 'Basic ' + eloqua_key}
     elif api == 'click':
         click_api_key = pickle.load(open(file('click'), 'rb'))
         headers = {'X-Api-Key': click_api_key}
@@ -125,23 +137,21 @@ def api_request(root, eloqua_auth, call='get', api='eloqua', status=DEBUG, data=
 
 def get_eloqua_auth():
     '''
-    Returns:
-    1. Eloqua API Key needed for authorization.
-    2. Eloqua Root URL
-    3. User name
+    Returns Eloqua Root URL and creates globals with auth and bulk/rest roots
     '''
     def get_eloqua_root(eloqua_auth):
         '''
         Returns Eloqua base URL for your instance.
         '''
         root = 'https://login.eloqua.com/id'
-        response = api_request(root=root, eloqua_auth=eloqua_auth)
+        response = api_request(root=root)
         login_data = response.json()
 
         return login_data
 
     while True:
         # Gets Eloqua user details if they are already stored
+        print()
         if not os.path.isfile(file('eloqua')):
             print(f'{Fore.YELLOW}» {Fore.WHITE}Enter Eloqua Company name: ', end='')
             eloqua_domain = input(' ')
@@ -154,14 +164,15 @@ def get_eloqua_auth():
         eloqua_password = getpass.getpass(' ')
 
         # Converts domain, user and  to Eloqua Auth Key
-        eloqua_api_key = bytes(eloqua_domain + '\\' +
-                               eloqua_user + ':' +
-                               eloqua_password, 'utf-8')
-        eloqua_api_key = str(base64.b64encode(eloqua_api_key), 'utf-8')
+        global eloqua_key
+        eloqua_key = bytes(eloqua_domain + '\\' +
+                           eloqua_user + ':' +
+                           eloqua_password, 'utf-8')
+        eloqua_key = str(base64.b64encode(eloqua_key), 'utf-8')
 
         # Gets Eloqua root URL
         try:
-            login_data = get_eloqua_root(eloqua_api_key)
+            login_data = get_eloqua_root(eloqua_key)
             eloqua_root = login_data['urls']['base']
         except TypeError:
             print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Login failed!')
@@ -170,31 +181,190 @@ def get_eloqua_auth():
         if eloqua_root:
             break
 
-    return (eloqua_api_key, eloqua_root)
+    # Creates globals related to Eloqua API
+    global eloqua_bulk
+    eloqua_bulk = eloqua_root + '/api/BULK/2.0/'
+    global eloqua_rest
+    eloqua_rest = eloqua_root + '/api/REST/1.0/'
+
+    return eloqua_root
 
 
 '''
 =================================================================================
-                                Eloqua Authentication
+                            Upload Contacts API Flow
 =================================================================================
 '''
 
 
-def get_click_auth():
+def eloqua_create_sharedlist(export):
     '''
-    Returns ClickMeeting API Key needed for authorization
+    Creates shared list for contacts
+    Requires 'export' dict with webinars and conctacts in format:
+    {'listName': ['mail', 'mail']}
     '''
-    if not os.path.isfile(file('click')):
-        while True:
-            print(
-                f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
-            input(' ')
-            click_api_key = pyperclip.paste()
-            if len(click_api_key) == 42:
-                break
-            else:
-                print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Incorrect API Key!')
-        pickle.dump(click_api_key, open(file('click'), 'wb'))
-    click_api_key = pickle.load(open(file('click'), 'rb'))
+    outcome = []
+    print(f'\n{Fore.BLUE}Saving to WK{source_country} - Webinars')
 
-    return click_api_key
+    # Unpacks export
+    for name, contacts in export.items():
+        root = f'{eloqua_rest}assets/contact/list'
+        data = {'name': f'{name}',
+                'description': 'Webinar API Upload',
+                'folderId': f'{shared_list}'}
+        response = api_request(
+            root, call='post', data=json.dumps(data))
+        sharedlist = response.json()
+
+        # Simple shared list creation
+        if response.status_code == 201:
+            print(f'{Fore.YELLOW}» {root} '
+                  f'{Fore.GREEN}({response.status_code})')
+            print(f'\t{Fore.YELLOW}{name} '
+                  f'{Fore.GREEN}[Created]')
+            list_id = int(sharedlist['id'])
+
+        # Shared list already exists - appending data
+        else:
+            print(f'{Fore.YELLOW}» {root} '
+                  f'{Fore.RED}({response.status_code})')
+            print(f'\t{Fore.YELLOW}{name} '
+                  f'{Fore.RED}[Exists]{Fore.GREEN} » [Append]')
+            list_id = sharedlist[0]['requirement']['conflictingId']
+
+        uri = eloqua_import_definition(name, list_id)
+        count = eloqua_import_content(contacts, list_id, uri)
+        status = eloqua_import_sync(uri)
+        outcome.append((list_id, name, count, status))
+
+    return outcome
+
+
+def eloqua_import_definition(name, list_id):
+    '''
+    Request to obtain uri key for data upload
+    Requires name of import and ID of shared list
+    Returns uri key needed for data upload
+    '''
+    data = {'name': name,
+            'fields': {
+                'SourceCountry': '{{Contact.Field(C_Source_Country1)}}',
+                'EmailAddress': '{{Contact.Field(C_EmailAddress)}}'},
+            'identifierFieldName': 'EmailAddress',
+            'isSyncTriggeredOnImport': 'false',
+            'syncActions': {
+                'action': 'add',
+                'destination': '{{ContactList[%s]}}' % list_id}}
+    root = eloqua_bulk + 'contacts/imports'
+    response = api_request(root, call='post', data=json.dumps(data))
+    import_eloqua = response.json()
+    uri = import_eloqua['uri'][1:]
+
+    return uri
+
+
+def eloqua_import_content(contacts, list_id, uri):
+    '''
+    Uploads contacts from ClickWebinar to Eloqua
+    Requires list of contacts for upload, shared list ID and uri key
+    Returns count of uploaded contacts
+    '''
+    count = 0
+    upload = []
+    record = {}
+    for user in contacts:
+        record = {'SourceCountry': source_country,
+                  'EmailAddress': user}
+        upload.append(record)
+        count += 1
+    root = eloqua_bulk + uri + '/data'
+    api_request(root, call='post', data=json.dumps(upload))
+
+    return count
+
+
+def eloqua_import_sync(uri):
+    '''
+    Requests to sync import
+    Checks status of sync
+    Requires uri key
+    Returns status of sync
+    '''
+
+    # Requests sync
+    root = eloqua_bulk + 'syncs'
+    sync_body = {'syncedInstanceUri': f'/{uri}'}
+    response = api_request(root, call='post', data=json.dumps(sync_body))
+    sync_eloqua = response.json()
+
+    # Checks stats of sync
+    sync_uri = sync_eloqua['uri']
+    status = sync_eloqua['status']
+    while status != 'success':
+        root = eloqua_bulk + sync_uri
+        sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
+        response = api_request(root)
+        sync_status = response.json()
+        status = sync_status['status']
+        print(f'{Fore.BLUE}{status}/', end='', flush=True)
+        if status == 'warning' or status == 'error':
+            logs = eloqua_log_sync(uri)
+            print(logs)
+            break
+        time.sleep(1)
+    print(f'\n{Fore.YELLOW}» {root} '
+          f'{Fore.GREEN}({response.status_code})\n')
+
+    return status
+
+
+def eloqua_log_sync(uri):
+    '''
+    Shows log for problematic sync
+    Requires uri key to get id of sync
+    Returns logs of sync
+    '''
+    id = uri[-5:]
+    root = eloqua_bulk + f'syncs/{id}/logs'
+    response = api_request(root)
+    logs_eloqua = response.json()
+
+    return logs_eloqua
+
+
+'''
+=================================================================================
+                            Main Eloqua API Flows
+=================================================================================
+'''
+
+
+def upload_contacts(country, contacts):
+    '''
+    Contacts argument should be dict with list: {'listName': ['mail', 'mail']}
+    Uploads mail list to Eloqua as shared list listName (appends if it already exists)
+    '''
+    # Creates global source_country from main module
+    global source_country
+    source_country = country
+
+    # Gets auth and global values
+    get_eloqua_auth()
+
+    # Gets data from naming.json
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
+    # Creates global shared_list information from json
+    global shared_list
+    shared_list = naming['PL']['webinar']['sharedlist']
+
+    eloqua_sharedlist = eloqua_create_sharedlist(contacts)
+    print(f'\n{Fore.BLUE}Contact uploads:')
+    for export in eloqua_sharedlist:
+        print(
+            f'{Fore.YELLOW}[{export[0]}] {Fore.GREEN}{export[1]}'
+            f' - {Fore.BLUE}{export[2]} contacts {Fore.YELLOW}({export[3]})')
+
+    return True

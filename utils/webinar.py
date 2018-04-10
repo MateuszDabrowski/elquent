@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.6
+# -*- coding: utf8 -*-
 
 '''
 ELQuent.webinar
@@ -10,21 +11,29 @@ github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
+# Python imports
 import os
 import sys
 import json
-import time
-import base64
-import getpass
+import pickle
 import datetime
 import requests
+import encodings
+import pyperclip
 from colorama import Fore, init
+
+# ELQuent imports
+import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
 
-# If you want to print API connection status codes, set debug to True
-DEBUG = False
+
+'''
+=================================================================================
+                            File Path Getter
+=================================================================================
+'''
 
 
 def file(file_path, name='LP'):
@@ -42,15 +51,16 @@ def file(file_path, name='LP'):
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, 'utils', dir, filename)
-        elif dir == 'outcomes':  # For writing outcome files
+        elif dir == 'api':  # For writing auth files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, dir, filename)
+            return os.path.join(datadir, 'utils', dir, filename)
 
     file_paths = {
-        'naming': find_data_file('naming.json')
+        'naming': find_data_file('naming.json', dir='api'),
+        'click': find_data_file('click.p', dir='api')
     }
 
     return file_paths.get(file_path)
@@ -58,67 +68,29 @@ def file(file_path, name='LP'):
 
 '''
 =================================================================================
-                            General use functions
+                                Click Authentication
 =================================================================================
 '''
 
 
-def status_code(response, root):
+def get_click_auth():
     '''
-    Arguments:
-        reponse - response from api_request function
-        root - root URL of API call
-    Returns boolean of API connection.
+    Returns ClickMeeting API Key needed for authorization
     '''
+    if not os.path.isfile(file('click')):
+        while True:
+            print(
+                f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
+            input(' ')
+            click_api_key = pyperclip.paste()
+            if len(click_api_key) == 42:
+                break
+            else:
+                print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Incorrect API Key!')
+        pickle.dump(click_api_key, open(file('click'), 'wb'))
+    click_api_key = pickle.load(open(file('click'), 'rb'))
 
-    if (response.status_code >= 200) and (response.status_code < 400):
-        print(f'{Fore.YELLOW}» {root} '
-              f'{Fore.GREEN}({response.status_code})')
-        connected = True
-    elif response.status_code >= 400:
-        print(f'{Fore.YELLOW}» {root} '
-              f'{Fore.RED}({response.status_code})')
-        connected = False
-    else:
-        print(f'{Fore.YELLOW}» {root} '
-              f'{Fore.BLUE}({response.status_code})')
-        connected = False
-
-    return connected
-
-
-def api_request(root, eloqua_auth, call='get', api='eloqua', status=DEBUG, data={}):
-    '''
-    Arguments:
-        root - root URL of API call
-        call - either GET or POST
-        api - either elouqa or click
-    Returns response from Eloqua API call.
-    '''
-
-    # Assings correct authorization method
-    if api == 'eloqua':
-        headers = {'Authorization': 'Basic ' + eloqua_auth}
-    elif api == 'click':
-        headers = {'X-Api-Key': click_key}
-
-    # Assings correct api call
-    if call == 'get':
-        response = requests.get(
-            root,
-            headers=headers)
-    elif call == 'post':
-        headers['Content-Type'] = 'application/json'
-        response = requests.post(
-            root,
-            headers=headers,
-            data=data)
-
-    # Prints status code
-    if status:
-        status_code(response, root)
-
-    return response
+    return click_api_key
 
 
 '''
@@ -138,7 +110,7 @@ def click_export_rooms():
 
     # Save active rooms
     root = click_root + 'conferences/active'
-    response = api_request(root, eloqua_auth=eloqua_key, api='click')
+    response = api.api_request(root, api='click')
     rooms_active_click = response.json()
     for room in rooms_active_click:
         room_ids.append(room['id'])
@@ -146,7 +118,7 @@ def click_export_rooms():
 
     # Save inactive rooms
     root = click_root + 'conferences/inactive'
-    response = api_request(root, eloqua_auth=eloqua_key, api='click')
+    response = api.api_request(root, api='click')
     rooms_inactive_click = response.json()
     for room in rooms_inactive_click:
         room_ids.append(room['id'])
@@ -174,7 +146,7 @@ def click_export_sessions(click_rooms):
     # Save all sessions
     for room in click_rooms:
         root = f'{click_root}conferences/{room[0]}/sessions'
-        response = api_request(root, eloqua_auth=eloqua_key, api='click')
+        response = api.api_request(root, api='click')
         if response.status_code == 200:
             print(f'{Fore.GREEN}|', end='', flush=True)
             sessions_in_room = response.json()
@@ -200,7 +172,7 @@ def click_export_registered(click_rooms):
         room_id = room[0]
         room_name = room[1]
         root = f'{click_root}conferences/{room_id}/registrations/all'
-        response = api_request(root, eloqua_auth=eloqua_key, api='click')
+        response = api.api_request(root, api='click')
         if response.status_code == 200:
             print(f'\n{Fore.YELLOW}» {root} '
                   f'{Fore.GREEN}({response.status_code})')
@@ -268,7 +240,8 @@ def click_export_attendees(click_sessions, export_time_range):
         # Calls attendees API only if session within given time range
         if (datetime.datetime.today() - session_datetime).days <= export_time_range:
             root = f'{click_root}conferences/{room_id}/sessions/{session_id}/attendees'
-            response = api_request(root, eloqua_auth=eloqua_key, api='click')
+            response = api.api_request(
+                root, api='click')
             attendees = response.json()
 
             # Create list of attendees
@@ -310,161 +283,18 @@ def click_export_attendees(click_sessions, export_time_range):
 
 '''
 =================================================================================
-                            Eloqua API specific functions
-=================================================================================
-'''
-
-
-def eloqua_create_sharedlist(export):
-    '''
-    Creates shared list for contacts
-    Requires 'export' dict with webinars and conctacts in format:
-    {'listName': ['mail', 'mail']}
-    '''
-    outcome = []
-    print(f'\n{Fore.BLUE}Saving to WK{source_country} - Webinars')
-
-    # Unpacks export
-    for name, contacts in export.items():
-        root = f'{eloqua_rest}assets/contact/list'
-        data = {'name': f'{name}',
-                'description': 'Webinar API Upload',
-                'folderId': f'{shared_list}'}
-        response = api_request(
-            root, eloqua_auth=eloqua_key, call='post', data=json.dumps(data))
-        sharedlist = response.json()
-
-        # Simple shared list creation
-        if response.status_code == 201:
-            print(f'{Fore.YELLOW}» {root} '
-                  f'{Fore.GREEN}({response.status_code})')
-            print(f'\t{Fore.YELLOW}{name} '
-                  f'{Fore.GREEN}[Created]')
-            list_id = int(sharedlist['id'])
-
-        # Shared list already exists - appending data
-        else:
-            print(f'{Fore.YELLOW}» {root} '
-                  f'{Fore.RED}({response.status_code})')
-            print(f'\t{Fore.YELLOW}{name} '
-                  f'{Fore.RED}[Exists]{Fore.GREEN} » [Append]')
-            list_id = sharedlist[0]['requirement']['conflictingId']
-
-        uri = eloqua_import_definition(name, list_id)
-        count = eloqua_import_content(contacts, list_id, uri)
-        status = eloqua_import_sync(uri)
-        outcome.append((list_id, name, count, status))
-
-    return outcome
-
-
-def eloqua_import_definition(name, list_id):
-    '''
-    Request to obtain uri key for data upload
-    Requires name of import and ID of shared list
-    Returns uri key needed for data upload
-    '''
-    data = {'name': name,
-            'fields': {
-                'SourceCountry': '{{Contact.Field(C_Source_Country1)}}',
-                'EmailAddress': '{{Contact.Field(C_EmailAddress)}}'},
-            'identifierFieldName': 'EmailAddress',
-            'isSyncTriggeredOnImport': 'false',
-            'syncActions': {
-                'action': 'add',
-                'destination': '{{ContactList[%s]}}' % list_id}}
-    root = eloqua_bulk + 'contacts/imports'
-    response = api_request(
-        root, eloqua_auth=eloqua_key, call='post', data=json.dumps(data))
-    import_eloqua = response.json()
-    uri = import_eloqua['uri'][1:]
-
-    return uri
-
-
-def eloqua_import_content(contacts, list_id, uri):
-    '''
-    Uploads contacts from ClickWebinar to Eloqua
-    Requires list of contacts for upload, shared list ID and uri key
-    Returns count of uploaded contacts
-    '''
-    count = 0
-    upload = []
-    record = {}
-    for user in contacts:
-        record = {'SourceCountry': source_country,
-                  'EmailAddress': user}
-        upload.append(record)
-        count += 1
-    root = eloqua_bulk + uri + '/data'
-    api_request(root, eloqua_auth=eloqua_key,
-                call='post', data=json.dumps(upload))
-
-    return count
-
-
-def eloqua_import_sync(uri):
-    '''
-    Requests to sync import
-    Checks status of sync
-    Requires uri key
-    Returns status of sync
-    '''
-
-    # Requests sync
-    root = eloqua_bulk + 'syncs'
-    sync_body = {'syncedInstanceUri': f'/{uri}'}
-    response = api_request(
-        root, eloqua_auth=eloqua_key, call='post', data=json.dumps(sync_body))
-    sync_eloqua = response.json()
-
-    # Checks stats of sync
-    sync_uri = sync_eloqua['uri']
-    status = sync_eloqua['status']
-    while status != 'success':
-        root = eloqua_bulk + sync_uri
-        sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
-        response = api_request(root, eloqua_auth=eloqua_key)
-        sync_status = response.json()
-        status = sync_status['status']
-        print(f'{Fore.BLUE}{status}/', end='', flush=True)
-        if status == 'warning' or status == 'error':
-            logs = eloqua_log_sync(uri)
-            print(logs)
-            break
-        time.sleep(1)
-    print(f'\n{Fore.YELLOW}» {root} '
-          f'{Fore.GREEN}({response.status_code})\n')
-
-    return status
-
-
-def eloqua_log_sync(uri):
-    '''
-    Shows log for problematic sync
-    Requires uri key to get id of sync
-    Returns logs of sync
-    '''
-    id = uri[-5:]
-    root = eloqua_bulk + f'syncs/{id}/logs'
-    response = api_request(root, eloqua_auth=eloqua_key)
-    logs_eloqua = response.json()
-
-    return logs_eloqua
-
-
-'''
-=================================================================================
                                 Main program flow
 =================================================================================
 '''
 
 
-def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
+def click_to_elq(country):
     '''
     Gets attendees and users registered to ClickMeeting webinars 
     and uploads them to Eloqua as a shared list
     '''
+    # Gets required auths
+    click_auth = get_click_auth()
 
     # Gets data from naming.json
     with open(file('naming'), 'r', encoding='utf-8') as f:
@@ -475,23 +305,11 @@ def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
     global source_country
     source_country = country
 
-    # Creates globals related to Eloqua API
-    global eloqua_key
-    eloqua_key = eloqua_auth
-    global eloqua_bulk
-    eloqua_bulk = eloqua_root + '/api/BULK/2.0/'
-    global eloqua_rest
-    eloqua_rest = eloqua_root + '/api/REST/1.0/'
-
     # Creates globals related to Click API
     global click_key
     click_key = click_auth
     global click_root
     click_root = 'https://api.clickmeeting.com/v1/'
-
-    # Creates global shared_list information from json
-    global shared_list
-    shared_list = naming['PL']['webinar']['sharedlist']
 
     # Gets export time frame from user
     while True:
@@ -514,12 +332,7 @@ def click_to_elq(country, click_auth, eloqua_auth, eloqua_root):
         click_sessions, export_time_range)
     click_exports = {**click_registered_export, **click_attendee_export}
     click_exports = {k: v for (k, v) in click_exports.items() if len(v) != 0}
-    eloqua_sharedlist = eloqua_create_sharedlist(click_exports)
-    print(f'\n{Fore.BLUE}Contact uploads:')
-    for export in eloqua_sharedlist:
-        print(
-            f'{Fore.YELLOW}[{export[0]}] {Fore.GREEN}{export[1]}'
-            f' - {Fore.BLUE}{export[2]} contacts {Fore.YELLOW}({export[3]})')
+    api.upload_contacts(source_country, click_exports)
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 

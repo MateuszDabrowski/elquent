@@ -25,6 +25,13 @@ init(autoreset=True)
 ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
 
+'''
+=================================================================================
+                            File Path Getter
+=================================================================================
+'''
+
+
 def file(file_path, name='LP'):
     '''
     Returns file path to template files
@@ -40,6 +47,12 @@ def file(file_path, name='LP'):
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, 'utils', dir, filename)
+        elif dir == 'api':  # For reading api files
+            if getattr(sys, 'frozen', False):
+                datadir = os.path.dirname(sys.executable)
+            else:
+                datadir = os.path.dirname(os.path.dirname(__file__))
+            return os.path.join(datadir, 'utils', dir, filename)
         elif dir == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
@@ -48,7 +61,7 @@ def file(file_path, name='LP'):
             return os.path.join(datadir, dir, filename)
 
     file_paths = {
-        'naming': find_data_file('naming.json'),
+        'naming': find_data_file('naming.json', dir='api'),
         'jquery': find_data_file('WKCORP_jquery.txt'),
         'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
@@ -479,7 +492,8 @@ def swap_form(code, form):
     # Appends Unicode arrow to button text
     regex_submit_text = re.compile(
         r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
-    button_text = '"' + (4 * '&nbsp;&zwnj; ') + regex_submit_text.findall(code)[0] + ' →"'
+    button_text = '"' + (4 * '&nbsp;&zwnj; ') + \
+        regex_submit_text.findall(code)[0] + ' →"'
     code = regex_submit_text.sub(button_text, code)
 
     return code

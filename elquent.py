@@ -15,13 +15,9 @@ import os
 import re
 import sys
 import json
-import base64
 import pickle
-import shutil
-import getpass
 import requests
 import encodings
-import pyperclip
 from colorama import Fore, init
 
 # ELQuent imports
@@ -33,6 +29,13 @@ import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
+
+
+'''
+=================================================================================
+                            File Path Getter
+=================================================================================
+'''
 
 
 def file(file_path):
@@ -74,7 +77,7 @@ os.makedirs(file('outcomes'), exist_ok=True)
 
 '''
 =================================================================================
-                                Checks source country
+                            Source Country Getter
 =================================================================================
 '''
 
@@ -111,7 +114,7 @@ def get_source_country():
 
 '''
 =================================================================================
-                            Checks update availablity
+                        Checks if updates are available
 =================================================================================
 '''
 
@@ -141,7 +144,28 @@ def new_version():
 
 '''
 =================================================================================
-                            Authentication functions
+                            Cleans Outcomes folder
+=================================================================================
+'''
+
+
+def clean_outcomes(country):
+    '''
+    Cleans all content of Outcomes folder
+    '''
+    for f in os.listdir(file('outcomes')):
+        file_path = os.path.join(file('outcomes'), f)
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
+    print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
+
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+    return True
+
+
+'''
+=================================================================================
+                                    Main menu
 =================================================================================
 '''
 
@@ -190,34 +214,7 @@ def menu(choice=''):
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
             choice = ''
-    if util_names[choice] == 'webinar':
-        click_auth = api.get_click_auth()
-        eloqua_key, eloqua_root = api.get_eloqua_auth()
-        available_utils.get(util_names[choice])[0](
-            SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
-    else:
-        available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
-
-
-'''
-=================================================================================
-                            Cleans Outcomes folder
-=================================================================================
-'''
-
-
-def clean_outcomes(country):
-    '''
-    Cleans all content of Outcomes folder
-    '''
-    for file in os.listdir(file('outcomes')):
-        file_path = os.path.join(file('outcomes'), file)
-        if os.path.isfile(file_path):
-            os.unlink(file_path)
-    print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
-
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-    return True
+    available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
 
 
 '''
@@ -262,9 +259,7 @@ elif sys.argv[1] == 'page':
 elif sys.argv[1] == 'campaign':
     page.campaign_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
-    click_auth = api.get_click_auth()
-    eloqua_key, eloqua_root = api.get_eloqua_auth()
-    webinar.click_to_elq(SOURCE_COUNTRY, click_auth, eloqua_key, eloqua_root)
+    webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':
     database.create_csv(SOURCE_COUNTRY)
 
