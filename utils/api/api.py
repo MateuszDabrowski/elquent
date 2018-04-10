@@ -50,7 +50,7 @@ def file(file_path):
             datadir = os.path.dirname(sys.executable)
         else:
             datadir = os.path.dirname(os.path.dirname(__file__))
-        return os.path.join(datadir, 'api', filename)
+        return os.path.join(datadir, 'utils', 'api', filename)
 
     file_paths = {
         'click': find_data_file('click.p'),
@@ -204,13 +204,13 @@ def eloqua_create_sharedlist(export):
     {'listName': ['mail', 'mail']}
     '''
     outcome = []
-    print(f'\n{Fore.BLUE}Saving to WK{source_country} - Webinars')
+    print(f'\n{Fore.BLUE}Saving to shared list:')
 
     # Unpacks export
     for name, contacts in export.items():
         root = f'{eloqua_rest}assets/contact/list'
         data = {'name': f'{name}',
-                'description': 'Webinar API Upload',
+                'description': 'ELQuent API Upload',
                 'folderId': f'{shared_list}'}
         response = api_request(
             root, call='post', data=json.dumps(data))
@@ -220,7 +220,7 @@ def eloqua_create_sharedlist(export):
         if response.status_code == 201:
             print(f'{Fore.YELLOW}» {root} '
                   f'{Fore.GREEN}({response.status_code})')
-            print(f'\t{Fore.YELLOW}{name} '
+            print(f'{Fore.WHITE}{name} '
                   f'{Fore.GREEN}[Created]')
             list_id = int(sharedlist['id'])
 
@@ -228,7 +228,7 @@ def eloqua_create_sharedlist(export):
         else:
             print(f'{Fore.YELLOW}» {root} '
                   f'{Fore.RED}({response.status_code})')
-            print(f'\t{Fore.YELLOW}{name} '
+            print(f'{Fore.WHITE}{name} '
                   f'{Fore.RED}[Exists]{Fore.GREEN} » [Append]')
             list_id = sharedlist[0]['requirement']['conflictingId']
 
@@ -339,7 +339,7 @@ def eloqua_log_sync(uri):
 '''
 
 
-def upload_contacts(country, contacts):
+def upload_contacts(country, contacts, sharedlist):
     '''
     Contacts argument should be dict with list: {'listName': ['mail', 'mail']}
     Uploads mail list to Eloqua as shared list listName (appends if it already exists)
@@ -358,13 +358,13 @@ def upload_contacts(country, contacts):
 
     # Creates global shared_list information from json
     global shared_list
-    shared_list = naming['PL']['webinar']['sharedlist']
+    shared_list = naming['PL'][sharedlist]['sharedlist']
 
     eloqua_sharedlist = eloqua_create_sharedlist(contacts)
-    print(f'\n{Fore.BLUE}Contact uploads:')
+    print(f'\n{Fore.GREEN}Uploaded to Eloqua:')
     for export in eloqua_sharedlist:
         print(
-            f'{Fore.YELLOW}[{export[0]}] {Fore.GREEN}{export[1]}'
+            f'{Fore.YELLOW}[{export[0]}] {Fore.WHITE}{export[1]}'
             f' - {Fore.BLUE}{export[2]} contacts {Fore.YELLOW}({export[3]})')
 
     return True

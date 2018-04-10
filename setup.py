@@ -3,8 +3,7 @@ from cx_Freeze import setup, Executable
 buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils', 'utils.json'],
                     packages=['pyperclip', 'csv', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
                               'platform', 'encodings', 'colorama', 'json', 'multiprocessing',
-                              'time', 'datetime', 'getpass', 'base64'],
-                    excludes=['user.db', 'requirements.txt', 'outcomes'])
+                              'time', 'datetime', 'getpass', 'base64'])
 
 base = 'Console'
 
@@ -13,7 +12,7 @@ executables = [
 ]
 
 setup(name='ELQuent',
-      version='1.2',
+      version='1.3',
       description='Eloqua automation utility bundle',
       author='Mateusz Dąbrowski',
       url='https://github.com/MateuszDabrowski/',

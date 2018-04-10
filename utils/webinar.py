@@ -332,7 +332,7 @@ def click_to_elq(country):
         click_sessions, export_time_range)
     click_exports = {**click_registered_export, **click_attendee_export}
     click_exports = {k: v for (k, v) in click_exports.items() if len(v) != 0}
-    api.upload_contacts(source_country, click_exports)
+    api.upload_contacts(source_country, click_exports, 'webinar')
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 

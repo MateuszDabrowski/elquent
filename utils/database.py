@@ -10,26 +10,40 @@ github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
+# Python imports
 import os
 import csv
 import sys
+import json
 import pyperclip
 from colorama import Fore, init
+
+# ELQuent imports
+import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
 
+# Predefined messege elements
+ERROR = f'{Fore.RED}  [ERROR] {Fore.YELLOW}'
 
-def file(file_path, name='LP'):
+'''
+=================================================================================
+                            File Path Getter
+=================================================================================
+'''
+
+
+def file(file_path, name=''):
     '''
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir='templates'):
+    def find_data_file(filename, dir):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'templates':  # For reading template files
+        if dir == 'api':  # For reading api files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
@@ -43,7 +57,8 @@ def file(file_path, name='LP'):
             return os.path.join(datadir, dir, filename)
 
     file_paths = {
-        'database': find_data_file(f'WK{source_country}_Contact-Upload.txt', dir='outcomes')
+        'naming': find_data_file('naming.json', dir='api'),
+        'database': find_data_file(f'{name}.txt', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -51,7 +66,7 @@ def file(file_path, name='LP'):
 
 '''
 =================================================================================
-                            Input functions
+                                User input functions
 =================================================================================
 '''
 
@@ -85,6 +100,64 @@ def get_contacts():
 
 '''
 =================================================================================
+                                Eloqua upload functions
+=================================================================================
+'''
+
+
+def upload_to_eloqua(contacts):
+    '''
+    Uploads contact list to Eloqua as a shared list
+    Returns campaign name
+    '''
+
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
+    # Gets campaign name from user
+    while True:
+        print(
+            f'{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Copy name of the Campaign [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        campaign_name = pyperclip.paste()
+        campaign_name_check = campaign_name.split('_')
+        if len(campaign_name_check) != 5:
+            print(
+                f'{ERROR}Expected 5 name elements, found {len(campaign_name_check)}')
+        elif campaign_name_check[0][:2] != 'WK':
+            print(
+                f'{ERROR}"{campaign_name_check[0]}" is not existing country code')
+        elif campaign_name_check[1] not in naming[source_country]['segment']:
+            print(
+                f'{ERROR}"{campaign_name_check[1]}" is not existing segment name')
+        elif campaign_name_check[2] not in naming['campaign']:
+            print(
+                f'{ERROR}"{campaign_name_check[2]}" is not existing campaign type')
+        elif campaign_name_check[4] not in naming['vsp']:
+            print(f'{ERROR}"{campaign_name_check[4]}" is not existing VSP')
+        else:
+            break
+
+    # Cleans contact list from non-email elements
+    contacts = [x for x in contacts if '@' in x and '.' in x]
+    # Prepares dict for import
+    contacts_to_upload = {campaign_name: contacts}
+
+    uploading = ''
+    while uploading.lower() != 'y' and uploading.lower() != 'n':
+        print(
+            f'{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N):', end='')
+        uploading = input(' ')
+    if uploading.lower() == 'y':
+        api.upload_contacts(source_country, contacts_to_upload, 'database')
+
+    return campaign_name
+
+
+'''
+=================================================================================
                                 Main program flow
 =================================================================================
 '''
@@ -111,7 +184,7 @@ def create_csv(country):
         f'{Fore.WHITE}[{Fore.YELLOW}APPEND{Fore.WHITE}] Add new emails to previously uploaded list',
         f'{Fore.WHITE}[{Fore.YELLOW}INTERSECT{Fore.WHITE}] Leave only emails existing in both old and new list'
     ]
-
+    # Asks users if he wants to manipulate data set
     while True:
         print(f'\n{Fore.GREEN}Do you want to add, trim or intersect another list?')
         for i, option in enumerate(options):
@@ -136,9 +209,20 @@ def create_csv(country):
         print(
             f'\n{Fore.WHITE}» [{Fore.GREEN}SUCCESS{Fore.WHITE}] New database got {len(contacts)} unique e-mails')
 
+    # Asks if user want to upload contacts to Eloqua
+    swapping = ''
+    while swapping.lower() != 'y' and swapping.lower() != 'n':
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? (Y/N):', end='')
+        swapping = input(' ')
+    if swapping.lower() == 'y':
+        name = upload_to_eloqua(contacts)
+    else:
+        name = f'WK{source_country}_Contact-Upload'
+
     # Builds .csv file in eloqua compliant structure
     count_contact = 0
-    with open(file('database'), 'w') as f:
+    with open(file('database', name), 'w') as f:
         fieldnames = ['Source_Country', 'Email Address']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -151,7 +235,7 @@ def create_csv(country):
             })
             count_contact += 1
     print(
-        f'\n{Fore.GREEN}» Database of {count_contact} contacts saved in Outcomes folder and ready to upload!',
+        f'\n{Fore.GREEN}» Database of {count_contact} contacts saved in Outcomes folder.',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
