@@ -19,7 +19,6 @@ import base64
 import pickle
 import getpass
 import requests
-import datetime
 import encodings
 from colorama import Fore, init
 
@@ -48,9 +47,10 @@ def file(file_path):
         '''
         if getattr(sys, 'frozen', False):
             datadir = os.path.dirname(sys.executable)
+            return os.path.join(datadir, 'utils', 'api', filename)
         else:
             datadir = os.path.dirname(os.path.dirname(__file__))
-        return os.path.join(datadir, 'utils', 'api', filename)
+            return os.path.join(datadir, 'api', filename)
 
     file_paths = {
         'click': find_data_file('click.p'),
@@ -204,7 +204,7 @@ def eloqua_create_sharedlist(export):
     {'listName': ['mail', 'mail']}
     '''
     outcome = []
-    print(f'\n{Fore.BLUE}Saving to shared list:')
+    print(f'\n{Fore.BLUE}Saving to shared list:', end='')
 
     # Unpacks export
     for name, contacts in export.items():
@@ -216,20 +216,15 @@ def eloqua_create_sharedlist(export):
             root, call='post', data=json.dumps(data))
         sharedlist = response.json()
 
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{len(contacts)}{Fore.WHITE}] {name}')
         # Simple shared list creation
         if response.status_code == 201:
-            print(f'{Fore.YELLOW}» {root} '
-                  f'{Fore.GREEN}({response.status_code})')
-            print(f'{Fore.WHITE}{name} '
-                  f'{Fore.GREEN}[Created]')
+            print(f'{Fore.GREEN}  [Created]', end=' ')
             list_id = int(sharedlist['id'])
-
         # Shared list already exists - appending data
         else:
-            print(f'{Fore.YELLOW}» {root} '
-                  f'{Fore.RED}({response.status_code})')
-            print(f'{Fore.WHITE}{name} '
-                  f'{Fore.RED}[Exists]{Fore.GREEN} » [Append]')
+            print(f'{Fore.YELLOW}  [Exists]{Fore.GREEN} » [Append]', end=' ')
             list_id = sharedlist[0]['requirement']['conflictingId']
 
         uri = eloqua_import_definition(name, list_id)
@@ -312,8 +307,6 @@ def eloqua_import_sync(uri):
             print(logs)
             break
         time.sleep(1)
-    print(f'\n{Fore.YELLOW}» {root} '
-          f'{Fore.GREEN}({response.status_code})\n')
 
     return status
 
@@ -358,13 +351,9 @@ def upload_contacts(country, contacts, sharedlist):
 
     # Creates global shared_list information from json
     global shared_list
-    shared_list = naming['PL'][sharedlist]['sharedlist']
+    shared_list = naming[source_country][sharedlist]['sharedlist']
 
-    eloqua_sharedlist = eloqua_create_sharedlist(contacts)
-    print(f'\n{Fore.GREEN}Uploaded to Eloqua:')
-    for export in eloqua_sharedlist:
-        print(
-            f'{Fore.YELLOW}[{export[0]}] {Fore.WHITE}{export[1]}'
-            f' - {Fore.BLUE}{export[2]} contacts {Fore.YELLOW}({export[3]})')
+    # Uploads database to eloqua shared list
+    eloqua_create_sharedlist(contacts)
 
     return True

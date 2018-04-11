@@ -3,7 +3,7 @@
 
 '''
 ELQuent.webinar
-Gets attendees and registered users from ClickMeeting 
+Gets attendees and registered users from ClickMeeting
 and uploads them to Oracle Eloqua as shared list
 
 Mateusz Dąbrowski
@@ -100,40 +100,49 @@ def get_click_auth():
 '''
 
 
-def click_export_rooms():
+def click_export_rooms(export_time_range):
     '''
-    Returns ClickMeeting ID's and names of active and inactive rooms
+    Returns tuples of active and inactive ClickMeeting rooms with ID and name
     '''
-
-    room_ids = []
-    room_names = []
 
     # Save active rooms
+    active_ids = []
+    active_names = []
     root = click_root + 'conferences/active'
     response = api.api_request(root, api='click')
     rooms_active_click = response.json()
     for room in rooms_active_click:
-        room_ids.append(room['id'])
-        room_names.append(room['name'])
+        active_ids.append(room['id'])
+        active_names.append(room['name'])
+    active_rooms = list(zip(active_ids, active_names))
 
     # Save inactive rooms
+    inactive_ids = []
+    inactive_names = []
     root = click_root + 'conferences/inactive'
     response = api.api_request(root, api='click')
     rooms_inactive_click = response.json()
     for room in rooms_inactive_click:
-        room_ids.append(room['id'])
-        room_names.append(room['name'])
-    click_rooms = list(zip(room_ids, room_names))
+        # Creating datetime version of room end date
+        room_date = room['ends_at'][:10] + ' ' + room['ends_at'][11:16]
+        room_datetime = datetime.datetime.strptime(room_date, '%Y-%m-%d %H:%M')
+        # Exporting room only if end date withing export date time
+        if (datetime.datetime.today() - room_datetime).days <= export_time_range:
+            inactive_ids.append(room['id'])
+            inactive_names.append(room['name'])
+    inactive_rooms = list(zip(inactive_ids, inactive_names))
 
 # <Company specific code> =========================================================================
     # Filter out internal webinars from export
     internal_webinars = naming[source_country]['webinar']['filters']
     for filtering in internal_webinars:
-        click_rooms = [(id, name) for (id, name)
-                       in click_rooms if f'{filtering}' not in name.lower()]
+        active_rooms = [(id, name) for (id, name)
+                        in active_rooms if f'{filtering}' not in name.lower()]
+        inactive_rooms = [(id, name) for (id, name)
+                          in inactive_rooms if f'{filtering}' not in name.lower()]
 # ========================================================================= </Company specific code>
 
-    return click_rooms
+    return (active_rooms, inactive_rooms)
 
 
 def click_export_sessions(click_rooms):
@@ -151,7 +160,7 @@ def click_export_sessions(click_rooms):
             print(f'{Fore.GREEN}|', end='', flush=True)
             sessions_in_room = response.json()
             for session in sessions_in_room:
-                click_session = (session['id'], session['end_date'][:10]
+                click_session = (session['id'], session['end_date'][: 10]
                                  + ' ' + session['end_date'][11:16])
                 click_sessions[click_session] = room
         else:
@@ -160,7 +169,7 @@ def click_export_sessions(click_rooms):
     return click_sessions
 
 
-def click_export_registered(click_rooms):
+def click_export_registered(active_rooms):
     '''
     Returns ClickMeeting room registrations within chosen time range
     '''
@@ -168,14 +177,13 @@ def click_export_registered(click_rooms):
     sessions_to_import = {}
 
     # Calls registrations API only if room has active registration
-    for room in click_rooms:
+    for room in active_rooms:
         room_id = room[0]
         room_name = room[1]
         root = f'{click_root}conferences/{room_id}/registrations/all'
         response = api.api_request(root, api='click')
         if response.status_code == 200:
-            print(f'\n{Fore.YELLOW}» {root} '
-                  f'{Fore.GREEN}({response.status_code})')
+            print(f'{Fore.GREEN}|', end='', flush=True)
             registered = response.json()
 
             if response:
@@ -210,12 +218,16 @@ def click_export_registered(click_rooms):
 
                 # Create dict with name and email list
                 sessions_to_import[shared_list_name] = registered_list
-                print(f'\t{Fore.GREEN}{shared_list_name}')
         else:
             print(f'{Fore.RED}|', end='', flush=True)
 
     # Cleans pairs with empty value from import
-    sessions_to_import = {k: v for (k, v) in sessions_to_import.items() if v}
+    sessions_to_import = {
+        k: v for (k, v) in sessions_to_import.items() if len(v) != 0}
+    print()
+    for name, mails in sessions_to_import.items():
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{len(mails)}{Fore.WHITE}] {name}')
 
     return sessions_to_import  # {'listName': ['mail', 'mail']}
 
@@ -276,7 +288,13 @@ def click_export_attendees(click_sessions, export_time_range):
 
             # Create dict with name and email list
             sessions_to_import[shared_list_name] = attendees_list
-            print(f'\t{Fore.GREEN}{shared_list_name}')
+
+    # Cleans pairs with empty value from import
+    sessions_to_import = {
+        k: v for (k, v) in sessions_to_import.items() if len(v) != 0}
+    for name, mails in sessions_to_import.items():
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{len(mails)}{Fore.WHITE}] {name}')
 
     return sessions_to_import  # {'listName': ['mail', 'mail']}
 
@@ -311,9 +329,10 @@ def click_to_elq(country):
     global click_root
     click_root = 'https://api.clickmeeting.com/v1/'
 
-    # Gets export time frame from user
+    # Gets export timeframe from user
     while True:
-        print(f'{Fore.YELLOW}Enter number of days to export:', end='')
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}TIMEFRAME{Fore.WHITE}] Enter number of days to export:', end='')
         export_time_range = input(' ')
         try:
             export_time_range = int(export_time_range)
@@ -325,22 +344,23 @@ def click_to_elq(country):
             break
 
     # Function pipe
-    click_rooms = click_export_rooms()
+    print(f'\n{Fore.YELLOW}» Getting rooms from chosen timeframe')
+    active_rooms, inactive_rooms = click_export_rooms(export_time_range)
+    print(f'{Fore.GREEN}» Imported {len(active_rooms)} active and {len(inactive_rooms)} inactive rooms')
+    click_rooms = active_rooms + inactive_rooms
+    print(f'\n{Fore.YELLOW}» Getting sessions')
     click_sessions = click_export_sessions(click_rooms)
-    click_registered_export = click_export_registered(click_rooms)
+    print(f'{Fore.GREEN}» Imported {len(click_sessions)} sessions')
+    print(f'\n{Fore.YELLOW}» Getting registered users in active rooms')
+    click_registered_export = click_export_registered(active_rooms)
+    print(f'{Fore.GREEN}» Imported registed users from {len(click_registered_export)} webinars')
+    print(f'\n{Fore.YELLOW}» Getting attendees from choosen timeframe')
     click_attendee_export = click_export_attendees(
         click_sessions, export_time_range)
+    print(f'{Fore.GREEN}» Imported attendees from {len(click_attendee_export)} webinars')
     click_exports = {**click_registered_export, **click_attendee_export}
-    click_exports = {k: v for (k, v) in click_exports.items() if len(v) != 0}
     api.upload_contacts(source_country, click_exports, 'webinar')
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     return True
-
-
-'''
-TODO:
-- Optimization of time and number of API calls
-- Save already sent, one time rooms to not overwrite each time 
-'''

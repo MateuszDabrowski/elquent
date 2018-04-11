@@ -179,7 +179,7 @@ def create_csv(country):
     contacts = get_contacts()
 
     options = [
-        f'{Fore.WHITE}[{Fore.YELLOW}NO{Fore.WHITE}] Create .csv',
+        f'{Fore.WHITE}[{Fore.YELLOW}NO{Fore.WHITE}] Save current contact list',
         f'{Fore.WHITE}[{Fore.YELLOW}TRIM{Fore.WHITE}] Delete new emails from previosly uploaded list',
         f'{Fore.WHITE}[{Fore.YELLOW}APPEND{Fore.WHITE}] Add new emails to previously uploaded list',
         f'{Fore.WHITE}[{Fore.YELLOW}INTERSECT{Fore.WHITE}] Leave only emails existing in both old and new list'
