@@ -15,15 +15,14 @@ __Create landing page__
 - Allows to use built-in landing page templates for quick deployment
 - Built-in wizard creating all Landing Pages required for campaign
 - Cleans code, appends snippets, changes form code
-- [_under develompent_]
+- [_under development_]
 ---
 ## ELQuent.webinar
 __Add viewers to Eloqua__
 - ClickMeeting API connector app
 - Allows user specify time range for webinar data import
-- Automatically gets all needed data and structures it
+- Automatically gets all needed data via API and restructures it
 - Uploads contacts to Eloqua shared list via ELQuent.api module
-- [_resource, time and calls optimization under develompent_]
 ---
 ## ELQuent.database
 __Create Eloqua-compliant contact upload file__
@@ -31,13 +30,13 @@ __Create Eloqua-compliant contact upload file__
 - Allows appending, trimming and intersecting e-mail uploads
 - Outputs .csv file with correct structure and naming convention
 - Uploads contacts to Eloqua shared list via ELQuent.api module
-- [_under develompent_]
+- [_under development_]
 ---
 ## ELQuent.api
 __Helper module for Eloqua API__
 - Authenticates user
 - Upload contact database to Eloqua shared lists
-- [_under develompent_]
+- [_under development_]
 ---
 
-[_Version: 1.3.0_]
+[_Version: 1.3.2_]

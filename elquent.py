@@ -136,7 +136,7 @@ def new_version():
     available_version = check_available_version.findall(github.text)
 
     # Compares versions
-    if current_version and available_version and current_version[0] != available_version[0]:
+    if current_version != available_version:
         return True
     else:
         return False
@@ -180,7 +180,7 @@ def menu(choice=''):
         'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
         'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
-        'database': (database.create_csv, f'Create contact upload{Fore.WHITE} file with correct structure'),
+        'database': (database.contact_list, f'Create contact upload{Fore.WHITE} file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Upload Webinar{Fore.WHITE} registered users and attendees')
     }
 
@@ -261,7 +261,7 @@ elif sys.argv[1] == 'campaign':
 elif sys.argv[1] == 'web':
     webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':
-    database.create_csv(SOURCE_COUNTRY)
+    database.contact_list(SOURCE_COUNTRY)
 
 # Allows to cycle through options after first errand
 while True:

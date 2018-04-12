@@ -12,6 +12,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 
 # Python imports
 import os
+import re
 import csv
 import sys
 import json
@@ -119,7 +120,7 @@ def upload_to_eloqua(contacts):
     # Gets campaign name from user
     while True:
         print(
-            f'{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Copy name of the Campaign [CTRL+C] and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Copy name for the shared list [CTRL+C] and click [Enter]', end='')
         input(' ')
         campaign_name = pyperclip.paste()
         campaign_name_check = campaign_name.split('_')
@@ -135,10 +136,19 @@ def upload_to_eloqua(contacts):
         elif campaign_name_check[2] not in naming['campaign']:
             print(
                 f'{ERROR}"{campaign_name_check[2]}" is not existing campaign type')
-        elif campaign_name_check[4] not in naming['vsp']:
-            print(f'{ERROR}"{campaign_name_check[4]}" is not existing VSP')
         else:
             break
+
+    # Asks for shared list name
+    while True:
+        print(
+            f'\n{Fore.WHITE}Click [Enter] to import contacts to {Fore.YELLOW}{campaign_name}',
+            f'\n{Fore.WHITE}Or write different name ending for the shared list upload: ', end='')
+        ending = input(' ')
+        if ending == '':
+            break
+        else:
+            campaign_name = '_'.join(campaign_name_check[:4] + [ending])
 
     # Cleans contact list from non-email elements
     contacts = [x for x in contacts if '@' in x and '.' in x]
@@ -148,7 +158,7 @@ def upload_to_eloqua(contacts):
     uploading = ''
     while uploading.lower() != 'y' and uploading.lower() != 'n':
         print(
-            f'{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N):', end='')
+            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N):', end='')
         uploading = input(' ')
     if uploading.lower() == 'y':
         api.upload_contacts(source_country, contacts_to_upload, 'database')
@@ -163,7 +173,7 @@ def upload_to_eloqua(contacts):
 '''
 
 
-def create_csv(country):
+def contact_list(country):
     '''
     Takes copied database and transforms it into .csv file
     compliant with Eloqua for manual import.
@@ -235,18 +245,23 @@ def create_csv(country):
             })
             count_contact += 1
     print(
-        f'\n{Fore.GREEN}» Database of {count_contact} contacts saved in Outcomes folder.',
-        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-    input(' ')
+        f'\n{Fore.GREEN}Database of {count_contact} contacts saved in Outcomes folder.')
 
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-
-    return True
+    # Asks user if he would like to repeat
+    print(
+        f'\n{Fore.WHITE}» Do you want to prepare another contact upload? (Y/N)', end='')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        contact_list(country)
+    else:
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+        return True
 
 
 '''
 TODO:
 - Create validation of input
-- Add import to Eloqua functionality
+- Allow to change last part of import name (if list already exists?)
 - Create functionality to work from .xls or .csv input
 '''

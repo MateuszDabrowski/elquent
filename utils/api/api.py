@@ -306,7 +306,7 @@ def eloqua_import_sync(uri):
             logs = eloqua_log_sync(uri)
             print(logs)
             break
-        time.sleep(1)
+        time.sleep(3)
 
     return status
 
