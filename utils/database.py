@@ -134,27 +134,19 @@ def upload_to_eloqua(contacts):
         else:
             break
 
-    # Asks for shared list name
-    while True:
-        print(
-            f'\n{Fore.WHITE}Click [Enter] to import contacts to {Fore.YELLOW}{campaign_name}',
-            f'\n{Fore.WHITE}Or write different name ending for the shared list upload: ', end='')
-        ending = input(' ')
-        if ending == '':
-            break
-        else:
-            campaign_name = '_'.join(campaign_name_check[:4] + [ending])
-
     # Cleans contact list from non-email elements
     contacts = [x for x in contacts if '@' in x and '.' in x]
-    # Prepares dict for import
-    contacts_to_upload = {campaign_name: contacts}
 
     uploading = ''
     while uploading.lower() != 'y' and uploading.lower() != 'n':
+        # Prepares dict for import
+        contacts_to_upload = {campaign_name: contacts}
+        # Confirms if everything is correct
         print(
-            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N):', end='')
+            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.CYAN}(Y/N or write new ending to change list name):', end='')
         uploading = input(' ')
+        if len(uploading) > 1:
+            campaign_name = '_'.join(campaign_name_check[:4] + [uploading])
     if uploading.lower() == 'y':
         api.upload_contacts(source_country, contacts_to_upload, 'database')
 
@@ -184,8 +176,6 @@ def contact_list(country):
         naming = json.load(f)
 
     # Gets contact list from user
-    print(
-        f'\n  {Fore.RED}[ATTENTION]{Fore.YELLOW} Currently only support upload of e-mails')
     contacts = get_contacts()
 
     options = [
@@ -220,6 +210,7 @@ def contact_list(country):
             f'\n{Fore.WHITE}» [{Fore.GREEN}SUCCESS{Fore.WHITE}] New database got {len(contacts)} unique e-mails')
 
     # Asks if user want to upload contacts to Eloqua
+    name = ''
     if naming[source_country]['api']['bulk'] == 'enabled':
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
@@ -228,7 +219,7 @@ def contact_list(country):
             swapping = input(' ')
         if swapping.lower() == 'y':
             name = upload_to_eloqua(contacts)
-    name = f'WK{source_country}_Contact-Upload'
+    name = f'WK{source_country}_Contact-Upload' if not name else name
 
     # Builds .csv file in eloqua compliant structure
     count_contact = 0
@@ -249,7 +240,7 @@ def contact_list(country):
 
     # Asks user if he would like to repeat
     print(
-        f'\n{Fore.WHITE}» Do you want to prepare another contact upload? (Y/N)', end='')
+        f'{Fore.WHITE}» Do you want to prepare another contact upload? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         contact_list(country)

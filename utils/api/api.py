@@ -197,7 +197,7 @@ def get_eloqua_auth():
 '''
 
 
-def eloqua_create_sharedlist(export):
+def eloqua_create_sharedlist(export, choice):
     '''
     Creates shared list for contacts
     Requires 'export' dict with webinars and conctacts in format:
@@ -222,10 +222,36 @@ def eloqua_create_sharedlist(export):
         if response.status_code == 201:
             print(f'{Fore.GREEN}  [Created]', end=' ')
             list_id = int(sharedlist['id'])
-        # Shared list already exists - appending data
+        # Shared list already exists
         else:
-            print(f'{Fore.YELLOW}  [Exists]{Fore.GREEN} » [Append]', end=' ')
-            list_id = sharedlist[0]['requirement']['conflictingId']
+            while True:  # Asks user what to do next
+                if not choice:
+                    print(f'\n{Fore.YELLOW}Shared list with that name already exist.',
+                          f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\tStop importing to Eloqua',
+                          f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\tAppend contacts to existing shared list')
+                    if len(export) == 1:
+                        print(
+                            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\tChange upload name')
+                    print(
+                        f'{Fore.WHITE}Enter number associated with your choice:', end='')
+                    choice = input(' ')
+                if not choice or choice == '0':  # Dropping import
+                    return False
+                elif choice == '1' or choice == 'append':  # Appending data to existing shared list
+                    print(
+                        f'{Fore.YELLOW}  [Exists]{Fore.GREEN} » [Append]', end=' ')
+                    list_id = sharedlist[0]['requirement']['conflictingId']
+                    break
+                # Changing name and trying again
+                elif choice == '2' and len(export) == 1:
+                    name_split = name.split('_')
+                    print(
+                        f'\n{Fore.WHITE}» Write different name ending for the shared list upload: ', end='')
+                    ending = input(' ')
+                    new_name = '_'.join(name_split[:4] + [ending])
+                    new_export = {new_name: contacts}
+                    outcome = eloqua_create_sharedlist(new_export, '')
+                    return outcome
 
         uri = eloqua_import_definition(name, list_id)
         count = eloqua_import_content(contacts, list_id, uri)
@@ -307,6 +333,7 @@ def eloqua_import_sync(uri):
             print(logs)
             break
         time.sleep(3)
+    print()
 
     return status
 
@@ -332,7 +359,7 @@ def eloqua_log_sync(uri):
 '''
 
 
-def upload_contacts(country, contacts, sharedlist):
+def upload_contacts(country, contacts, sharedlist, choice=''):
     '''
     Contacts argument should be dict with list: {'listName': ['mail', 'mail']}
     Uploads mail list to Eloqua as shared list listName (appends if it already exists)
@@ -354,7 +381,7 @@ def upload_contacts(country, contacts, sharedlist):
     shared_list = naming[source_country][sharedlist]['sharedlist']
 
     # Uploads database to eloqua shared list
-    eloqua_create_sharedlist(contacts)
+    eloqua_create_sharedlist(contacts, choice)
 
     return True
 
