@@ -357,3 +357,9 @@ def upload_contacts(country, contacts, sharedlist):
     eloqua_create_sharedlist(contacts)
 
     return True
+
+
+'''
+TODO:
+- asking in case of possible overwrite of shared list (with global switch)
+'''

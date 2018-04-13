@@ -39,4 +39,4 @@ __Helper module for Eloqua API__
 - [_under development_]
 ---
 
-[_Version: 1.3.2_]
+[_Version: 1.3.3_]

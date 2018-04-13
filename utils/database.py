@@ -112,11 +112,6 @@ def upload_to_eloqua(contacts):
     Returns campaign name
     '''
 
-    # Loads json file with naming convention
-    with open(file('naming'), 'r', encoding='utf-8') as f:
-        global naming
-        naming = json.load(f)
-
     # Gets campaign name from user
     while True:
         print(
@@ -183,6 +178,11 @@ def contact_list(country):
     global source_country
     source_country = country
 
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
     # Gets contact list from user
     print(
         f'\n  {Fore.RED}[ATTENTION]{Fore.YELLOW} Currently only support upload of e-mails')
@@ -220,15 +220,15 @@ def contact_list(country):
             f'\n{Fore.WHITE}» [{Fore.GREEN}SUCCESS{Fore.WHITE}] New database got {len(contacts)} unique e-mails')
 
     # Asks if user want to upload contacts to Eloqua
-    swapping = ''
-    while swapping.lower() != 'y' and swapping.lower() != 'n':
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? (Y/N):', end='')
-        swapping = input(' ')
-    if swapping.lower() == 'y':
-        name = upload_to_eloqua(contacts)
-    else:
-        name = f'WK{source_country}_Contact-Upload'
+    if naming[source_country]['api']['bulk'] == 'enabled':
+        swapping = ''
+        while swapping.lower() != 'y' and swapping.lower() != 'n':
+            print(
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? (Y/N):', end='')
+            swapping = input(' ')
+        if swapping.lower() == 'y':
+            name = upload_to_eloqua(contacts)
+    name = f'WK{source_country}_Contact-Upload'
 
     # Builds .csv file in eloqua compliant structure
     count_contact = 0
@@ -262,6 +262,5 @@ def contact_list(country):
 '''
 TODO:
 - Create validation of input
-- Allow to change last part of import name (if list already exists?)
 - Create functionality to work from .xls or .csv input
 '''
