@@ -76,20 +76,44 @@ def get_contacts():
     '''
     Returns contact list from user input
     '''
-    print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}] Copy list of e-mails [CTRL+C] and click [Enter]', end='')
-    input(' ')
-    database = pyperclip.paste()
+    while True:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}] Copy list of e-mails [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        database = pyperclip.paste()
 
-    # Removes possible whitespace characters
-    database = database.replace('\r\n', '\n')
+        # Removes possible whitespace characters
+        database = database.replace('\r\n', '\n')
 
-    # Translates input into a list
-    database = database.split('\n')
+        # Translates input into a list
+        database = database.split('\n')
 
-    # Takes care of empty line at the end of input
-    if database[-1] == '':
-        database.pop()
+        # Checks sample of import to validate data
+        validate_database = ';'.join(database) + ';'
+        valid_mail = re.compile(
+            r'([\w\.\-\+]+?@[\w\.\-\+]+?\.[\w\.\-\+]+?);', re.UNICODE)
+        validated_mails = valid_mail.findall(validate_database)
+
+        # Takes care of empty line at the end of input
+        if database[-1] == '':
+            database.pop()
+
+        # Informs user about invalid upload
+        if len(database) > len(validated_mails):
+            print(
+                f'\n{ERROR}Out of {len(database)} records uploaded, {len(validated_mails)} are correct e-mails.',
+                f'\n  {Fore.WHITE}» Print incorrect ones? (Y/N):', end='')
+            print_diff = input(' ')
+            if print_diff.lower() == 'y':  # Allows user to see which particular lines are incorrect
+                diff = [mail for mail in database if mail not in validated_mails]
+                print(diff)
+            elif print_diff.lower() == 'i':  # Allows to ignore validation
+                break
+            print(
+                f'\n{Fore.WHITE}Please copy a list containing only e-mail address in each line', end='')
+            continue
+        else:
+            break
 
     # Deduplicates list
     database = list(set(database))
@@ -252,6 +276,5 @@ def contact_list(country):
 
 '''
 TODO:
-- Create validation of input
 - Create functionality to work from .xls or .csv input
 '''
