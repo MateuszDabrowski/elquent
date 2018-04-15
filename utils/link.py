@@ -2,8 +2,8 @@
 # -*- coding: utf8 -*-
 
 '''
-ELQuent.mail
-RegEx cleaner of email HTML
+ELQuent.link
+RegEx cleaner for links
 
 Mateusz Dąbrowski
 github.com/MateuszDabrowski
@@ -28,10 +28,11 @@ init(autoreset=True)
 '''
 
 
-def file():
+def file(file_path):
     '''
     Returns file path to template files
     '''
+
     def find_data_file(filename):
         '''
         Returns correct file path for both script and frozen app
@@ -40,11 +41,14 @@ def file():
             datadir = os.path.dirname(sys.executable)
         else:
             datadir = os.path.dirname(os.path.dirname(__file__))
-        return os.path.join(datadir, 'outcomes', filename)
+        return os.path.join(datadir, dir, filename)
 
-    file_path = find_data_file(f'WK{source_country}_EML.txt')
+    file_paths = {
+        'elqtrack': find_data_file(f'WK{source_country}_CleanedURL-Code.txt'),
+        'utmswap': find_data_file(f'WK{source_country}_SwappedUTM-Code.txt')
+    }
 
-    return file_path
+    return file_paths.get(file_path)
 
 
 '''
@@ -54,20 +58,21 @@ def file():
 '''
 
 
-def get_email_code():
+def get_code():
     '''
-    Returns eMail code to be cleaned
+    Returns code to be cleaned
     » code: long str
     '''
     while True:
         print(
-            f'\n{Fore.WHITE}» Copy code of eMail [CTRL+C] and click [Enter]', end='')
+            f'\n{Fore.WHITE}» Copy code [CTRL+C] and click [Enter]', end='')
         input(' ')
         code = pyperclip.paste()
         is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
         if is_html.findall(code):
             break
-        print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not Email')
+        print(
+            f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not correct HTML')
 
     return code
 
@@ -81,29 +86,29 @@ def get_email_code():
 
 def clean_elq_track(country):
     '''
-    Returns Email code without elqTrack UTMs
+    Returns code without elqTrack UTMs
     » code: long str
     '''
     global source_country
     source_country = country
 
-    code = get_email_code()
+    code = get_code()
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
     if elq_track.findall(code):
         print(
             f'\t{Fore.YELLOW}» Cleaned {len(elq_track.findall(code))} elqTrack instances')
         code = elq_track.sub('', code)
         pyperclip.copy(code)
-        with open(file(), 'w', encoding='utf-8') as f:
+        with open(file('elqtrack'), 'w', encoding='utf-8') as f:
             f.write(code)
         print(
-            f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
+            f'\n{Fore.GREEN}» You can now paste code to Eloqua [CTRL+V].',
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_CleanedURL-Code.txt in Outcomes folder)')
     else:
         print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.GREEN}Do you want to clean another Email? (Y/N)', end='')
+    print(f'\n{Fore.GREEN}Do you want to clean another code? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         clean_elq_track(country)
@@ -122,14 +127,14 @@ def clean_elq_track(country):
 
 def swap_utm_track(country):
     '''
-    Returns Email code with swapped tracking scripts in links
+    Returns code with swapped tracking scripts in links
     » code: long str
     '''
     global source_country
     source_country = country
 
     # Gets Email code
-    code = get_email_code()
+    code = get_code()
 
     # Cleans ELQ tracking
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
@@ -163,11 +168,11 @@ def swap_utm_track(country):
             f'\t{Fore.YELLOW}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
         code = utm_track.sub(new_utm, code)
         pyperclip.copy(code)
-        with open(file(), 'w', encoding='utf-8') as f:
+        with open(file('utmswap'), 'w', encoding='utf-8') as f:
             f.write(code)
         print(
-            f'\n{Fore.GREEN}» You can now paste Email to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_EML.txt in Outcomes folder)')
+            f'\n{Fore.GREEN}» You can now paste code to Eloqua [CTRL+V].',
+            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_SwappedUTM-Code.txt in Outcomes folder)')
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.GREEN}Do you want to swap another UTM tracking? (Y/N)', end='')

@@ -2,8 +2,8 @@
 Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Automation tool
 
 ---
-## ELQuent.mail
-__Fix your mail__
+## ELQuent.link
+__Clean your links__
 - RegEx helper
 - Quick deletion of Eloqua Tracking from links
 - Quick swapping of UTM Tracking Scripts in links

@@ -21,7 +21,7 @@ import encodings
 from colorama import Fore, init
 
 # ELQuent imports
-import utils.mail as mail
+import utils.link as link
 import utils.page as page
 import utils.webinar as webinar
 import utils.database as database
@@ -176,8 +176,8 @@ def menu(choice=''):
     '''
     utils = {
         'clean_outcomes': (clean_outcomes, f'Clean Outcomes folder'),
-        'clean_elq_track': (mail.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
-        'swap_utm_track': (mail.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
+        'clean_elq_track': (link.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
+        'swap_utm_track': (link.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
         'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
         'database': (database.contact_list, f'Create contact upload{Fore.WHITE} file with correct structure'),
@@ -251,9 +251,9 @@ print(
 if len(sys.argv) < 2:
     menu()
 elif sys.argv[1] == 'track':
-    mail.clean_elq_track(SOURCE_COUNTRY)
+    link.clean_elq_track(SOURCE_COUNTRY)
 elif sys.argv[1] == 'utm':
-    mail.swap_utm_track(SOURCE_COUNTRY)
+    link.swap_utm_track(SOURCE_COUNTRY)
 elif sys.argv[1] == 'page':
     page.page_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'campaign':
