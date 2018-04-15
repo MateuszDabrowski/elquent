@@ -183,9 +183,3 @@ def swap_utm_track(country):
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         return True
-
-
-'''
-TODO:
-- try/except in utm tracking to catch if the input has utm script (currently gives Index Error on 155 line)
-'''

@@ -902,14 +902,6 @@ def campaign_gen(country):
     print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
-    '''
-    TODO:
-    - Automated solution to add created LPs to Eloqua
-    - Only one LP template with question regarding sectors that should stay
-    - When not recognized product, after user enters name, ask "did you mean ..." with options from naming.json
-    - Prepere DE version
-    '''
-
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     return True

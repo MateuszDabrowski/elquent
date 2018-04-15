@@ -272,9 +272,3 @@ def contact_list(country):
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         return True
-
-
-'''
-TODO:
-- Create functionality to work from .xls or .csv input
-'''
