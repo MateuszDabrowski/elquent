@@ -25,10 +25,6 @@ from colorama import Fore, init
 # Initialize colorama
 init(autoreset=True)
 
-# If you want to print API connection status codes, set debug to True
-DEBUG = False
-
-
 '''
 =================================================================================
                             File Path Getter
@@ -93,13 +89,15 @@ def status_code(response, root):
     return connected
 
 
-def api_request(root, call='get', api='eloqua', status=DEBUG, data={}):
+def api_request(root, call='get', api='eloqua', debug=False, data={}):
     '''
     Arguments:
         root - root URL of API call
         call - either GET or POST
         api - either elouqa or click
     Returns response from Eloqua API call.
+
+    If you want to print API connection status codes, set debug to True
     '''
 
     # Assings correct authorization method
@@ -122,7 +120,7 @@ def api_request(root, call='get', api='eloqua', status=DEBUG, data={}):
             data=data)
 
     # Prints status code
-    if status:
+    if debug:
         status_code(response, root)
 
     return response
@@ -354,6 +352,41 @@ def eloqua_log_sync(uri):
 
 '''
 =================================================================================
+                            Upload Image API Flow
+=================================================================================
+'''
+
+
+def eloqua_post_image(byte_image, image_name):
+    '''
+    Requires data bytes of image file to be uploaded
+    Uploads image to Eloqua content section
+    '''
+    # Gets extension of the image to be uploaded
+    if image_name.endswith('jpg') or image_name.endswith('jpeg'):
+        ext = 'jpeg'
+    elif image_name.endswith('gif'):
+        ext = 'gif'
+    elif image_name.endswith('png'):
+        ext = 'png'
+    else:
+        ext = image_name.split('.')[1]
+        print(
+            f'{Fore.RED}[ERROR] {Fore.YELLOW}Unknown image extension: {ext}!')
+        return
+
+    # Creates import call
+    root = f'{eloqua_rest}assets/image'
+    data = {'name': 'Unicorn.jpg',
+            'fullImageUrl': 'http://cdn.smosh.com/sites/default/files/bloguploads/ralph-wiggum-simpsons.jpg'}
+    response = api_request(root, call='post', data=json.dumps(data))
+    image_upload = response.json()
+
+    return image_upload
+
+
+'''
+=================================================================================
                             Main Eloqua API Flows
 =================================================================================
 '''
@@ -383,10 +416,18 @@ def upload_contacts(country, contacts, sharedlist, choice=''):
     # Uploads database to eloqua shared list
     eloqua_create_sharedlist(contacts, choice)
 
-    return True
+    return
 
 
-'''
-TODO:
-- asking in case of possible overwrite of shared list (with global switch)
-'''
+def upload_images(country, byte_image, image_name):
+    '''
+    Image argument should be image changed into byte string
+    Uploads image to Eloqua
+    '''
+    # Creates global source_country from main module
+    global source_country
+    source_country = country
+
+    print(eloqua_post_image(byte_image, image_name))
+
+    return

@@ -21,6 +21,7 @@ import encodings
 from colorama import Fore, init
 
 # ELQuent imports
+import utils.mail as mail
 import utils.link as link
 import utils.page as page
 import utils.webinar as webinar
@@ -61,6 +62,7 @@ def file(file_path):
             return os.path.join(datadir, 'utils', dir, filename)
 
     file_paths = {
+        'incomes': find_data_file('incomes'),
         'outcomes': find_data_file('outcomes'),
         'utils': find_data_file('utils.json'),
         'readme': find_data_file('readme.md'),
@@ -71,7 +73,8 @@ def file(file_path):
     return file_paths.get(file_path)
 
 
-# Builds folder for outcomes
+# Builds folders for user
+os.makedirs(file('incomes'), exist_ok=True)
 os.makedirs(file('outcomes'), exist_ok=True)
 
 
@@ -160,7 +163,7 @@ def clean_outcomes(country):
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-    return True
+    return
 
 
 '''
@@ -176,8 +179,9 @@ def menu(choice=''):
     '''
     utils = {
         'clean_outcomes': (clean_outcomes, f'Clean Outcomes folder'),
-        'clean_elq_track': (link.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in Email links'),
-        'swap_utm_track': (link.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in Email links'),
+        'clean_elq_track': (link.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in links'),
+        'swap_utm_track': (link.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in links'),
+        'build_mail': (mail.mail_constructor, f'Build e-mail{Fore.WHITE} from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
         'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
         'database': (database.contact_list, f'Create contact upload{Fore.WHITE} file with correct structure'),
@@ -198,7 +202,7 @@ def menu(choice=''):
     while True:
         if not choice:
             print(
-                f'{Fore.YELLOW}Enter number associated with choosen utility:', end='')
+                f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
             choice = input(' ')
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')

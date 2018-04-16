@@ -115,7 +115,7 @@ def clean_elq_track(country):
     else:
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        return True
+        return
 
 
 '''
@@ -182,4 +182,4 @@ def swap_utm_track(country):
     else:
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        return True
+        return

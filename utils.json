@@ -10,6 +10,6 @@
     "IT": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
     "LSW": ["clean_outcomes", "clean_elq_track", "swap_utm_track"],
     "NL": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"],
-    "PL": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "page_gen", "campaign_gen", "database", "webinar"],
+    "PL": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "campaign_gen", "database", "webinar"],
     "SK": ["clean_outcomes", "clean_elq_track", "swap_utm_track", "database"]
 }

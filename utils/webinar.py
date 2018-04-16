@@ -239,7 +239,7 @@ def click_export_attendees(click_sessions, export_time_range):
 
     sessions_to_import = {}
 
-    # Create list of attendees of each session in choosen period
+    # Create list of attendees of each session in chosen period
     for key, value in click_sessions.items():
         # click_sessions unpacking
         session_id, session_date = key
@@ -354,7 +354,7 @@ def click_to_elq(country):
     print(f'\n{Fore.YELLOW}» Getting registered users in active rooms')
     click_registered_export = click_export_registered(active_rooms)
     print(f'{Fore.GREEN}» Imported registed users from {len(click_registered_export)} webinars')
-    print(f'\n{Fore.YELLOW}» Getting attendees from choosen timeframe')
+    print(f'\n{Fore.YELLOW}» Getting attendees from chosen timeframe')
     click_attendee_export = click_export_attendees(
         click_sessions, export_time_range)
     print(f'{Fore.GREEN}» Imported attendees from {len(click_attendee_export)} webinars')
@@ -363,4 +363,4 @@ def click_to_elq(country):
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
-    return True
+    return

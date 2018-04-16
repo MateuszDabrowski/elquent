@@ -904,4 +904,4 @@ def campaign_gen(country):
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
-    return True
+    return
