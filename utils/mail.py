@@ -14,7 +14,6 @@ import os
 import re
 import sys
 import json
-import base64
 import requests
 import encodings
 import pyperclip
@@ -71,8 +70,8 @@ def file(file_path, file_name='', folder_name=''):
         'incomes': find_data_file('incomes', dir='main'),
         'package': find_data_file(f'{file_name}'),
         'package_file': find_data_file(f'{file_name}', dir='package', folder_name=folder_name),
-        'mail_html': find_data_file(f'WK{source_country}_EML.html', dir='outcomes'),
-        'mail_mjml': find_data_file(f'WK{source_country}_EML.mjml', dir='outcomes')
+        'mail_html': find_data_file(f'WK{source_country}_{file_name}.html', dir='outcomes'),
+        'mail_mjml': find_data_file(f'WK{source_country}_{file_name}.mjml', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -155,14 +154,19 @@ def mail_constructor(country):
     source_country = country
 
     # Lets user choose package to construct
-    folder_name, html_files, mjml_files, image_files = package_chooser()
-
-    # Get eloqua auth for multiple calls
-    # api.get_eloqua_auth()
+    while True:
+        folder_name, html_files, mjml_files, image_files = package_chooser()
+        if not html_files and not mjml_files:
+            print(f'{Fore.RED}Chosen package got neither HTML nor MJML file!')
+        else:
+            break
 
     '''
     =================================================== Image upload
     '''
+
+    # Get eloqua auth for multiple calls
+    # api.get_eloqua_auth()
 
     # Upload package images to Eloqua
     for image in image_files:
@@ -186,25 +190,67 @@ def mail_constructor(country):
     =================================================== Get HTML & MJML
     '''
 
-    with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
-        html = f.read()
+    if html_files:
+        with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
+            html = f.read()
 
-    with open(file('package_file', file_name=mjml_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
-        mjml = f.read()
+    if mjml_files:
+        with open(file('package_file', file_name=mjml_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
+            mjml = f.read()
 
     '''
     =================================================== Track URL
     '''
 
-    # Ask user for tracking code input
-    # Regex tracking code to correct links (exluding some)
+    # Gets new UTM tracking
+    utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
+    while True:
+        print(
+            f'\n{Fore.WHITE}» Copy new UTM tracking script [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        utm = pyperclip.paste()
+        if utm_track.findall(utm + '"'):
+            break
+        print(
+            f'{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not correct UTM tracking script')
+
+    # Gathers all links in HTML
+    links = re.compile(r'href="(.*?)"', re.UNICODE)
+    if html_files:
+        trackable_links = links.findall(html)
+    elif mjml_files:
+        trackable_links = links.findall(mjml)
+    trackable_links = list(set(trackable_links))
+
+    # Removes untrackable links
+    for link in trackable_links[:]:
+        if 'googleapis' in link or 'emailfield' in link:
+            trackable_links.remove(link)
+
+    # Appending UTM to all trackable_links in HTML
+    if html_files:
+        for link in trackable_links:
+            html = html.replace(link, (link + utm))
+    if mjml_files:
+        for link in trackable_links:
+            mjml = mjml.replace(link, (link + utm))
 
     '''
     =================================================== Swap pre-header
     '''
 
-    # Ask user for pre-header if it is empty
-    # Regex pre-header
+    # Gets pre-header from user
+    if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
+        print(
+            f'\n{Fore.WHITE}» Copy desired pre-header text [CTRL+C] and click [Enter]', end='')
+        input(' ')
+        preheader = pyperclip.paste()
+
+        if html_files and re.search('Pre-header', html):
+            html = html.replace('Pre-header', preheader)
+
+        if mjml_files and re.search('Pre-header', mjml):
+            mjml = mjml.replace('Pre-header', preheader)
 
     '''
     =================================================== Import HTML to Eloqua
@@ -216,8 +262,20 @@ def mail_constructor(country):
     =================================================== Save MJML to Outcomes
     '''
 
-    # Save changed html and mjml to Outcomes folder
-    # Return html code via pyperclip.copy
+    if html_files:
+        with open(file('mail_html', file_name=folder_name), 'w', encoding='utf-8') as f:
+            f.write(html)
+        pyperclip.copy(html)
+
+    if mjml_files:
+        with open(file('mail_mjml', file_name=folder_name), 'w', encoding='utf-8') as f:
+            f.write(mjml)
+
+    print(
+        f'\n{Fore.GREEN}» You can now paste constructed Email to Eloqua [CTRL+V].',
+        f'\n{Fore.WHITE}  (It is also saved to Outcomes folder)',
+        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
 
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
