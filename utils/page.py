@@ -643,8 +643,6 @@ def page_gen(country):
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-
     return code
 
 
@@ -901,7 +899,5 @@ def campaign_gen(country):
         print(f'\n{Fore.YELLOW}Remember to use file names as asset names.')
     print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
-
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     return

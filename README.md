@@ -12,6 +12,17 @@ _ToDo:_
 - _Catching wrong input (proper HTML with inproper UTM codes) - currently Index Error on line 155_
 
 ---
+## ELQuent.mail
+__Constructs your email packages__
+- RegEx & API builder
+- Automatically adds image links, tracking scripts and pre-header to package
+- Works with both HTML and MJML files
+
+_ToDo:_
+- _Upload constructed code to Eloqua_
+- _Ability to alter created mail with new pre-header or tracking_
+
+---
 ## ELQuent.page
 __Create landing page__
 - RegEx work automator
@@ -57,4 +68,4 @@ _ToDo:_
 
 ---
 
-[_Version: 1.3.5_]
+[_Version: 1.4.0_]

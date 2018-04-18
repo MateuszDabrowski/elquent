@@ -13,7 +13,6 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
-import json
 import requests
 import encodings
 import pyperclip
@@ -153,6 +152,11 @@ def mail_constructor(country):
     global source_country
     source_country = country
 
+    # Asks user to firstly upload images to Eloqua
+    print(
+        f'\n{Fore.YELLOW}» Please add email folder with {Fore.WHITE}Images, HTML, MJML{Fore.YELLOW} to Incomes folder.\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+    input(' ')
+
     # Lets user choose package to construct
     while True:
         folder_name, html_files, mjml_files, image_files = package_chooser()
@@ -160,31 +164,6 @@ def mail_constructor(country):
             print(f'{Fore.RED}Chosen package got neither HTML nor MJML file!')
         else:
             break
-
-    '''
-    =================================================== Image upload
-    '''
-
-    # Get eloqua auth for multiple calls
-    # api.get_eloqua_auth()
-
-    # Upload package images to Eloqua
-    for image in image_files:
-        # Gets extension of the image to be uploaded
-        if image.endswith('jpg') or image.endswith('jpeg'):
-            ext = 'jpeg'
-        elif image.endswith('gif'):
-            ext = 'gif'
-        elif image.endswith('png'):
-            ext = 'png'
-        else:
-            ext = image.split('.')[1]
-            print(
-                f'{Fore.RED}[ERROR] {Fore.YELLOW}Unknown image extension: {ext}!')
-            return
-
-    # Build API call for importing images
-    # Regex images into html and mjml
 
     '''
     =================================================== Get HTML & MJML
@@ -199,6 +178,47 @@ def mail_constructor(country):
             mjml = f.read()
 
     '''
+    =================================================== Image getter
+    '''
+
+    # Asks user to firstly upload images to Eloqua
+    print(
+        f'\n{Fore.YELLOW}» Please upload {Fore.WHITE}{folder_name}{Fore.YELLOW} images to Eloqua.\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+    input(' ')
+
+    print(f'\n{Fore.GREEN}Adding image links from Eloqua:', end='')
+    # Gets list of images in package
+    images = re.compile(r'src="(.*?)"', re.UNICODE)
+    if html_files:
+        # Builds list of images that should be swapped
+        linkable_images_html = images.findall(html)
+        linkable_images_html = list(set(linkable_images_html))
+        linkable_images_html = [
+            image for image in linkable_images_html if 'http' not in image]
+
+        print(f'\n{Fore.WHITE}» HTML ', end='')
+        # Gets image link from Eloqua and adds it to the code
+        for image in linkable_images_html:
+            image_link = api.eloqua_get_image(image)
+            html = html.replace(image, image_link)
+            print(f'{Fore.GREEN}|', end='', flush=True)
+
+    if mjml_files:
+        # Builds list of images that should be swapped
+        linkable_images_mjml = images.findall(mjml)
+        linkable_images_mjml = list(set(linkable_images_mjml))
+        linkable_images_mjml = [
+            image for image in linkable_images_mjml if 'http' not in image]
+
+        print(f'\n{Fore.WHITE}» MJML ', end='')
+        # Gets image link from Eloqua and adds it to the code
+        for image in linkable_images_mjml:
+            image = (image.split('/'))[-1]
+            image_link = api.eloqua_get_image(image)
+            mjml = mjml.replace(image, image_link)
+            print(f'{Fore.GREEN}|', end='', flush=True)
+
+    '''
     =================================================== Track URL
     '''
 
@@ -206,7 +226,7 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n{Fore.WHITE}» Copy new UTM tracking script [CTRL+C] and click [Enter]', end='')
+            f'\n\n{Fore.WHITE}» Copy new {Fore.YELLOW}UTM tracking script{Fore.WHITE} [CTRL+C] and click [Enter]', end='')
         input(' ')
         utm = pyperclip.paste()
         if utm_track.findall(utm + '"'):
@@ -215,7 +235,7 @@ def mail_constructor(country):
             f'{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not correct UTM tracking script')
 
     # Gathers all links in HTML
-    links = re.compile(r'href="(.*?)"', re.UNICODE)
+    links = re.compile(r'href=(".*?")', re.UNICODE)
     if html_files:
         trackable_links = links.findall(html)
     elif mjml_files:
@@ -230,10 +250,16 @@ def mail_constructor(country):
     # Appending UTM to all trackable_links in HTML
     if html_files:
         for link in trackable_links:
-            html = html.replace(link, (link + utm))
+            if '?' in link:
+                html = html.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
+            else:
+                html = html.replace(link, (link[:-1] + utm + '"'))
     if mjml_files:
         for link in trackable_links:
-            mjml = mjml.replace(link, (link + utm))
+            if '?' in link:
+                mjml = mjml.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
+            else:
+                mjml = mjml.replace(link, (link[:-1] + utm + '"'))
 
     '''
     =================================================== Swap pre-header
@@ -242,7 +268,7 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.WHITE}» Copy desired pre-header text [CTRL+C] and click [Enter]', end='')
+            f'\n{Fore.WHITE}» Copy desired {Fore.YELLOW}pre-header{Fore.WHITE} text [CTRL+C] and click [Enter]', end='')
         input(' ')
         preheader = pyperclip.paste()
 
@@ -251,12 +277,6 @@ def mail_constructor(country):
 
         if mjml_files and re.search('Pre-header', mjml):
             mjml = mjml.replace('Pre-header', preheader)
-
-    '''
-    =================================================== Import HTML to Eloqua
-    '''
-
-    # In the future - ask if it should be automatically added to ELQ
 
     '''
     =================================================== Save MJML to Outcomes
@@ -273,10 +293,12 @@ def mail_constructor(country):
 
     print(
         f'\n{Fore.GREEN}» You can now paste constructed Email to Eloqua [CTRL+V].',
-        f'\n{Fore.WHITE}  (It is also saved to Outcomes folder)',
-        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
-    input(' ')
+        f'\n{Fore.WHITE}  (It is also saved to Outcomes folder)')
 
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.GREEN}Do you want to construct another Email? (Y/N)', end='')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        mail_constructor(country)
 
     return

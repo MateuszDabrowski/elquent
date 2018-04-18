@@ -41,7 +41,7 @@ def file(file_path):
             datadir = os.path.dirname(sys.executable)
         else:
             datadir = os.path.dirname(os.path.dirname(__file__))
-        return os.path.join(datadir, dir, filename)
+        return os.path.join(datadir, 'outcomes', filename)
 
     file_paths = {
         'elqtrack': find_data_file(f'WK{source_country}_CleanedURL-Code.txt'),
@@ -112,10 +112,8 @@ def clean_elq_track(country):
     choice = input(' ')
     if choice.lower() == 'y':
         clean_elq_track(country)
-    else:
-        print(
-            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        return
+
+    return
 
 
 '''
@@ -179,7 +177,5 @@ def swap_utm_track(country):
     choice = input(' ')
     if choice.lower() == 'y':
         swap_utm_track(country)
-    else:
-        print(
-            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        return
+
+    return

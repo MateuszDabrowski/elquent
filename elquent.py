@@ -162,7 +162,6 @@ def clean_outcomes(country):
             os.unlink(file_path)
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
 
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
     return
 
 
@@ -177,6 +176,8 @@ def menu(choice=''):
     '''
     Allows to choose ELQuent utility
     '''
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+
     utils = {
         'clean_outcomes': (clean_outcomes, f'Clean Outcomes folder'),
         'clean_elq_track': (link.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in links'),
@@ -218,6 +219,9 @@ def menu(choice=''):
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
             choice = ''
+
+    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
+
     available_utils.get(util_names[choice])[0](SOURCE_COUNTRY)
 
 
@@ -239,15 +243,15 @@ if new_version():
 with open(file('utils'), 'r', encoding='utf-8') as f:
     COUNTRY_UTILS = json.load(f)
 
-# Loads domain and user name
-if os.path.isfile(file('eloqua')):
-    ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(file('eloqua'), 'rb'))
-else:
-    ELOQUA_DOMAIN = 'WK'
-    ELOQUA_USER = ''
-
 # Gets required auth data and prints them
 SOURCE_COUNTRY = get_source_country()
+
+# Get eloqua auth for multiple calls
+api.get_eloqua_auth(SOURCE_COUNTRY)
+
+# Load domain and user name
+ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(file('eloqua'), 'rb'))
+
 print(
     f'\n{Fore.YELLOW}User » {Fore.WHITE}[{Fore.GREEN}{ELOQUA_DOMAIN} {SOURCE_COUNTRY}{Fore.WHITE}] {ELOQUA_USER}')
 

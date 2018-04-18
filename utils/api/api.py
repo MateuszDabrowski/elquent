@@ -89,7 +89,7 @@ def status_code(response, root):
     return connected
 
 
-def api_request(root, call='get', api='eloqua', debug=False, data={}):
+def api_request(root, call='get', api='eloqua', params={}, debug=False, data={}):
     '''
     Arguments:
         root - root URL of API call
@@ -111,7 +111,8 @@ def api_request(root, call='get', api='eloqua', debug=False, data={}):
     if call == 'get':
         response = requests.get(
             root,
-            headers=headers)
+            headers=headers,
+            params=params)
     elif call == 'post':
         headers['Content-Type'] = 'application/json'
         response = requests.post(
@@ -133,10 +134,20 @@ def api_request(root, call='get', api='eloqua', debug=False, data={}):
 '''
 
 
-def get_eloqua_auth():
+def get_eloqua_auth(country):
     '''
     Returns Eloqua Root URL and creates globals with auth and bulk/rest roots
     '''
+
+    # Creates global source_country from main module
+    global source_country
+    source_country = country
+
+    # Gets data from naming.json
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
     def get_eloqua_root(eloqua_auth):
         '''
         Returns Eloqua base URL for your instance.
@@ -327,8 +338,7 @@ def eloqua_import_sync(uri):
         status = sync_status['status']
         print(f'{Fore.BLUE}{status}/', end='', flush=True)
         if status == 'warning' or status == 'error':
-            logs = eloqua_log_sync(uri)
-            print(logs)
+            eloqua_log_sync(sync_uri)
             break
         time.sleep(3)
     print()
@@ -336,53 +346,54 @@ def eloqua_import_sync(uri):
     return status
 
 
-def eloqua_log_sync(uri):
+def eloqua_log_sync(sync_uri):
     '''
     Shows log for problematic sync
     Requires uri key to get id of sync
     Returns logs of sync
     '''
-    id = uri[-5:]
+    print(f'{Fore.WHITE}{sync_uri[1:]}')
+    id = (sync_uri.split('/'))[-1]
     root = eloqua_bulk + f'syncs/{id}/logs'
     response = api_request(root)
     logs_eloqua = response.json()
+    for item in logs_eloqua['items']:
+        if item['severity'] == 'warning':
+            print(f'\t{Fore.YELLOW}» {item["count"]} {item["message"]}')
+        if item['message'] in ['Contacts created.', 'Contacts updated.']:
+            print(f'\t{Fore.GREEN}» {item["count"]} {item["message"]}')
 
     return logs_eloqua
 
 
 '''
 =================================================================================
-                            Upload Image API Flow
+                                Image URL Getter
 =================================================================================
 '''
 
 
-def eloqua_post_image(byte_image, image_name):
+def eloqua_get_image(image_name):
     '''
-    Requires data bytes of image file to be uploaded
-    Uploads image to Eloqua content section
+    Returns url of uploaded image
     '''
-    # Gets extension of the image to be uploaded
-    if image_name.endswith('jpg') or image_name.endswith('jpeg'):
-        ext = 'jpeg'
-    elif image_name.endswith('gif'):
-        ext = 'gif'
-    elif image_name.endswith('png'):
-        ext = 'png'
-    else:
-        ext = image_name.split('.')[1]
+
+    # Gets data on that
+    root = f'{eloqua_rest}assets/images'
+    payload = {'depth': 'complete',
+               'orderBy': 'createdAt Desc',
+               'search': image_name}
+    response = api_request(root, params=payload)
+    image_info = response.json()
+    image_link = image_info['elements'][0]['fullImageUrl']
+    image_link = (image_link.split('/'))[-1]
+    image_link = naming['image'] + image_link
+
+    # Warns if there are multiple images found by query
+    if int(image_info['total']) > 1:
         print(
-            f'{Fore.RED}[ERROR] {Fore.YELLOW}Unknown image extension: {ext}!')
-        return
-
-    # Creates import call
-    root = f'{eloqua_rest}assets/image'
-    data = {'name': 'Unicorn.jpg',
-            'fullImageUrl': 'http://cdn.smosh.com/sites/default/files/bloguploads/ralph-wiggum-simpsons.jpg'}
-    response = api_request(root, call='post', data=json.dumps(data))
-    image_upload = response.json()
-
-    return image_upload
+            f'{Fore.YELLOW}[WARNING] {Fore.WHITE}More then one image found - adding newest.')
+    return image_link
 
 
 '''
@@ -397,17 +408,6 @@ def upload_contacts(country, contacts, sharedlist, choice=''):
     Contacts argument should be dict with list: {'listName': ['mail', 'mail']}
     Uploads mail list to Eloqua as shared list listName (appends if it already exists)
     '''
-    # Creates global source_country from main module
-    global source_country
-    source_country = country
-
-    # Gets auth and global values
-    get_eloqua_auth()
-
-    # Gets data from naming.json
-    with open(file('naming'), 'r', encoding='utf-8') as f:
-        global naming
-        naming = json.load(f)
 
     # Creates global shared_list information from json
     global shared_list
@@ -415,19 +415,5 @@ def upload_contacts(country, contacts, sharedlist, choice=''):
 
     # Uploads database to eloqua shared list
     eloqua_create_sharedlist(contacts, choice)
-
-    return
-
-
-def upload_images(country, byte_image, image_name):
-    '''
-    Image argument should be image changed into byte string
-    Uploads image to Eloqua
-    '''
-    # Creates global source_country from main module
-    global source_country
-    source_country = country
-
-    print(eloqua_post_image(byte_image, image_name))
 
     return

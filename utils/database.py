@@ -102,7 +102,7 @@ def get_contacts():
         if len(database) > len(validated_mails):
             print(
                 f'\n{ERROR}Out of {len(database)} records uploaded, {len(validated_mails)} are correct e-mails.',
-                f'\n  {Fore.WHITE}» Print incorrect ones? (Y/N):', end='')
+                f'\n  {Fore.WHITE}» Show incorrect ones? (Y/N):', end='')
             print_diff = input(' ')
             if print_diff.lower() == 'y':  # Allows user to see which particular lines are incorrect
                 diff = [mail for mail in database if mail not in validated_mails]
@@ -118,7 +118,7 @@ def get_contacts():
     # Deduplicates list
     database = list(set(database))
     print(
-        f'{Fore.WHITE}  [{Fore.GREEN}UPLOADED{Fore.WHITE}] {len(database)} unique e-mails uploaded')
+        f'{Fore.WHITE}  [{Fore.GREEN}ADDED{Fore.WHITE}] {len(database)} unique e-mails added')
 
     return database
 
@@ -203,14 +203,15 @@ def contact_list(country):
     contacts = get_contacts()
 
     options = [
-        f'{Fore.WHITE}[{Fore.YELLOW}NO{Fore.WHITE}] Save current contact list',
+        f'{Fore.WHITE}[{Fore.YELLOW}UPLOAD{Fore.WHITE}] Contact list ready to be saved',
         f'{Fore.WHITE}[{Fore.YELLOW}TRIM{Fore.WHITE}] Delete new emails from previosly uploaded list',
         f'{Fore.WHITE}[{Fore.YELLOW}APPEND{Fore.WHITE}] Add new emails to previously uploaded list',
         f'{Fore.WHITE}[{Fore.YELLOW}INTERSECT{Fore.WHITE}] Leave only emails existing in both old and new list'
     ]
     # Asks users if he wants to manipulate data set
     while True:
-        print(f'\n{Fore.GREEN}Do you want to add, trim or intersect another list?')
+        print(
+            f'\n{Fore.GREEN}Do you want to upload list or add, trim or intersect with another one?')
         for i, option in enumerate(options):
             print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{option}')
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
@@ -268,7 +269,5 @@ def contact_list(country):
     choice = input(' ')
     if choice.lower() == 'y':
         contact_list(country)
-    else:
-        print(
-            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        return
+
+    return

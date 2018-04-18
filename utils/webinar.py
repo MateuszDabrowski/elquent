@@ -361,6 +361,4 @@ def click_to_elq(country):
     click_exports = {**click_registered_export, **click_attendee_export}
     api.upload_contacts(source_country, click_exports, 'webinar', 'append')
 
-    print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-
     return
