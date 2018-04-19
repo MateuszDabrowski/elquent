@@ -392,7 +392,7 @@ def eloqua_get_image(image_name):
     # Warns if there are multiple images found by query
     if int(image_info['total']) > 1:
         print(
-            f'{Fore.YELLOW}[WARNING] {Fore.WHITE}More then one image found - adding newest.')
+            f'\n{Fore.YELLOW}[WARNING] {Fore.WHITE}More then one image found - adding newest ', end='')
     return image_link
 
 

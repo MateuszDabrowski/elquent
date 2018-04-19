@@ -96,7 +96,7 @@ def clean_elq_track(country):
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
     if elq_track.findall(code):
         print(
-            f'\t{Fore.YELLOW}» Cleaned {len(elq_track.findall(code))} elqTrack instances')
+            f'{Fore.GREEN}» Cleaned {len(elq_track.findall(code))} elqTrack instances')
         code = elq_track.sub('', code)
         pyperclip.copy(code)
         with open(file('elqtrack'), 'w', encoding='utf-8') as f:
@@ -108,9 +108,11 @@ def clean_elq_track(country):
         print(f'\t{Fore.RED}[ERROR] {Fore.YELLOW}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.GREEN}Do you want to clean another code? (Y/N)', end='')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         clean_elq_track(country)
 
     return
@@ -123,7 +125,7 @@ def clean_elq_track(country):
 '''
 
 
-def swap_utm_track(country):
+def swap_utm_track(country, code=''):
     '''
     Returns code with swapped tracking scripts in links
     » code: long str
@@ -132,7 +134,8 @@ def swap_utm_track(country):
     source_country = country
 
     # Gets Email code
-    code = get_code()
+    if not code:
+        code = get_code()
 
     # Cleans ELQ tracking
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
@@ -155,15 +158,15 @@ def swap_utm_track(country):
     swapping = ''
     while swapping.lower() != 'y' and swapping.lower() != 'n':
         print(f'\n{Fore.WHITE}Change UTM tracking script from:',
-              f'\n{Fore.WHITE}"{Fore.CYAN}{(utm_track.findall(code))[0][0]}{Fore.WHITE}"',
+              f'\n{Fore.WHITE}"{Fore.YELLOW}{(utm_track.findall(code))[0][0]}{Fore.WHITE}"',
               f'\n{Fore.WHITE}to:',
-              f'\n{Fore.WHITE}"{Fore.CYAN}{new_utm}{Fore.WHITE}"',
+              f'\n{Fore.WHITE}"{Fore.YELLOW}{new_utm}{Fore.WHITE}"',
               f'\n{Fore.WHITE}? (Y/N)', end='')
         swapping = input(' ')
 
     if swapping.lower() == 'y':
         print(
-            f'\t{Fore.YELLOW}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
+            f'{Fore.GREEN}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
         code = utm_track.sub(new_utm, code)
         pyperclip.copy(code)
         with open(file('utmswap'), 'w', encoding='utf-8') as f:
@@ -173,9 +176,15 @@ def swap_utm_track(country):
             f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_SwappedUTM-Code.txt in Outcomes folder)')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.GREEN}Do you want to swap another UTM tracking? (Y/N)', end='')
+    print(f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n(Y/N or S for another UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         swap_utm_track(country)
+    elif choice.lower() == 's':
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------', end='\n')
+        swap_utm_track(country, code)
 
     return

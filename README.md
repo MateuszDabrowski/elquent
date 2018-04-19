@@ -1,5 +1,6 @@
 # ELQuent
 Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Automation tool
+_Interested in using this tool for your company? Let me know - can help with implementation_
 
 ---
 ## ELQuent.link
@@ -20,7 +21,6 @@ __Constructs your email packages__
 
 _ToDo:_
 - _Upload constructed code to Eloqua_
-- _Ability to alter created mail with new pre-header or tracking_
 
 ---
 ## ELQuent.page
@@ -68,4 +68,4 @@ _ToDo:_
 
 ---
 
-[_Version: 1.4.0_]
+[_Version: 1.4.1_]

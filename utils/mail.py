@@ -215,7 +215,7 @@ def mail_constructor(country):
         for image in linkable_images_mjml:
             image = (image.split('/'))[-1]
             image_link = api.eloqua_get_image(image)
-            mjml = mjml.replace(image, image_link)
+            mjml = mjml.replace('../Gfx/' + image, image_link)
             print(f'{Fore.GREEN}|', end='', flush=True)
 
     '''

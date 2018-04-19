@@ -262,6 +262,8 @@ elif sys.argv[1] == 'track':
     link.clean_elq_track(SOURCE_COUNTRY)
 elif sys.argv[1] == 'utm':
     link.swap_utm_track(SOURCE_COUNTRY)
+elif sys.argv[1] == 'mail':
+    mail.mail_constructor(SOURCE_COUNTRY)
 elif sys.argv[1] == 'page':
     page.page_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'campaign':

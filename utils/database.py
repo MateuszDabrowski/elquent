@@ -167,7 +167,7 @@ def upload_to_eloqua(contacts):
         contacts_to_upload = {campaign_name: contacts}
         # Confirms if everything is correct
         print(
-            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.CYAN}(Y/N {Fore.WHITE}or write new ending to change list name{Fore.CYAN}):', end='')
+            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N {Fore.WHITE}or write new ending to change list name{Fore.YELLOW}):', end='')
         uploading = input(' ')
         if len(uploading) > 1:
             campaign_name = '_'.join(campaign_name_check[:4] + [uploading])
@@ -268,6 +268,8 @@ def contact_list(country):
         f'{Fore.WHITE}» Do you want to prepare another contact upload? (Y/N)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         contact_list(country)
 
     return
