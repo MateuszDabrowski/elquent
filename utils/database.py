@@ -172,7 +172,7 @@ def upload_to_eloqua(contacts):
         if len(uploading) > 1:
             campaign_name = '_'.join(campaign_name_check[:4] + [uploading])
     if uploading.lower() == 'y':
-        api.upload_contacts(source_country, contacts_to_upload, 'database')
+        api.upload_contacts(contacts_to_upload, id_type='upload')
 
     return campaign_name
 

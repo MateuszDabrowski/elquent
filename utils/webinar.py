@@ -359,6 +359,6 @@ def click_to_elq(country):
         click_sessions, export_time_range)
     print(f'{Fore.GREEN}» Imported attendees from {len(click_attendee_export)} webinars')
     click_exports = {**click_registered_export, **click_attendee_export}
-    api.upload_contacts(source_country, click_exports, 'webinar', 'append')
+    api.upload_contacts(click_exports, list_type='webinar', choice='append')
 
     return

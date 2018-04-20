@@ -10,6 +10,7 @@ github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
+# Python imports
 import os
 import re
 import sys
@@ -17,6 +18,9 @@ import json
 import encodings
 import pyperclip
 from colorama import Fore, init
+
+# ELQuent imports
+import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
@@ -770,10 +774,15 @@ def campaign_gen(country):
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
+    # Saves to Outcomes file
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    # Saves to Eloqua
+    api.eloqua_create_landingpage(file_name, code)
+    # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
+    
 
     '''
     =================================================== Builds TY-LP
@@ -799,9 +808,13 @@ def campaign_gen(country):
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
             converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
+        # Saves to Outcomes file
+        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
-        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        # Saves to Eloqua
+        api.eloqua_create_landingpage(file_name, lead_ty_lp)
+        # Saves to list of created LPs
         lp_list.append([(f'WK{source_country}_' + file_name), lead_ty_lp])
 
     # Not lead submission TY LP
@@ -819,9 +832,13 @@ def campaign_gen(country):
             converter_value = naming[source_country]['converter'][converter_choice][i]
             contact_ty_lp = regex_converter.sub(
                 rf'{converter_value}', contact_ty_lp)
-        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
-            f.write(contact_ty_lp)
+        # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+            f.write(contacts_ty_lp)
+        # Saves to Eloqua
+        api.eloqua_create_landingpage(file_name, contact_ty_lp)
+        # Saves to list of created LPs
         lp_list.append([(f'WK{source_country}_' + file_name), contact_ty_lp])
 
     '''
@@ -844,9 +861,13 @@ def campaign_gen(country):
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
+    # Saves to Outcomes file
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    # Saves to Eloqua
+    api.eloqua_create_landingpage(file_name, code)
+    # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     '''
@@ -864,9 +885,13 @@ def campaign_gen(country):
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
+    # Saves to Outcomes file
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    # Saves to Eloqua
+    api.eloqua_create_landingpage(file_name, code)
+    # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     '''

@@ -1,6 +1,7 @@
 # ELQuent
 Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Automation tool
-_Interested in using this tool for your company? Let me know - can help with implementation_
+
+_Interested in using this tool for your company? Can help with implementation_
 
 ---
 ## ELQuent.link
@@ -32,7 +33,6 @@ __Create landing page__
 - Cleans code, appends snippets, changes form code
 
 _ToDo:_
-- _Automated solution to upload created LPs to Eloqua_
 - _Change from two (one and two column) LP templates to just one modular template_
 - _When not recognized product name, try to find best matches from a list_
 
@@ -64,8 +64,8 @@ __Helper module for Eloqua API__
 - Upload contact database to Eloqua shared lists
 
 _ToDo:_
-- _Broaden API with LP, Email and Form uploads_
+- _Broaden API with Email and Form uploads_
 
 ---
 
-[_Version: 1.4.1_]
+[_Version: 1.4.2_]

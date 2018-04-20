@@ -20,6 +20,7 @@ import pickle
 import getpass
 import requests
 import encodings
+import webbrowser
 from colorama import Fore, init
 
 # Initialize colorama
@@ -368,7 +369,79 @@ def eloqua_log_sync(sync_uri):
 
 '''
 =================================================================================
-                                Image URL Getter
+                                    Upload LP API
+=================================================================================
+'''
+
+
+def eloqua_create_landingpage(name, code):
+    '''
+    Requires name and code of the landing page to create LP in Eloqua
+    Returns Landing Page ID
+
+    TODO: Checking if there is LP with the same name
+    '''
+    # Chosses correct folder ID for upload
+    segment = name.split('_')[0]
+    folder_id = naming[source_country]['id']['landingpage'].get(segment)
+
+    # Creates correct html_name
+    local_name = name.split('_')[-2]  # Gets local name from asset name
+    local_name = local_name.split('-')[:-5]  # Cuts down date & PSP elements
+    local_name = '-'.join(local_name)  # Local name concat
+    lp_type = name.split('_')[-1]  # Gets last part of asset name as asset type
+    html_name = f'{local_name}-{lp_type}'
+
+    # Gets id and url of microsite
+    microsite_id = naming[source_country]['id']['microsite'][0]
+    microsite_link = naming[source_country]['id']['microsite'][1]
+
+    while True:
+        # Creating a post call to Eloqua API
+        root = f'{eloqua_rest}assets/landingPage'
+        data = {
+            'name': name,  # asset name
+            'description': 'ELQuent API Upload',  # asset description
+            'folderId': folder_id,  # folder id
+            'micrositeId': microsite_id,  # html name domain
+            'relativePath': f'/{html_name}',  # html name path
+            'htmlContent': {
+                'type': 'RawHtmlContent',
+                'metaTags': [],
+                'html': code
+            }
+        }
+        response = api_request(
+            root, call='post', data=json.dumps(data))
+        landing_page = (response.json())
+        print(landing_page)
+        # Checks if there is error
+        if type(landing_page) is list and len(landing_page) == 1 and landing_page[0]['type'] == 'ObjectValidationError' and landing_page[0]['property'] == 'relativePath' and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
+            print(
+                f'  {Fore.RED}[ERROR] {Fore.YELLOW} URL ending "/{html_name}" already exists!',
+                f'\n{Fore.WHITE}» Enter new URL ending:', end='')
+            html_name = input(' ')
+            continue
+        elif type(landing_page) is list:  # Other errors
+            print(f'{Fore.YELLOW}{landing_page}')
+        elif landing_page['type'] == 'LandingPage':
+            break
+        else:  # Weird cases
+            print(f'{Fore.YELLOW}{landing_page}')
+
+    # Open in new tab
+    id = landing_page['id']
+    url = microsite_link + landing_page['relativePath']
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] LP in Eloqua with ID {id}')
+    webbrowser.open(url)
+
+    return id
+
+
+'''
+=================================================================================
+                                Image URL Getter API
 =================================================================================
 '''
 
@@ -403,7 +476,7 @@ def eloqua_get_image(image_name):
 '''
 
 
-def upload_contacts(country, contacts, sharedlist, choice=''):
+def upload_contacts(contacts, list_type, choice=''):
     '''
     Contacts argument should be dict with list: {'listName': ['mail', 'mail']}
     Uploads mail list to Eloqua as shared list listName (appends if it already exists)
@@ -411,7 +484,7 @@ def upload_contacts(country, contacts, sharedlist, choice=''):
 
     # Creates global shared_list information from json
     global shared_list
-    shared_list = naming[source_country][sharedlist]['sharedlist']
+    shared_list = naming[source_country]['id']['sharedlist'][list_type]
 
     # Uploads database to eloqua shared list
     eloqua_create_sharedlist(contacts, choice)
