@@ -62,10 +62,12 @@ _ToDo:_
 __Helper module for Eloqua API__
 - Authenticates user
 - Upload contact database to Eloqua shared lists
+- Search if Landing Page already exists on Eloqua instance
+- Upload landing page to specified folder
 
 _ToDo:_
 - _Broaden API with Email and Form uploads_
 
 ---
 
-[_Version: 1.4.2_]
+[_Version: 1.4.3_]

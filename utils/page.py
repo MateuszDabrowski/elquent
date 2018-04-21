@@ -835,7 +835,7 @@ def campaign_gen(country):
         # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
-            f.write(contacts_ty_lp)
+            f.write(contact_ty_lp)
         # Saves to Eloqua
         api.eloqua_create_landingpage(file_name, contact_ty_lp)
         # Saves to list of created LPs
