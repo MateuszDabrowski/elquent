@@ -19,7 +19,6 @@ import pickle
 import datetime
 import requests
 import encodings
-import pyperclip
 from colorama import Fore, init
 
 # ELQuent imports
@@ -27,6 +26,9 @@ import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
+
+# Predefined messege elements
+ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
 
 '''
@@ -80,13 +82,12 @@ def get_click_auth():
     if not os.path.isfile(file('click')):
         while True:
             print(
-                f'\n{Fore.WHITE}Copy ClickMeeting API Key [CTRL+C] and click [Enter]', end='')
-            input(' ')
-            click_api_key = pyperclip.paste()
+                f'\n{Fore.WHITE}Write or copy ClickMeeting API Key and click [Enter]')
+            click_api_key = input(' ')
             if len(click_api_key) == 42:
                 break
             else:
-                print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Incorrect API Key!')
+                print(f'{ERROR}Incorrect API Key!')
         pickle.dump(click_api_key, open(file('click'), 'wb'))
     click_api_key = pickle.load(open(file('click'), 'rb'))
 
@@ -338,7 +339,7 @@ def click_to_elq(country):
             export_time_range = int(export_time_range)
         except ValueError:
             print(
-                f'\t{Fore.RED}[ERROR] {Fore.YELLOW}Please enter numeric value!')
+                f'\t{ERROR}Please enter numeric value!')
             continue
         else:
             break

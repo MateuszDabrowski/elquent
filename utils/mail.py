@@ -24,6 +24,9 @@ import utils.api.api as api
 # Initialize colorama
 init(autoreset=True)
 
+# Predefined messege elements
+ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+
 '''
 =================================================================================
                             File Path Getter
@@ -226,13 +229,12 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.WHITE}» Copy new {Fore.YELLOW}UTM tracking script{Fore.WHITE} [CTRL+C] and click [Enter]', end='')
-        input(' ')
-        utm = pyperclip.paste()
+            f'\n\n{Fore.WHITE}» Write or copy new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
+        utm = input(' ')
         if utm_track.findall(utm + '"'):
             break
         print(
-            f'{Fore.RED}[ERROR] {Fore.YELLOW}Copied code is not correct UTM tracking script')
+            f'{ERROR}Copied code is not correct UTM tracking script')
 
     # Gathers all links in HTML
     links = re.compile(r'href=(".*?")', re.UNICODE)
@@ -268,9 +270,8 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.WHITE}» Copy desired {Fore.YELLOW}pre-header{Fore.WHITE} text [CTRL+C] and click [Enter]', end='')
-        input(' ')
-        preheader = pyperclip.paste()
+            f'\n{Fore.WHITE}» Write or copy desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
+        preheader = input(' ')
 
         if html_files and re.search('Pre-header', html):
             html = html.replace('Pre-header', preheader)

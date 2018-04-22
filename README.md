@@ -8,10 +8,8 @@ _Interested in using this tool for your company? Can help with implementation_
 __Clean your links__
 - RegEx helper
 - Quick deletion of Eloqua Tracking from links
+- Allows to update e-mail with newly tracked code via ELQuent.api module
 - Quick swapping of UTM Tracking Scripts in links
-
-_ToDo:_
-- _Catching wrong input (proper HTML with inproper UTM codes) - currently Index Error on line 155_
 
 ---
 ## ELQuent.mail
@@ -62,12 +60,15 @@ _ToDo:_
 __Helper module for Eloqua API__
 - Authenticates user
 - Upload contact database to Eloqua shared lists
-- Search if Landing Page already exists on Eloqua instance
+- Checks if LP, Form, Mail already exists on Eloqua instance
 - Upload landing page to specified folder
+- Upload e-mail to specified folder
+- Update e-mail with new code
 
 _ToDo:_
-- _Broaden API with Email and Form uploads_
+- _Fix JSONDecodeError when there are emoticons in email subject on PUT call_
+- _Broaden API with Form uploads and updates - currently halted due to API bug_
 
 ---
 
-[_Version: 1.4.3_]
+[_Version: 1.4.4_]

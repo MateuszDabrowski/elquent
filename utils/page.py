@@ -86,7 +86,7 @@ def file(file_path, name='LP'):
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
         'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
-        'landing-page': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
+        'landing-page': find_data_file(f'WK{source_country}_{name}.html', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -111,16 +111,8 @@ def create_landing_page():
 
         print()
         if choice == 3:  # Gets code from clipboard and validates if it is HTML page
-            while True:
-                print(
-                    f'{Fore.WHITE}» [{Fore.YELLOW}LP{Fore.WHITE}] Copy code of the Landing Page [CTRL+C] and click [Enter]', end='')
-                input(' ')
-                lp_code = pyperclip.paste()
-                is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
-                if is_html.findall(lp_code):
-                    break
-                print(f'{ERROR}Copied code is not a HTML')
-
+            lp_id = api.get_asset_id('LP')
+            lp_code = (api.eloqua_get_landingpage(lp_id))[1]
             # Modifies landing page code
             lp_code = clean_custom_css(lp_code)
             lp_code = add_showhide_css(lp_code)
@@ -207,18 +199,10 @@ def create_form():
         '''
         Returns validated form code form clipoard
         '''
+        form_id = api.get_asset_id('Form')
+        form_code = (api.eloqua_get_form(form_id))[1]
 
-        while True:
-            print(
-                f'{Fore.WHITE}» [{Fore.YELLOW}FORM{Fore.WHITE}] Copy code of the new Form [CTRL+C] and click [Enter]', end='')
-            input(' ')
-            form = pyperclip.paste()
-            is_form = re.compile(r'<form[\s\S\n]*?</form>', re.UNICODE)
-            if is_form.findall(form):
-                break
-            print(f'\t{ERROR}Copied code is not a form')
-
-        return form
+        return form_code
 
     def get_form_fields(form):
         '''
@@ -686,9 +670,8 @@ def campaign_gen(country):
     # Gets campaign name from user
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] Copy name of the Campaign [CTRL+C] and click [Enter]', end='')
-        input(' ')
-        campaign_name = pyperclip.paste()
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] Write or copy name of the Campaign and click [Enter]')
+        campaign_name = input(' ')
         campaign_name = campaign_name.split('_')
         if len(campaign_name) != 5:
             print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
@@ -782,7 +765,6 @@ def campaign_gen(country):
     api.eloqua_create_landingpage(file_name, code)
     # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
-    
 
     '''
     =================================================== Builds TY-LP

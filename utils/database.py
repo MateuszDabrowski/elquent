@@ -26,7 +26,7 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}  [ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
 '''
 =================================================================================
@@ -139,9 +139,8 @@ def upload_to_eloqua(contacts):
     # Gets campaign name from user
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Copy name for the shared list [CTRL+C] and click [Enter]', end='')
-        input(' ')
-        campaign_name = pyperclip.paste()
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or copy name for the shared list and click [Enter]')
+        campaign_name = input(' ')
         campaign_name_check = campaign_name.split('_')
         if len(campaign_name_check) != 5:
             print(
@@ -172,7 +171,7 @@ def upload_to_eloqua(contacts):
         if len(uploading) > 1:
             campaign_name = '_'.join(campaign_name_check[:4] + [uploading])
     if uploading.lower() == 'y':
-        api.upload_contacts(contacts_to_upload, id_type='upload')
+        api.upload_contacts(contacts_to_upload, list_type='upload')
 
     return campaign_name
 

@@ -23,9 +23,13 @@ import requests
 import encodings
 import webbrowser
 from colorama import Fore, init
+from collections import defaultdict
 
 # Initialize colorama
 init(autoreset=True)
+
+# Predefined messege elements
+ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
 
 '''
 =================================================================================
@@ -58,6 +62,124 @@ def file(file_path):
     }
 
     return file_paths.get(file_path)
+
+
+'''
+=================================================================================
+                                Eloqua Asset Helpers
+=================================================================================
+'''
+
+
+def get_asset_id(asset):
+    '''
+    Returns valid ID of chosen Eloqua asset
+    '''
+
+    assets = {
+        'LP': 'Landing Page',
+        'Form': 'Form',
+        'Mail': 'E-mail'
+    }
+
+    asset_name = assets.get(asset)
+
+    while True:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or copy ID of the {asset_name} and click [Enter]', end='')
+        asset_id = input(' ')
+
+        # Checks if input in numerical value
+        try:
+            asset_id = int(asset_id)
+        except ValueError:
+            print(f'{ERROR}It is not valid Eloqua {asset_name} ID')
+            continue
+
+        # Checks if there is asset with that ID
+        try:
+            if asset == 'LP':
+                asset_exists = eloqua_get_landingpage(asset_id)
+            elif asset == 'Form':
+                asset_exists = eloqua_get_form(asset_id)
+            elif asset == 'Mail':
+                asset_exists = eloqua_get_email(asset_id)
+        except json.decoder.JSONDecodeError:
+            asset_exists = False
+
+        # Gets ID confirmation from user
+        if asset_exists:
+            choice = ''
+            while choice.lower() != 'y' and choice.lower() != 'n':
+                print(
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}"{asset_exists[0]}"{Fore.WHITE}? (Y/N):', end='')
+                choice = input(' ')
+            if choice.lower() == 'y':
+                return asset_id
+            elif choice.lower() == 'n':
+                get_asset_id(asset)
+        else:
+            print(f'{ERROR}Not found Eloqua {asset_name} with given ID')
+
+
+def eloqua_asset_exist(name, asset):
+    '''
+    Returns True if there is already asset in Eloqua instance with that name
+    '''
+
+    assets = {
+        'LP': 'landingPages',
+        'Form': 'forms',
+        'Mail': 'emails'
+    }
+
+    endpoint = assets.get(asset)
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/{endpoint}'
+    params = {'search': name}
+    response = api_request(root, params=params)
+    elq_asset = response.json()
+
+    if elq_asset['total']:
+        id = elq_asset['elements'][0]['id']
+        print(
+            f'\n  {Fore.RED}[WARNING]{Fore.YELLOW} {asset} "{name}" already exists! [ID: {id}]')
+        while True:
+            print(
+                f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
+            choice = input(' ')
+            if not choice:
+                return id
+            elif choice.lower() == 'q':
+                print(f'\n{Fore.GREEN}Ahoj!')
+                raise SystemExit
+            else:
+                print(
+                    f'\n{ERROR}Entered value is not a valid choice!')
+    else:
+        return False
+
+
+def eloqua_asset_html_name(name):
+    '''
+    Returns correct html_name for the asset
+    '''
+    html_name = ''
+    date_element = re.compile(r'\d\d', re.UNICODE)
+    local_name = name.split('_')[-2]  # Gets local name from asset name
+    for part in local_name.split('-'):
+        # Skip if part belongs to PSP
+        if part.startswith(tuple(naming[source_country]['psp'])):
+            continue
+        # Skip if part is a date
+        elif date_element.search(part):
+            continue
+        else:
+            html_name += f'{part}-'
+    # Gets asset type last part of html_name
+    html_name += name.split('_')[-1]
+
+    return html_name
 
 
 '''
@@ -118,6 +240,12 @@ def api_request(root, call='get', api='eloqua', params={}, debug=False, data={})
     elif call == 'post':
         headers['Content-Type'] = 'application/json'
         response = requests.post(
+            root,
+            headers=headers,
+            data=data)
+    elif call == 'put':
+        headers['Content-Type'] = 'application/json'
+        response = requests.put(
             root,
             headers=headers,
             data=data)
@@ -186,7 +314,7 @@ def get_eloqua_auth(country):
             login_data = get_eloqua_root(eloqua_key)
             eloqua_root = login_data['urls']['base']
         except TypeError:
-            print(f'{Fore.RED}[ERROR] {Fore.YELLOW}Login failed!')
+            print(f'{ERROR}Login failed!')
             os.remove(file('eloqua'))
             continue
         if eloqua_root:
@@ -370,9 +498,24 @@ def eloqua_log_sync(sync_uri):
 
 '''
 =================================================================================
-                            Landing Page Upload API
+                                Landing Page API
 =================================================================================
 '''
+
+
+def eloqua_get_landingpage(id):
+    '''
+    Returns name and code of Landing Page of given ID
+    '''
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/landingPage/{id}'
+    params = {'depth': 'complete'}
+    response = api_request(root, params=params)
+    landing_page = response.json()
+
+    name = landing_page['name']
+    code = landing_page['htmlContent']['html']
+    return (name, code)
 
 
 def eloqua_create_landingpage(name, code):
@@ -380,61 +523,18 @@ def eloqua_create_landingpage(name, code):
     Requires name and code of the landing page to create LP in Eloqua
     Returns Landing Page ID
     '''
-
-    def eloqua_exist_landingpage(name):
-        '''
-        Returns True if there is already Landing Page in Eloqua instance with that name
-        '''
-        # Gets data of requested image name
-        root = f'{eloqua_rest}assets/landingPages'
-        payload = {'search': name}
-        response = api_request(root, params=payload)
-        landing_page = response.json()
-
-        if landing_page['total']:
-            return True
-        else:
-            return False
-
     # Adds source contry to received asset name
     name = f'WK{source_country}_{name}'
 
     # Checks if there already is LP with that name
-    if eloqua_exist_landingpage(name):
-        print(
-            f'\n  {Fore.RED}[WARNING]{Fore.YELLOW} Landing Page named "{name}" already exists!')
-        while True:
-            print(
-                f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
-            choice = input(' ')
-            if not choice:
-                break
-            elif choice.lower() == 'q':
-                print(f'\n{Fore.GREEN}Ahoj!')
-                raise SystemExit
-            else:
-                print(
-                    f'\n  {Fore.RED}Entered value is not a valid choice!')
+    eloqua_asset_exist(name, asset='LP')
 
     # Chosses correct folder ID for upload
     segment = name.split('_')[1]
     folder_id = naming[source_country]['id']['landingpage'].get(segment)
 
     # Creates correct html_name
-    html_name = ''
-    date_element = re.compile(r'\d\d', re.UNICODE)
-    local_name = name.split('_')[-2]  # Gets local name from asset name
-    for part in local_name.split('-'):
-        # Skip if part belongs to PSP
-        if part.startswith(tuple(naming[source_country]['psp'])):
-            continue
-        # Skip if part is a date
-        elif date_element.search(part):
-            continue
-        else:
-            html_name += f'{part}-'
-    # Gets asset type last part of html_name
-    html_name += name.split('_')[-1]
+    html_name = eloqua_asset_html_name(name)
 
     # Gets id and url of microsite
     microsite_id = naming[source_country]['id']['microsite'][0]
@@ -445,24 +545,23 @@ def eloqua_create_landingpage(name, code):
         root = f'{eloqua_rest}assets/landingPage'
         data = {
             'name': name,  # asset name
-            'description': 'ELQuent API Upload',  # asset description
-            'folderId': folder_id,  # folder id
+            'description': 'ELQuent API Upload',
+            'folderId': folder_id,
             'micrositeId': microsite_id,  # html name domain
             'relativePath': f'/{html_name}',  # html name path
             'htmlContent': {
                 'type': 'RawHtmlContent',
-                'metaTags': [],
                 'html': code
             }
         }
         response = api_request(
             root, call='post', data=json.dumps(data))
-        landing_page = (response.json())
+        landing_page = response.json()
 
         # Checks if there is error
         if type(landing_page) is list and len(landing_page) == 1 and landing_page[0]['type'] == 'ObjectValidationError' and landing_page[0]['property'] == 'relativePath' and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
             print(
-                f'\n  {Fore.RED}[ERROR] {Fore.YELLOW} URL ending "/{html_name}" already exists!',
+                f'\n  {ERROR}URL ending "/{html_name}" already exists!',
                 f'\n  {Fore.WHITE}» Enter new URL ending:', end='')
             html_name = input(' ')
             continue
@@ -485,6 +584,380 @@ def eloqua_create_landingpage(name, code):
 
 '''
 =================================================================================
+                                    Form API
+=================================================================================
+'''
+
+
+def eloqua_get_form(id):
+    '''
+    Returns name and code of Form of given ID
+    '''
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/form/{id}'
+    params = {'depth': 'complete'}
+    response = api_request(root, params=params)
+    form = response.json()
+
+    name = form['name']
+    code = form['html']
+    return (name, code)
+
+
+'''
+=================================================================================
+                                    E-mail API
+=================================================================================
+'''
+
+
+def eloqua_get_email_group(mail_name):
+    '''
+    Returns chosen email group ID
+    '''
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/email/groups'
+    params = {'depth': 'minimal',
+              'search': f'WK{source_country}*'}
+    response = api_request(root, params=params)
+    email_groups_response = response.json()
+
+    email_groups = []
+    # email_groups = defaultdict(list)
+    for group in email_groups_response['elements']:
+        # Skips email groups waiting for deletion
+        if 'delete' in group['name'].lower():
+            continue
+        name = group['name'].split(' - ')
+        if len(name) == 2:
+            name = [name[-1]]
+        if len(name) == 3:
+            name = [name[-2], name[-1]]
+        email_groups.append((name, group['id']))
+    email_groups.sort()
+
+    # Prints first level of email groups and single-level email groups
+    print(f'\n{Fore.GREEN}Choose Email Group:')
+    for i, group in enumerate(email_groups):
+        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» ', end='')
+        if len(group[0]) == 1:
+            print(f'{Fore.WHITE}{group[0][0]}')
+        if len(group[0]) == 2:
+            print(f'{Fore.YELLOW}{group[0][0]}{Fore.WHITE} › {group[0][1]}')
+
+    # Returns id of email group chosen by user
+    while True:
+        print(
+            f'{Fore.YELLOW}Enter number associated with chosen email group:', end='')
+        choice = input(' ')
+        try:
+            choice = int(choice)
+        except (TypeError, ValueError):
+            print(f'{Fore.RED}Please enter numeric value!')
+            choice = ''
+            continue
+        if 0 <= choice < len(email_groups):
+            id = email_groups[choice]
+            return id[1]
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any email group!')
+            choice = ''
+
+
+# def eloqua_get_email_footer(group_name):
+#     '''
+#     Returns chosen email footer name and ID as ('name', 'id')
+
+#     TODO: Different approach with first checking if the email group can be extrapolated from the email name
+#     '''
+#     # Gets data of requested image name
+#     root = f'{eloqua_rest}assets/email/footers'
+#     params = {'depth': 'complete',
+#               'search': f'WK{source_country}*'}
+#     response = api_request(root, params=params)
+#     email_footers = response.json()
+
+#     # Gets possible footers based on chosen email group
+#     possible_footers = []
+#     for footer in email_footers['elements']:
+#         footer_name = footer['name'].replace('_', ' ').replace('-', ' ')
+#         if len(group_name) == 1:
+#             if group_name[0] in footer_name:
+#                 possible_footers.append((footer['name'], footer['id']))
+#         elif len(group_name) == 2:
+#             if group_name[0] in footer_name:
+#                 if group_name[1] in footer['name']:
+#                     possible_footers.append((footer['name'], footer['id']))
+
+#     # Gets confirmation on chosen footer
+#     if len(possible_footers) == 1:
+#         correct = ''
+#         while correct.lower() != 'y' and correct.lower() != 'n':
+#             print(
+#                 f'\t{Fore.WHITE}Is "{possible_footers[0][0]}" correct email footer? (Y/N):', end='')
+#             correct = input(' ')
+#             if correct.lower() == 'y':
+#                 return possible_footers[0]
+#             elif correct.lower() == 'n':
+#                 break
+
+#     # If footer wasn't confirmed or there was more then one possible footer, ask user to choose
+#     print(f'\n{Fore.GREEN}Choose Email Footer:')
+#     for i, footer in enumerate(email_footers):
+#         print(
+#             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {footer["name"]}')
+#     # Returns id of email footer chosen by user
+#     while True:
+#         print(
+#             f'{Fore.YELLOW}Enter number associated with chosen email footer:', end='')
+#         choice = input(' ')
+#         try:
+#             choice = int(choice)
+#         except (TypeError, ValueError):
+#             print(f'{Fore.RED}Please enter numeric value!')
+#             choice = ''
+#             continue
+#         if 0 <= choice < len(email_footers):
+#             return (email_footers[choice])
+#         else:
+#             print(f'{Fore.RED}Entered value does not belong to any email group!')
+#             choice = ''
+
+#     return True
+
+
+def eloqua_get_email(id, depth=''):
+    '''
+    Returns name and code of E-mail of given ID or full response if depth='complete'
+    '''
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/email/{id}'
+    params = {'depth': 'complete'}
+    response = api_request(root, params=params)
+    email = response.json()
+
+    if depth == 'complete':
+        return email
+
+    name = email['name']
+    code = email['htmlContent']['html']
+    return (name, code)
+
+
+def eloqua_search_emails(phrase):
+    '''
+    Returns information about e-mails with phrase
+    '''
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/emails'
+    params = {'depth': 'complete',
+              'search': f'{phrase}*',
+              'orderBy': 'id DESC',
+              'count': '5'}
+    response = api_request(root, params=params)
+    email = response.json()
+
+    return email
+
+
+def eloqua_fill_mail_params(name):
+    '''
+    Returns eloqua_create_email data based on settings of similar mails from the past
+    '''
+    # Start building data dict
+    data = {}
+    data['name'] = name
+    data['description'] = 'ELQuent API Upload'
+    data['bounceBackEmail'] = naming[source_country]['mail']['bounceback']
+    data['replyToName'] = naming[source_country]['mail']['reply_name']
+    data['isTracked'] = 'true'
+    # data['subject'] = subject
+
+    # Builds search name to use as param
+    name_split = name.split('_')
+    global_name = ('_').join(name_split[:3])
+    local_name = name_split[3].split('-')
+    search_name = f'{global_name}_{local_name[0]}'
+    previous_mails = eloqua_search_emails(search_name)
+
+    # Builds gatherers for data from found similar emails
+    sender_mail = []
+    sender_name = []
+    reply_mail = []
+    folder_id = []
+    footer = []
+    header = []
+    group_id = []
+
+    # Fills gatherers with data
+    for mail in previous_mails['elements']:
+        sender_mail.append(mail['senderEmail'])
+        sender_name.append(mail['senderName'])
+        reply_mail.append(mail['replyToEmail'])
+        folder_id.append(mail['folderId'])
+        footer.append(mail['emailFooterId'])
+        header.append(mail['emailHeaderId'])
+        group_id.append(mail['emailGroupId'])
+
+    # Deduplication to check if there is pattern
+    sender_mail = list(set(sender_mail))
+    sender_name = list(set(sender_name))
+    reply_mail = list(set(reply_mail))
+    folder_id = list(set(folder_id))
+    footer = list(set(footer))
+    header = list(set(header))
+    group_id = list(set(group_id))
+    print(reply_mail)
+
+    # If there is single pattern, use this for import
+    chosen_sender = ''  # Allows to propageate chosen sender as reply address
+    if len(sender_mail) == 1:
+        data['senderEmail'] = sender_mail[0]
+    else:
+        for i, sender in enumerate(sender_mail):
+            print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {sender}')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}S{Fore.WHITE}]\t» Skip choosing sender e-mail')
+        # Returns sender e-mail choosen by user
+        while True:
+            print(
+                f'{Fore.YELLOW}Enter number associated with chosen sender e-mail:', end='')
+            choice = input(' ')
+            if choice.lower() == 's':
+                print(
+                    f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Sender e-mail empty')
+                break
+            try:
+                choice = int(choice)
+            except (TypeError, ValueError):
+                print(f'{Fore.RED}Please enter numeric value!')
+                choice = ''
+                continue
+            if 0 <= choice < len(sender_mail):
+                chosen_sender = sender_mail[choice]
+                break
+            else:
+                print(
+                    f'{Fore.RED}Entered value does not belong to any email address!')
+                choice = ''
+    if len(sender_name) == 1:
+        data['senderName'] = sender_name[0]
+    else:
+        data['senderName'] = 'Wolters Kluwer'
+    if len(reply_mail) == 1:
+        data['replyToEmail'] = reply_mail[0]
+    elif chosen_sender:
+        data['replyToEmail'] = chosen_sender
+    else:
+        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Reply e-mail not found')
+    if len(folder_id) == 1:
+        data['folderId'] = folder_id[0]
+    else:
+        id = naming[source_country]['id']['email'].get(
+            name_split[1], naming[source_country]['id']['email'].get(source_country))
+        data['folderId'] = id
+    if len(footer) == 1:
+        data['emailFooterId'] = footer[0]
+    else:
+        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email footer not found')
+    if len(header) == 1:
+        data['emailHeaderId'] = sender_mail[0]
+    else:
+        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email header not found')
+    if len(group_id) == 1:
+        data['emailGroupId'] = sender_mail[0]
+    else:
+        group_id = eloqua_get_email_group(name)
+        data['emailGroupId'] = group_id
+
+    return data
+
+
+def eloqua_create_email(name, code):
+    '''
+    Requires name and code of the email to create it in Eloqua
+    Returns E-mail ID
+    '''
+    # Adds source contry to received asset name
+    name = f'WK{source_country}_{name}'
+
+    # Checks if there already is LP with that name
+    eloqua_asset_exist(name, asset='Mail')
+
+    # Gets required data for the API call
+    data = eloqua_fill_mail_params(name)
+    data['htmlContent'] = {
+        'type': 'RawHtmlContent',
+        'html': code
+    }
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/email'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    email = response.json()
+
+    # Open in new tab
+    id = email['id']
+    url = naming['root'] + '#emails&id=' + id
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+    webbrowser.open(url)
+
+    return id
+
+
+def eloqua_update_email(id, code):
+    '''
+    Requires name and code of the email to create it in Eloqua
+    Returns E-mail ID
+    '''
+    # Gets current data of e-mail to update
+    old_data = eloqua_get_email(id, depth='complete')
+    code = code.replace('"', '\"')
+    data = {
+        'type': 'Email',
+        'currentStatus': old_data['currentStatus'],
+        'id': old_data['id'],
+        'createdAt': old_data['createdAt'],
+        'createdBy': old_data['createdBy'],
+        'folderId': old_data['folderId'],
+        'name': old_data['name'],
+        'updatedAt': old_data['updatedAt'],
+        'updatedBy': old_data['updatedBy'],
+        'bounceBackEmail': old_data['bounceBackEmail'],
+        'emailFooterId': old_data['emailFooterId'],
+        'emailGroupId': old_data['emailGroupId'],
+        'emailHeaderId': old_data['emailHeaderId'],
+        'replyToEmail': old_data['replyToEmail'],
+        'replyToName': old_data['replyToName'],
+        'senderEmail': old_data['senderEmail'],
+        'senderName': old_data['senderName'],
+        'subject': old_data['subject'],
+        'htmlContent': {
+            'type': 'RawHtmlContent',
+            'html': code
+        }
+    }
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/email/{id}'
+    response = api_request(
+        root, call='put', data=json.dumps(data))
+    email = response.json()
+
+    # Open in new tab
+    id = email['id']
+    url = naming['root'] + '#emails&id=' + id
+    print(
+        f'{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+    webbrowser.open(url)
+
+    return id
+
+
+'''
+=================================================================================
                                 Image URL Getter API
 =================================================================================
 '''
@@ -497,10 +970,10 @@ def eloqua_get_image(image_name):
 
     # Gets data of requested image name
     root = f'{eloqua_rest}assets/images'
-    payload = {'depth': 'complete',
-               'orderBy': 'createdAt Desc',
-               'search': image_name}
-    response = api_request(root, params=payload)
+    params = {'depth': 'complete',
+              'orderBy': 'createdAt Desc',
+              'search': image_name}
+    response = api_request(root, params=params)
     image_info = response.json()
     image_link = image_info['elements'][0]['fullImageUrl']
     image_link = (image_link.split('/'))[-1]
