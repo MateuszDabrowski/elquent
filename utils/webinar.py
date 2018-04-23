@@ -82,7 +82,7 @@ def get_click_auth():
     if not os.path.isfile(file('click')):
         while True:
             print(
-                f'\n{Fore.WHITE}Write or copy ClickMeeting API Key and click [Enter]')
+                f'\n{Fore.WHITE}Write or paste ClickMeeting API Key and click [Enter]')
             click_api_key = input(' ')
             if len(click_api_key) == 42:
                 break

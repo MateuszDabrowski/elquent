@@ -670,7 +670,7 @@ def campaign_gen(country):
     # Gets campaign name from user
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] Write or copy name of the Campaign and click [Enter]')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] Write or paste name of the Campaign and click [Enter]')
         campaign_name = input(' ')
         campaign_name = campaign_name.split('_')
         if len(campaign_name) != 5:

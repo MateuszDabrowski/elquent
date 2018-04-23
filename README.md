@@ -8,8 +8,8 @@ _Interested in using this tool for your company? Can help with implementation_
 __Clean your links__
 - RegEx helper
 - Quick deletion of Eloqua Tracking from links
-- Allows to update e-mail with newly tracked code via ELQuent.api module
 - Quick swapping of UTM Tracking Scripts in links
+- Allows to update or create e-mail with new code via ELQuent.api module
 
 ---
 ## ELQuent.mail
@@ -71,4 +71,4 @@ _ToDo:_
 
 ---
 
-[_Version: 1.4.4_]
+[_Version: 1.4.5_]

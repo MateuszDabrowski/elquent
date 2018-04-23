@@ -86,7 +86,7 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or copy ID of the {asset_name} and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste ID of the {asset_name} and click [Enter]', end='')
         asset_id = input(' ')
 
         # Checks if input in numerical value
@@ -112,7 +112,7 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}"{asset_exists[0]}"{Fore.WHITE}? (Y/N):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? (Y/N):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -180,6 +180,30 @@ def eloqua_asset_html_name(name):
     html_name += name.split('_')[-1]
 
     return html_name
+
+
+def eloqua_asset_name():
+    '''
+    Returns correct name for the asset
+    '''
+    while True:
+        name = input(' ')
+        name_check = name.split('_')
+        if len(name_check) != 5:
+            print(
+                f'{ERROR}Expected 5 name elements, found {len(name_check)}')
+        elif name_check[0][:2] != 'WK':
+            print(
+                f'{ERROR}"{name_check[0]}" is not existing country code')
+        elif name_check[1] not in naming[source_country]['segment']:
+            print(
+                f'{ERROR}"{name_check[1]}" is not existing segment name')
+        elif name_check[2] not in naming['campaign']:
+            print(
+                f'{ERROR}"{name_check[2]}" is not existing campaign type')
+        else:
+            return name
+        print(f'{Fore.YELLOW}Please write or paste correct name:')
 
 
 '''
@@ -324,7 +348,7 @@ def get_eloqua_auth(country):
     global eloqua_bulk
     eloqua_bulk = eloqua_root + '/api/BULK/2.0/'
     global eloqua_rest
-    eloqua_rest = eloqua_root + '/api/REST/1.0/'
+    eloqua_rest = eloqua_root + '/api/REST/2.0/'
 
     return eloqua_root
 
@@ -807,7 +831,6 @@ def eloqua_fill_mail_params(name):
     footer = list(set(footer))
     header = list(set(header))
     group_id = list(set(group_id))
-    print(reply_mail)
 
     # If there is single pattern, use this for import
     chosen_sender = ''  # Allows to propageate chosen sender as reply address
@@ -901,7 +924,7 @@ def eloqua_create_email(name, code):
     id = email['id']
     url = naming['root'] + '#emails&id=' + id
     print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
     webbrowser.open(url)
 
     return id
@@ -950,7 +973,7 @@ def eloqua_update_email(id, code):
     id = email['id']
     url = naming['root'] + '#emails&id=' + id
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
     webbrowser.open(url)
 
     return id

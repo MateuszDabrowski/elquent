@@ -229,7 +229,7 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.WHITE}» Write or copy new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
+            f'\n\n{Fore.WHITE}» Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
         utm = input(' ')
         if utm_track.findall(utm + '"'):
             break
@@ -270,7 +270,7 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.WHITE}» Write or copy desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
+            f'\n{Fore.WHITE}» Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
         preheader = input(' ')
 
         if html_files and re.search('Pre-header', html):

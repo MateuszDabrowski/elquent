@@ -78,6 +78,40 @@ def get_code():
     return email, email_id
 
 
+def output_method(code, email_id, name):
+    '''
+    Allows user choose how the program should output the results
+    '''
+
+    print(
+        f'\n{Fore.GREEN}New code should be:',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Only saved to Outcomes folder',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard for pasting [CTRL+V]',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua to original E-mail with new elqTrack',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua as a new E-mail with new elqTrack')
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice == '0':
+            break
+        elif choice == '1':
+            pyperclip.copy(code)
+            break
+        elif choice == '2':
+            api.eloqua_update_email(email_id, code)
+            break
+        elif choice == '3':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}Original E-mail{Fore.WHITE}] {name}',
+                f'\n{Fore.YELLOW}» Write or paste new E-mail name:')
+            name = api.eloqua_asset_name()
+            api.eloqua_create_email(name, code)
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
+
+
 '''
 =================================================================================
                             Cleaning functions
@@ -88,14 +122,15 @@ def get_code():
 def clean_elq_track(country):
     '''
     Returns code without elqTrack UTMs
-    » code: long str
     '''
     global source_country
     source_country = country
 
+    # Gets required data points
     name_and_code, email_id = get_code()
     name, code = name_and_code
 
+    # Checks if there is anything to clear
     elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
     if elq_track.findall(code):
         print(
@@ -103,15 +138,10 @@ def clean_elq_track(country):
         code = elq_track.sub('', code)
         with open(file('elqtrack', name=name), 'w', encoding='utf-8') as f:
             f.write(code)
+        # Asks if user want another method of code usage
+        output_method(code, email_id, name)
     else:
         print(f'\t{ERROR}elqTrack not found')
-
-    # Asks if it should be uploaded to Eloqua
-    print(
-        f'\n{Fore.WHITE}» Update e-mail with newly tracked code in Eloqua? (Y/N)', end='')
-    choice = input(' ')
-    if choice.lower() == 'y':
-        api.eloqua_update_email(email_id, code)
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.WHITE}» Do you want to clean another code? (Y/N)', end='')
@@ -131,10 +161,9 @@ def clean_elq_track(country):
 '''
 
 
-def swap_utm_track(country, code='', name=''):
+def swap_utm_track(country, code='', email_id='', name=''):
     '''
     Returns code with swapped tracking scripts in links
-    » code: long str
     '''
     global source_country
     source_country = country
@@ -142,7 +171,8 @@ def swap_utm_track(country, code='', name=''):
     while True:
         # Gets Email code
         if not code:
-            name, code = get_code()
+            name_and_code, email_id = get_code()
+            name, code = name_and_code
 
         # Cleans ELQ tracking
         elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
@@ -160,32 +190,28 @@ def swap_utm_track(country, code='', name=''):
 
     while True:
         print(
-            f'{Fore.WHITE}» Write or copy new UTM tracking script and click [Enter]')
+            f'{Fore.WHITE}» Write or paste new UTM tracking script and click [Enter]')
         new_utm = input(' ')
         if utm_track.findall(new_utm + '"'):
             break
-        print(f'{ERROR}It is not correct UTM tracking script')
+        print(f'{ERROR}Entered UTM tracking script is incorrect')
 
     # Asks if phone field should be changed to lead mechanism
     swapping = ''
     while swapping.lower() != 'y' and swapping.lower() != 'n':
-        print(f'\n{Fore.WHITE}Change UTM tracking script from:',
-              f'\n{Fore.WHITE}› "{Fore.YELLOW}{(utm_track.findall(code))[0][0]}{Fore.WHITE}"',
-              f'\n{Fore.WHITE}to:',
-              f'\n{Fore.WHITE}› "{Fore.YELLOW}{new_utm}{Fore.WHITE}"',
-              f'\n{Fore.WHITE}? (Y/N)', end='')
+        print(f'\n{Fore.WHITE}Change UTM tracking script? (Y/N)',
+              f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
+              f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}')
         swapping = input(' ')
 
     if swapping.lower() == 'y':
         print(
-            f'{Fore.GREEN}» Swapped {len(utm_track.findall(code))} UTM tracking scripts')
+            f'{Fore.GREEN}» Swapped {len(utm_track.findall(code))} UTM tracking scripts and saved to Outcomes folder.')
         code = utm_track.sub(new_utm, code)
-        pyperclip.copy(code)
         with open(file('utmswap', name=name), 'w', encoding='utf-8') as f:
             f.write(code)
-        print(
-            f'\n{Fore.GREEN}» You can now paste code to Eloqua [CTRL+V].',
-            f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_SwappedUTM-Code.txt in Outcomes folder)')
+        # Asks if user want another method of code usage
+        output_method(code, email_id, name)
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n(Y/N or S for another UTM change in the same code)', end='')
@@ -197,6 +223,6 @@ def swap_utm_track(country, code='', name=''):
     elif choice.lower() == 's':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------', end='\n')
-        swap_utm_track(country, code)
+        swap_utm_track(country, code, email_id, name)
 
     return

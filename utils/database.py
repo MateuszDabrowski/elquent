@@ -139,23 +139,8 @@ def upload_to_eloqua(contacts):
     # Gets campaign name from user
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or copy name for the shared list and click [Enter]')
-        campaign_name = input(' ')
-        campaign_name_check = campaign_name.split('_')
-        if len(campaign_name_check) != 5:
-            print(
-                f'{ERROR}Expected 5 name elements, found {len(campaign_name_check)}')
-        elif campaign_name_check[0][:2] != 'WK':
-            print(
-                f'{ERROR}"{campaign_name_check[0]}" is not existing country code')
-        elif campaign_name_check[1] not in naming[source_country]['segment']:
-            print(
-                f'{ERROR}"{campaign_name_check[1]}" is not existing segment name')
-        elif campaign_name_check[2] not in naming['campaign']:
-            print(
-                f'{ERROR}"{campaign_name_check[2]}" is not existing campaign type')
-        else:
-            break
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste name for the shared list and click [Enter]')
+        campaign_name = api.eloqua_asset_name()
 
     # Cleans contact list from non-email elements
     contacts = [x for x in contacts if '@' in x and '.' in x]
@@ -169,7 +154,8 @@ def upload_to_eloqua(contacts):
             f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list? {Fore.YELLOW}(Y/N {Fore.WHITE}or write new ending to change list name{Fore.YELLOW}):', end='')
         uploading = input(' ')
         if len(uploading) > 1:
-            campaign_name = '_'.join(campaign_name_check[:4] + [uploading])
+            campaign_name = '_'.join(
+                (campaign_name.split('_'))[:-1] + [uploading])
     if uploading.lower() == 'y':
         api.upload_contacts(contacts_to_upload, list_type='upload')
 
