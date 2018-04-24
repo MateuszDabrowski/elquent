@@ -646,13 +646,25 @@ def eloqua_get_email_group(mail_name):
     response = api_request(root, params=params)
     email_groups_response = response.json()
 
+    # Tries to automatically select group based on naming
+    mail_name_parts = mail_name.split('_')
+    local_name_parts = (mail_name_parts[3]).split('-')
+    try:
+        id = naming[source_country]['mail']['data'][local_name_parts[0]]['group_id']
+        return id
+    except KeyError:
+        if mail_name_parts[1:3] == ['PROF', 'BOO']:
+            return naming[source_country]['mail']['data']['Profinfo']['group_id']
+
     email_groups = []
-    # email_groups = defaultdict(list)
     for group in email_groups_response['elements']:
         # Skips email groups waiting for deletion
         if 'delete' in group['name'].lower():
             continue
         name = group['name'].split(' - ')
+        # Skips email groups checked in above part
+        if name[1].lower() in ['newsletter', 'alert', 'profinfo']:
+            continue
         if len(name) == 2:
             name = [name[-1]]
         if len(name) == 3:
@@ -686,68 +698,6 @@ def eloqua_get_email_group(mail_name):
         else:
             print(f'{Fore.RED}Entered value does not belong to any email group!')
             choice = ''
-
-
-# def eloqua_get_email_footer(group_name):
-#     '''
-#     Returns chosen email footer name and ID as ('name', 'id')
-
-#     TODO: Different approach with first checking if the email group can be extrapolated from the email name
-#     '''
-#     # Gets data of requested image name
-#     root = f'{eloqua_rest}assets/email/footers'
-#     params = {'depth': 'complete',
-#               'search': f'WK{source_country}*'}
-#     response = api_request(root, params=params)
-#     email_footers = response.json()
-
-#     # Gets possible footers based on chosen email group
-#     possible_footers = []
-#     for footer in email_footers['elements']:
-#         footer_name = footer['name'].replace('_', ' ').replace('-', ' ')
-#         if len(group_name) == 1:
-#             if group_name[0] in footer_name:
-#                 possible_footers.append((footer['name'], footer['id']))
-#         elif len(group_name) == 2:
-#             if group_name[0] in footer_name:
-#                 if group_name[1] in footer['name']:
-#                     possible_footers.append((footer['name'], footer['id']))
-
-#     # Gets confirmation on chosen footer
-#     if len(possible_footers) == 1:
-#         correct = ''
-#         while correct.lower() != 'y' and correct.lower() != 'n':
-#             print(
-#                 f'\t{Fore.WHITE}Is "{possible_footers[0][0]}" correct email footer? (Y/N):', end='')
-#             correct = input(' ')
-#             if correct.lower() == 'y':
-#                 return possible_footers[0]
-#             elif correct.lower() == 'n':
-#                 break
-
-#     # If footer wasn't confirmed or there was more then one possible footer, ask user to choose
-#     print(f'\n{Fore.GREEN}Choose Email Footer:')
-#     for i, footer in enumerate(email_footers):
-#         print(
-#             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {footer["name"]}')
-#     # Returns id of email footer chosen by user
-#     while True:
-#         print(
-#             f'{Fore.YELLOW}Enter number associated with chosen email footer:', end='')
-#         choice = input(' ')
-#         try:
-#             choice = int(choice)
-#         except (TypeError, ValueError):
-#             print(f'{Fore.RED}Please enter numeric value!')
-#             choice = ''
-#             continue
-#         if 0 <= choice < len(email_footers):
-#             return (email_footers[choice])
-#         else:
-#             print(f'{Fore.RED}Entered value does not belong to any email group!')
-#             choice = ''
-
-#     return True
 
 
 def eloqua_get_email(id, depth=''):
@@ -863,30 +813,36 @@ def eloqua_fill_mail_params(name):
                 print(
                     f'{Fore.RED}Entered value does not belong to any email address!')
                 choice = ''
+
     if len(sender_name) == 1:
         data['senderName'] = sender_name[0]
     else:
         data['senderName'] = 'Wolters Kluwer'
+
     if len(reply_mail) == 1:
         data['replyToEmail'] = reply_mail[0]
     elif chosen_sender:
         data['replyToEmail'] = chosen_sender
     else:
         print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Reply e-mail not found')
+
     if len(folder_id) == 1:
         data['folderId'] = folder_id[0]
     else:
         id = naming[source_country]['id']['email'].get(
             name_split[1], naming[source_country]['id']['email'].get(source_country))
         data['folderId'] = id
+
     if len(footer) == 1:
         data['emailFooterId'] = footer[0]
     else:
         print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email footer not found')
+
     if len(header) == 1:
         data['emailHeaderId'] = sender_mail[0]
     else:
         print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email header not found')
+
     if len(group_id) == 1:
         data['emailGroupId'] = sender_mail[0]
     else:

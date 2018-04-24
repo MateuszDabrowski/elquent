@@ -53,8 +53,8 @@ def file(file_path, name=''):
         name = f'WK{source_country}_SwappedUTM-Code.txt'
 
     file_paths = {
-        'elqtrack': find_data_file(f'{name}.html'),
-        'utmswap': find_data_file(f'{name}.html')
+        'elqtrack': find_data_file(f'{name}.txt'),
+        'utmswap': find_data_file(f'{name}.txt')
     }
 
     return file_paths.get(file_path)

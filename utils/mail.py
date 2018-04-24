@@ -72,7 +72,7 @@ def file(file_path, file_name='', folder_name=''):
         'incomes': find_data_file('incomes', dir='main'),
         'package': find_data_file(f'{file_name}'),
         'package_file': find_data_file(f'{file_name}', dir='package', folder_name=folder_name),
-        'mail_html': find_data_file(f'WK{source_country}_{file_name}.html', dir='outcomes'),
+        'mail_html': find_data_file(f'WK{source_country}_{file_name}.txt', dir='outcomes'),
         'mail_mjml': find_data_file(f'WK{source_country}_{file_name}.mjml', dir='outcomes')
     }
 

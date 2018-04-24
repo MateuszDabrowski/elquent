@@ -86,7 +86,7 @@ def file(file_path, name='LP'):
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
         'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
-        'landing-page': find_data_file(f'WK{source_country}_{name}.html', dir='outcomes')
+        'landing-page': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -703,14 +703,14 @@ def campaign_gen(country):
     # Gets information about converter that is used in campaign
     print(f'\n{Fore.GREEN}After filling the form user receives:')
     converter_values = list(naming[source_country]['converter'].keys())
-    for i, converter in enumerate(converter_values[1:]):
+    for i, converter in enumerate(converter_values[2:]):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         converter_choice = input(' ')
         if converter_choice in ['0', '1', '2', '3', '4', '5']:
-            converter_choice = converter_values[int(converter_choice) + 1]
+            converter_choice = converter_values[int(converter_choice) + 2]
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any choice!')
@@ -790,6 +790,8 @@ def campaign_gen(country):
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
             converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
+        lead_ty_lp.replace('<!-- PRESENTATION -->',
+                           naming[source_country]['converter']['Presentation'])
         # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:

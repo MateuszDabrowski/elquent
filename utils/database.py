@@ -137,10 +137,9 @@ def upload_to_eloqua(contacts):
     '''
 
     # Gets campaign name from user
-    while True:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste name for the shared list and click [Enter]')
-        campaign_name = api.eloqua_asset_name()
+    print(
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste name for the shared list and click [Enter]')
+    campaign_name = api.eloqua_asset_name()
 
     # Cleans contact list from non-email elements
     contacts = [x for x in contacts if '@' in x and '.' in x]
