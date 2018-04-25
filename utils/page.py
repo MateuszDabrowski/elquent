@@ -26,7 +26,8 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 
 '''
@@ -261,7 +262,7 @@ def create_form():
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? (Y/N):', end='')
+                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -290,7 +291,7 @@ def create_form():
         # Asks if information about data administrator should be appended
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Add information about data administrator? (Y/N):', end='')
+                f'\t{Fore.WHITE}Add information about data administrator? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -374,7 +375,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n':
                 print(
-                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? (Y/N):', end='')
+                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 requiredOptins.append(optin[1])
@@ -407,7 +408,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? (Y/N):', end='')
+                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)

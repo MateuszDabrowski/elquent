@@ -1,39 +1,51 @@
 {
     "country": ["AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
     "AK": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "BE": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "CZ": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "DE": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "database"
     ],
     "ES": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "FR": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "HU": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "IT": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "LSW": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "NL": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ],
     "PL": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "campaign_gen", "database", "webinar"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "campaign_gen", "database", "webinar"
     ],
     "SK": [
-        "clean_outcomes", "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "database"
     ]
 }

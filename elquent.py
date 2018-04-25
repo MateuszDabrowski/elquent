@@ -147,7 +147,7 @@ def new_version():
 
 '''
 =================================================================================
-                            Cleans Outcomes folder
+                            Cleaner helper functions
 =================================================================================
 '''
 
@@ -161,6 +161,19 @@ def clean_outcomes(country):
         if os.path.isfile(file_path):
             os.unlink(file_path)
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
+
+    return
+
+
+def clean_incomes(country):
+    '''
+    Cleans all content of Incomes folder
+    '''
+    for f in os.listdir(file('incomes')):
+        file_path = os.path.join(file('incomes'), f)
+        if os.path.isfile(file_path):
+            os.unlink(file_path)
+    print(f'\n{Fore.GREEN}» Incomes folder cleaned.')
 
     return
 
@@ -179,14 +192,15 @@ def menu(choice=''):
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     utils = {
-        'clean_outcomes': (clean_outcomes, f'Clean Outcomes folder'),
-        'clean_elq_track': (link.clean_elq_track, f'Delete elqTrack{Fore.WHITE} code in links'),
-        'swap_utm_track': (link.swap_utm_track, f'Swap UTM{Fore.WHITE} tracking code in links'),
-        'build_mail': (mail.mail_constructor, f'Build e-mail{Fore.WHITE} from package in Incomes folder'),
-        'page_gen': (page.page_gen, f'Swap or Add Form{Fore.WHITE} to a single Landing Page'),
-        'campaign_gen': (page.campaign_gen, f'Prepare Campaign{Fore.WHITE} required set of Landing Pages'),
-        'database': (database.contact_list, f'Create contact upload{Fore.WHITE} file with correct structure'),
-        'webinar': (webinar.click_to_elq, f'Upload Webinar{Fore.WHITE} registered users and attendees')
+        'build_mail': (mail.mail_constructor, f'E-mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
+        'page_gen': (page.page_gen, f'Form›LP{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
+        'campaign_gen': (page.campaign_gen, f'Campaign{Fore.WHITE}] Prepare Campaign required set of Landing Pages'),
+        'webinar': (webinar.click_to_elq, f'Webinars{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'database': (database.contact_list, f'Database{Fore.WHITE}] Create contact upload file with correct structure'),
+        'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in links'),
+        'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in links'),
+        'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
+        'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder')
     }
 
     # Gets dict of utils available for users source country
@@ -197,8 +211,9 @@ def menu(choice=''):
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
     for i, function in enumerate(available_utils.values()):
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {Fore.YELLOW}{function[1]}')
-    print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{function[1]}')
+    print(
+        f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
 
     while True:
         if not choice:

@@ -29,7 +29,8 @@ from collections import defaultdict
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
 =================================================================================
@@ -112,7 +113,7 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? (Y/N):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -491,10 +492,10 @@ def eloqua_import_sync(uri):
         sync_status = response.json()
         status = sync_status['status']
         print(f'{Fore.BLUE}{status}/', end='', flush=True)
-        if status == 'warning' or status == 'error':
+        if status in ['warning', 'error', 'success']:
             eloqua_log_sync(sync_uri)
             break
-        time.sleep(3)
+        time.sleep(5)
     print()
 
     return status
@@ -961,7 +962,7 @@ def eloqua_get_image(image_name):
     # Warns if there are multiple images found by query
     if int(image_info['total']) > 1:
         print(
-            f'\n{Fore.YELLOW}[WARNING] {Fore.WHITE}More then one image found - adding newest ', end='')
+            f'\n{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] More then one image found - adding newest ', end='')
 
     return image_link
 

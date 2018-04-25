@@ -25,7 +25,8 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
 =================================================================================
@@ -82,7 +83,6 @@ def output_method(code, email_id, name):
     '''
     Allows user choose how the program should output the results
     '''
-
     print(
         f'\n{Fore.GREEN}New code should be:',
         f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Only saved to Outcomes folder',
@@ -96,6 +96,8 @@ def output_method(code, email_id, name):
             break
         elif choice == '1':
             pyperclip.copy(code)
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}HTML{Fore.WHITE}]{Fore.GREEN} You can now paste [CTRL+V]')
             break
         elif choice == '2':
             api.eloqua_update_email(email_id, code)
@@ -144,7 +146,7 @@ def clean_elq_track(country):
         print(f'\t{ERROR}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to clean another code? (Y/N)', end='')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -199,7 +201,7 @@ def swap_utm_track(country, code='', email_id='', name=''):
     # Asks if phone field should be changed to lead mechanism
     swapping = ''
     while swapping.lower() != 'y' and swapping.lower() != 'n':
-        print(f'\n{Fore.WHITE}Change UTM tracking script? (Y/N)',
+        print(f'\n{Fore.WHITE}Change UTM tracking script? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})',
               f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
               f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}')
         swapping = input(' ')
@@ -214,7 +216,7 @@ def swap_utm_track(country, code='', email_id='', name=''):
         output_method(code, email_id, name)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n(Y/N or S for another UTM change in the same code)', end='')
+    print(f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE} or {Fore.YELLOW}S{Fore.WHITE} for another UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

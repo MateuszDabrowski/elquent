@@ -28,7 +28,8 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 
 '''

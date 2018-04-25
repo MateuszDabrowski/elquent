@@ -25,7 +25,8 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Predefined messege elements
-ERROR = f'{Fore.RED}[ERROR] {Fore.YELLOW}'
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
 =================================================================================
@@ -81,6 +82,61 @@ def file(file_path, file_name='', folder_name=''):
 
 '''
 =================================================================================
+                                Code Output Helper
+=================================================================================
+'''
+
+
+def output_method(html_code='', mjml_code=''):
+    '''
+    Allows user choose how the program should output the results
+    '''
+    print(
+        f'\n{Fore.GREEN}New code should be:',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Only saved to Outcomes folder')
+    if html_code:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard as HTML for pasting [CTRL+V]')
+    if mjml_code:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard as MJML for pasting [CTRL+V]')
+    print(
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua to original E-mail with new elqTrack',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua as a new E-mail with new elqTrack')
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice == '0':
+            break
+        elif choice == '1':
+            pyperclip.copy(html_code)
+            print(
+                f'\n{SUCCESS} You can now paste the HTML code [CTRL+V]')
+            break
+        elif choice == '2':
+            pyperclip.copy(mjml_code)
+            print(
+                f'\n{SUCCESS} You can now paste the MJML code [CTRL+V]')
+            break
+        elif choice == '3':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste ID of the E-mail to update:')
+            email_id = input(' ')
+            api.eloqua_update_email(email_id, html_code)
+            break
+        elif choice == '4':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste name of the E-mail:')
+            name = api.eloqua_asset_name()
+            api.eloqua_create_email(name, html_code)
+            break
+        else:
+            print(f'{ERROR}Entered value does not belong to any utility!')
+            choice = ''
+
+
+'''
+=================================================================================
                             Preparation of the program
 =================================================================================
 '''
@@ -126,13 +182,13 @@ def package_chooser():
         try:
             choice = int(choice)
         except (TypeError, ValueError):
-            print(f'{Fore.RED}Please enter numeric value!')
+            print(f'{ERROR}Please enter numeric value!')
             choice = ''
             continue
         if 0 <= choice < len(folders):
             break
         else:
-            print(f'{Fore.RED}Entered value does not belong to any package!')
+            print(f'{ERROR}Entered value does not belong to any package!')
             choice = ''
 
     folder_name = folders[choice]
@@ -157,14 +213,16 @@ def mail_constructor(country):
 
     # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}» Please add email folder with {Fore.WHITE}Images, HTML, MJML{Fore.YELLOW} to Incomes folder.\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with {Fore.YELLOW}Images, HTML, MJML{Fore.WHITE} to Incomes folder.',
+        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
     # Lets user choose package to construct
     while True:
         folder_name, html_files, mjml_files, image_files = package_chooser()
         if not html_files and not mjml_files:
-            print(f'{Fore.RED}Chosen package got neither HTML nor MJML file!')
+            print(
+                f'{ERROR}Chosen package got neither HTML nor MJML file!')
         else:
             break
 
@@ -186,7 +244,8 @@ def mail_constructor(country):
 
     # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}» Please upload {Fore.WHITE}{folder_name}{Fore.YELLOW} images to Eloqua.\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+        f'\n{Fore.YELLOW}»{Fore.WHITE} Please upload {Fore.YELLOW}{folder_name}{Fore.WHITE} images to Eloqua.',
+        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
     print(f'\n{Fore.GREEN}Adding image links from Eloqua:', end='')
@@ -229,8 +288,10 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.WHITE}» Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
+            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
         utm = input(' ')
+        if utm == 'i':
+            break
         if utm_track.findall(utm + '"'):
             break
         print(
@@ -250,13 +311,13 @@ def mail_constructor(country):
             trackable_links.remove(link)
 
     # Appending UTM to all trackable_links in HTML
-    if html_files:
+    if html_files and utm != 'i':
         for link in trackable_links:
             if '?' in link:
                 html = html.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
             else:
                 html = html.replace(link, (link[:-1] + utm + '"'))
-    if mjml_files:
+    if mjml_files and utm != 'i':
         for link in trackable_links:
             if '?' in link:
                 mjml = mjml.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
@@ -270,7 +331,7 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.WHITE}» Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
         preheader = input(' ')
 
         if html_files and re.search('Pre-header', html):
@@ -286,18 +347,18 @@ def mail_constructor(country):
     if html_files:
         with open(file('mail_html', file_name=folder_name), 'w', encoding='utf-8') as f:
             f.write(html)
-        pyperclip.copy(html)
 
     if mjml_files:
         with open(file('mail_mjml', file_name=folder_name), 'w', encoding='utf-8') as f:
             f.write(mjml)
 
     print(
-        f'\n{Fore.GREEN}» You can now paste constructed Email to Eloqua [CTRL+V].',
-        f'\n{Fore.WHITE}  (It is also saved to Outcomes folder)')
+        f'\n{SUCCESS} Code saved to Outcomes folder')
+
+    output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.GREEN}Do you want to construct another Email? (Y/N)', end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         mail_constructor(country)
