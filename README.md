@@ -18,9 +18,6 @@ __Constructs your email packages__
 - Automatically adds image links, tracking scripts and pre-header to package
 - Works with both HTML and MJML files
 
-_ToDo:_
-- _Upload constructed code to Eloqua_
-
 ---
 ## ELQuent.page
 __Create landing page__
@@ -71,4 +68,4 @@ _ToDo:_
 
 ---
 
-[_Version: 1.4.7_]
+[_Version: 1.4.8_]

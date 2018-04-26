@@ -103,7 +103,7 @@ def get_contacts():
         if len(database) > len(validated_mails):
             print(
                 f'\n{ERROR}Out of {len(database)} records uploaded, {len(validated_mails)} are correct e-mails.',
-                f'\n  {Fore.WHITE}» Show incorrect ones? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
+                f'\n  {Fore.WHITE}» Show incorrect ones? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
             print_diff = input(' ')
             if print_diff.lower() == 'y':  # Allows user to see which particular lines are incorrect
                 diff = [mail for mail in database if mail not in validated_mails]
@@ -152,7 +152,7 @@ def upload_to_eloqua(contacts):
         # Confirms if everything is correct
         print(
             f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to {Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list?',
-            f'\n{Fore.WHITE}({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE} or {Fore.YELLOW}write{Fore.WHITE} new ending to change list name):', end='')
+            f'\n{Fore.WHITE}({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE} or {Fore.YELLOW}write{Fore.WHITE} new ending to change list name):', end='')
         uploading = input(' ')
         if len(uploading) > 1:
             campaign_name = '_'.join(
@@ -226,7 +226,7 @@ def contact_list(country):
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
             swapping = input(' ')
         if swapping.lower() == 'y':
             name = upload_to_eloqua(contacts)
@@ -251,7 +251,7 @@ def contact_list(country):
 
     # Asks user if he would like to repeat
     print(
-        f'{Fore.WHITE}» Do you want to prepare another contact upload? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})', end='')
+        f'{Fore.WHITE}» Do you want to prepare another contact upload? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

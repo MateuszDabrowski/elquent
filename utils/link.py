@@ -74,7 +74,22 @@ def get_code():
     » code: long str
     '''
     email_id = api.get_asset_id('Mail')
-    email = api.eloqua_get_email(email_id)
+    if email_id:
+        email = api.eloqua_get_email(email_id)
+    else:
+        while True:
+            print(
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}CODE{Fore.WHITE}] Copy code [CTRL+C] and click [Enter]', end='')
+            input(' ')
+            code = pyperclip.paste()
+            is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
+            if is_html.findall(code):
+                print(
+                    f'{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste new E-mail name:')
+                name = api.eloqua_asset_name()
+                email = (name, code)
+                break
+            print(f'  {ERROR}Copied code is not correct HTML')
 
     return email, email_id
 
@@ -85,10 +100,12 @@ def output_method(code, email_id, name):
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Only saved to Outcomes folder',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard for pasting [CTRL+V]',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua to original E-mail with new elqTrack',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua as a new E-mail with new elqTrack')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» [{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}COPY{Fore.WHITE}] Copied to clipboard for pasting [CTRL+V]',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail with new elqTrack')
+    if email_id:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua to original E-mail with new elqTrack')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -100,14 +117,14 @@ def output_method(code, email_id, name):
                 f'\n{Fore.WHITE}[{Fore.YELLOW}HTML{Fore.WHITE}]{Fore.GREEN} You can now paste [CTRL+V]')
             break
         elif choice == '2':
-            api.eloqua_update_email(email_id, code)
-            break
-        elif choice == '3':
             print(
                 f'\n{Fore.WHITE}[{Fore.YELLOW}Original E-mail{Fore.WHITE}] {name}',
-                f'\n{Fore.YELLOW}» Write or paste new E-mail name:')
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste new E-mail name:')
             name = api.eloqua_asset_name()
             api.eloqua_create_email(name, code)
+            break
+        elif choice == '3' and email_id:
+            api.eloqua_update_email(email_id, code)
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
@@ -146,7 +163,7 @@ def clean_elq_track(country):
         print(f'\t{ERROR}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to clean another code? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})', end='')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -201,7 +218,7 @@ def swap_utm_track(country, code='', email_id='', name=''):
     # Asks if phone field should be changed to lead mechanism
     swapping = ''
     while swapping.lower() != 'y' and swapping.lower() != 'n':
-        print(f'\n{Fore.WHITE}Change UTM tracking script? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})',
+        print(f'\n{Fore.WHITE}Change UTM tracking script? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})',
               f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
               f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}')
         swapping = input(' ')
@@ -216,13 +233,14 @@ def swap_utm_track(country, code='', email_id='', name=''):
         output_method(code, email_id, name)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE} or {Fore.YELLOW}S{Fore.WHITE} for another UTM change in the same code)', end='')
+    print(
+        f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE} or [A]nother UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         swap_utm_track(country)
-    elif choice.lower() == 's':
+    elif choice.lower() == 'a':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------', end='\n')
         swap_utm_track(country, code, email_id, name)

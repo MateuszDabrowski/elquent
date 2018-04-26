@@ -30,6 +30,7 @@ init(autoreset=True)
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}ERROR{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
@@ -87,8 +88,12 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste ID of the {asset_name} and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste ID of the {asset_name} and click [Enter] or [P]aste code', end='')
         asset_id = input(' ')
+
+        # Skips to get code via pyperclip
+        if asset_id.lower() == 'p':
+            return None
 
         # Checks if input in numerical value
         try:
@@ -113,7 +118,7 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE}):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -144,7 +149,7 @@ def eloqua_asset_exist(name, asset):
     if elq_asset['total']:
         id = elq_asset['elements'][0]['id']
         print(
-            f'\n  {Fore.RED}[WARNING]{Fore.YELLOW} {asset} "{name}" already exists! [ID: {id}]')
+            f'\n  {WARNING}{asset} "{name}" already exists! [ID: {id}]')
         while True:
             print(
                 f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
@@ -514,9 +519,9 @@ def eloqua_log_sync(sync_uri):
     logs_eloqua = response.json()
     for item in logs_eloqua['items']:
         if item['severity'] == 'warning':
-            print(f'\t{Fore.YELLOW}» {item["count"]} {item["message"]}')
+            print(f'\t{Fore.YELLOW}› {item["count"]} {item["message"]}')
         if item['message'] in ['Contacts created.', 'Contacts updated.']:
-            print(f'\t{Fore.GREEN}» {item["count"]} {item["message"]}')
+            print(f'\t{Fore.GREEN}› {item["count"]} {item["message"]}')
 
     return logs_eloqua
 
@@ -799,7 +804,7 @@ def eloqua_fill_mail_params(name):
             choice = input(' ')
             if choice.lower() == 's':
                 print(
-                    f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Sender e-mail empty')
+                    f'{WARNING}Sender e-mail empty')
                 break
             try:
                 choice = int(choice)
@@ -825,7 +830,7 @@ def eloqua_fill_mail_params(name):
     elif chosen_sender:
         data['replyToEmail'] = chosen_sender
     else:
-        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Reply e-mail not found')
+        print(f'{WARNING}Reply e-mail not found')
 
     if len(folder_id) == 1:
         data['folderId'] = folder_id[0]
@@ -837,12 +842,12 @@ def eloqua_fill_mail_params(name):
     if len(footer) == 1:
         data['emailFooterId'] = footer[0]
     else:
-        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email footer not found')
+        print(f'{WARNING}Email footer not found')
 
     if len(header) == 1:
         data['emailHeaderId'] = sender_mail[0]
     else:
-        print(f'{Fore.YELLOW}[WARNING]{Fore.WHITE} Email header not found')
+        print(f'{WARNING}Email header not found')
 
     if len(group_id) == 1:
         data['emailGroupId'] = sender_mail[0]
@@ -866,6 +871,7 @@ def eloqua_create_email(name, code):
 
     # Gets required data for the API call
     data = eloqua_fill_mail_params(name)
+    data['isTracked'] = 'true'
     data['htmlContent'] = {
         'type': 'RawHtmlContent',
         'html': code
@@ -897,28 +903,19 @@ def eloqua_update_email(id, code):
     code = code.replace('"', '\"')
     data = {
         'type': 'Email',
-        'currentStatus': old_data['currentStatus'],
-        'id': old_data['id'],
-        'createdAt': old_data['createdAt'],
-        'createdBy': old_data['createdBy'],
-        'folderId': old_data['folderId'],
-        'name': old_data['name'],
-        'updatedAt': old_data['updatedAt'],
-        'updatedBy': old_data['updatedBy'],
-        'bounceBackEmail': old_data['bounceBackEmail'],
-        'emailFooterId': old_data['emailFooterId'],
-        'emailGroupId': old_data['emailGroupId'],
-        'emailHeaderId': old_data['emailHeaderId'],
-        'replyToEmail': old_data['replyToEmail'],
-        'replyToName': old_data['replyToName'],
-        'senderEmail': old_data['senderEmail'],
-        'senderName': old_data['senderName'],
-        'subject': old_data['subject'],
+        'isTracked': 'true',
         'htmlContent': {
             'type': 'RawHtmlContent',
             'html': code
         }
     }
+    
+    # Takes care of case where there is lack of element in source mail
+    for element in ['currentStatus','id','createdAt','createdBy','folderId','name','updatedAt','updatedBy','bounceBackEmail','emailFooterId','emailGroupId','emailHeaderId','replyToEmail','replyToName','senderEmail','senderName','subject',]:
+        try:
+            data[element] = old_data[element]
+        except KeyError:
+            continue
 
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/email/{id}'
@@ -962,7 +959,7 @@ def eloqua_get_image(image_name):
     # Warns if there are multiple images found by query
     if int(image_info['total']) > 1:
         print(
-            f'\n{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] More then one image found - adding newest ', end='')
+            f'\n{WARNING}More then one image found - adding newest ', end='')
 
     return image_link
 

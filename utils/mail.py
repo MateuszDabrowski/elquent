@@ -93,30 +93,30 @@ def output_method(html_code='', mjml_code=''):
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Only saved to Outcomes folder')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» [{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
     if html_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard as HTML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
     if mjml_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Copied to clipboard as MJML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua to original E-mail with new elqTrack',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t{Fore.YELLOW}» {Fore.WHITE}Uploaded to Eloqua as a new E-mail with new elqTrack')
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
         if choice == '0':
             break
-        elif choice == '1':
+        elif choice == '1' and html_code:
             pyperclip.copy(html_code)
             print(
-                f'\n{SUCCESS} You can now paste the HTML code [CTRL+V]')
+                f'\n{SUCCESS}You can now paste the HTML code [CTRL+V]')
             break
-        elif choice == '2':
+        elif choice == '2' and mjml_code:
             pyperclip.copy(mjml_code)
             print(
-                f'\n{SUCCESS} You can now paste the MJML code [CTRL+V]')
+                f'\n{SUCCESS}You can now paste the MJML code [CTRL+V]')
             break
         elif choice == '3':
             print(
@@ -288,9 +288,9 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter]')
+            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
-        if utm == 'i':
+        if utm.lower() == 's':
             break
         if utm_track.findall(utm + '"'):
             break
@@ -311,13 +311,13 @@ def mail_constructor(country):
             trackable_links.remove(link)
 
     # Appending UTM to all trackable_links in HTML
-    if html_files and utm != 'i':
+    if html_files and utm.lower() != 's':
         for link in trackable_links:
             if '?' in link:
                 html = html.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
             else:
                 html = html.replace(link, (link[:-1] + utm + '"'))
-    if mjml_files and utm != 'i':
+    if mjml_files and utm.lower() != 's':
         for link in trackable_links:
             if '?' in link:
                 mjml = mjml.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
@@ -331,13 +331,13 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter]')
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
         preheader = input(' ')
 
-        if html_files and re.search('Pre-header', html):
+        if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
             html = html.replace('Pre-header', preheader)
 
-        if mjml_files and re.search('Pre-header', mjml):
+        if mjml_files and preheader.lower() != 's' and re.search('Pre-header', mjml):
             mjml = mjml.replace('Pre-header', preheader)
 
     '''
@@ -353,12 +353,12 @@ def mail_constructor(country):
             f.write(mjml)
 
     print(
-        f'\n{SUCCESS} Code saved to Outcomes folder')
+        f'\n{SUCCESS}Code saved to Outcomes folder')
 
     output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Fore.GREEN}Y{Fore.WHITE}/{Fore.RED}N{Fore.WHITE})', end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         mail_constructor(country)
