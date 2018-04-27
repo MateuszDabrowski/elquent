@@ -63,9 +63,8 @@ __Helper module for Eloqua API__
 - Update e-mail with new code
 
 _ToDo:_
-- _Fix JSONDecodeError when there are emoticons in email subject on PUT call_
 - _Broaden API with Form uploads and updates - currently halted due to API bug_
 
 ---
 
-[_Version: 1.4.8_]
+[_Version: 1.4.9_]

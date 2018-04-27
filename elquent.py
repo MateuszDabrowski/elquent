@@ -194,11 +194,11 @@ def menu(choice=''):
     utils = {
         'build_mail': (mail.mail_constructor, f'E-mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Form›LP{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'campaign_gen': (page.campaign_gen, f'Campaign{Fore.WHITE}] Prepare Campaign required set of Landing Pages'),
+        'campaign_gen': (page.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
         'webinar': (webinar.click_to_elq, f'Webinars{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'database': (database.contact_list, f'Database{Fore.WHITE}] Create contact upload file with correct structure'),
-        'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in links'),
-        'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in links'),
+        'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in E-mail links'),
+        'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
         'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder')
     }

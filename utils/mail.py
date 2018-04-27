@@ -101,8 +101,8 @@ def output_method(html_code='', mjml_code=''):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail')
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -120,15 +120,15 @@ def output_method(html_code='', mjml_code=''):
             break
         elif choice == '3':
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste ID of the E-mail to update:')
-            email_id = input(' ')
-            api.eloqua_update_email(email_id, html_code)
-            break
-        elif choice == '4':
-            print(
                 f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste name of the E-mail:')
             name = api.eloqua_asset_name()
             api.eloqua_create_email(name, html_code)
+            break
+        elif choice == '4':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste ID of the E-mail to update:')
+            email_id = input(' ')
+            api.eloqua_update_email(email_id, html_code)
             break
         else:
             print(f'{ERROR}Entered value does not belong to any utility!')
@@ -230,10 +230,12 @@ def mail_constructor(country):
     =================================================== Get HTML & MJML
     '''
 
+    html = ''
     if html_files:
         with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
             html = f.read()
 
+    mjml = ''
     if mjml_files:
         with open(file('package_file', file_name=mjml_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
             mjml = f.read()

@@ -150,7 +150,7 @@ def clean_elq_track(country):
     name, code = name_and_code
 
     # Checks if there is anything to clear
-    elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
+    elq_track = re.compile(r'((\?|&)elqTrack.*?(?=(#|")))', re.UNICODE)
     if elq_track.findall(code):
         print(
             f'\n{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] Cleaned {len(elq_track.findall(code))} elqTracks and saved to Outcomes folder.')
@@ -194,7 +194,7 @@ def swap_utm_track(country, code='', email_id='', name=''):
             name, code = name_and_code
 
         # Cleans ELQ tracking
-        elq_track = re.compile(r'(\?|&)elqTrack.*?(?=(#|"))', re.UNICODE)
+        elq_track = re.compile(r'((\?|&)elqTrack.*?(?=(#|")))', re.UNICODE)
         if elq_track.findall(code):
             code = elq_track.sub('', code)
 
@@ -234,7 +234,7 @@ def swap_utm_track(country, code='', email_id='', name=''):
 
     # Asks user if he would like to repeat
     print(
-        f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE} or [A]nother UTM change in the same code)', end='')
+        f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?\n({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Fore.WHITE}nother UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

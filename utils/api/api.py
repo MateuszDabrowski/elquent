@@ -88,11 +88,11 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste ID of the {asset_name} and click [Enter] or [P]aste code', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste {asset_name} ID and click [Enter] or use [C]lipboard', end='')
         asset_id = input(' ')
 
         # Skips to get code via pyperclip
-        if asset_id.lower() == 'p':
+        if asset_id.lower() == 'c':
             return None
 
         # Checks if input in numerical value
@@ -606,7 +606,7 @@ def eloqua_create_landingpage(name, code):
     id = landing_page['id']
     url = microsite_link + landing_page['relativePath']
     print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] Eloqua Landing Page ID: {id}')
+        f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
     webbrowser.open(url)
 
     return id
@@ -619,7 +619,7 @@ def eloqua_create_landingpage(name, code):
 '''
 
 
-def eloqua_get_form(id):
+def eloqua_get_form(id, depth=''):
     '''
     Returns name and code of Form of given ID
     '''
@@ -629,9 +629,73 @@ def eloqua_get_form(id):
     response = api_request(root, params=params)
     form = response.json()
 
+    if depth == 'complete':
+        return form
+
     name = form['name']
     code = form['html']
     return (name, code)
+
+
+def eloqua_create_form(name, data, version='blindform'):
+    '''
+    Requires name, json data and version of the form to create it in Eloqua
+    Returns Form ID
+    '''
+    # Checks if there already is Form with that name
+    eloqua_asset_exist(name, asset='Form')
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/form'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    form = response.json()
+
+    # Open in new tab
+    id = form['id']
+    print(
+        f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {id}')
+
+    return id
+
+
+def eloqua_update_form(id, change, type=''):
+    '''
+    Requires id and json data of the form to update it in Eloqua
+    Returns Form ID
+    '''
+    # Gets current data of e-mail to update
+    old_data = eloqua_get_form(id, depth='complete')
+    data = {
+        'type': 'Email',
+        'isTracked': 'true',
+        'htmlContent': {
+            'type': 'RawHtmlContent',
+            'html': code
+        }
+    }
+
+    # Takes care of case where there is lack of element in source mail
+    for element in ['currentStatus', 'id', 'createdAt', 'createdBy', 'folderId', 'name', 'updatedAt', 'updatedBy', 'bounceBackEmail', 'emailFooterId', 'emailGroupId', 'emailHeaderId', 'replyToEmail', 'replyToName', 'senderEmail', 'senderName', 'subject']:
+        try:
+            data[element] = old_data[element]
+        except KeyError:
+            continue
+
+    # Creating a post call to Eloqua API and taking care of emoticons encoding
+    root = f'{eloqua_rest}assets/form/{id}'
+    response = api_request(
+        root, call='put', data=json.dumps(data, ensure_ascii=False).encode('utf-8'))
+    email = response.json()
+
+    # Open in new tab
+    id = email['id']
+    url = naming['root'] + '#emails&id=' + id
+    print(
+        f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+    webbrowser.open(url)
+
+    return id
 
 
 '''
@@ -866,7 +930,7 @@ def eloqua_create_email(name, code):
     # Adds source contry to received asset name
     name = f'WK{source_country}_{name}'
 
-    # Checks if there already is LP with that name
+    # Checks if there already is E-mail with that name
     eloqua_asset_exist(name, asset='Mail')
 
     # Gets required data for the API call
@@ -887,7 +951,7 @@ def eloqua_create_email(name, code):
     id = email['id']
     url = naming['root'] + '#emails&id=' + id
     print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}CREATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+        f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua E-mail ID: {id}')
     webbrowser.open(url)
 
     return id
@@ -895,7 +959,7 @@ def eloqua_create_email(name, code):
 
 def eloqua_update_email(id, code):
     '''
-    Requires name and code of the email to create it in Eloqua
+    Requires id and code of the email to update it in Eloqua
     Returns E-mail ID
     '''
     # Gets current data of e-mail to update
@@ -909,18 +973,18 @@ def eloqua_update_email(id, code):
             'html': code
         }
     }
-    
+
     # Takes care of case where there is lack of element in source mail
-    for element in ['currentStatus','id','createdAt','createdBy','folderId','name','updatedAt','updatedBy','bounceBackEmail','emailFooterId','emailGroupId','emailHeaderId','replyToEmail','replyToName','senderEmail','senderName','subject',]:
+    for element in ['currentStatus', 'id', 'createdAt', 'createdBy', 'folderId', 'name', 'updatedAt', 'updatedBy', 'bounceBackEmail', 'emailFooterId', 'emailGroupId', 'emailHeaderId', 'replyToEmail', 'replyToName', 'senderEmail', 'senderName', 'subject']:
         try:
             data[element] = old_data[element]
         except KeyError:
             continue
 
-    # Creating a post call to Eloqua API
+    # Creating a post call to Eloqua API and taking care of emoticons encoding
     root = f'{eloqua_rest}assets/email/{id}'
     response = api_request(
-        root, call='put', data=json.dumps(data))
+        root, call='put', data=json.dumps(data, ensure_ascii=False).encode('utf-8'))
     email = response.json()
 
     # Open in new tab
