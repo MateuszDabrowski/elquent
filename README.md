@@ -46,6 +46,7 @@ __Create Eloqua-compliant contact upload file__
 - Allows appending, trimming and intersecting e-mail uploads
 - Outputs .csv file with correct structure and naming convention
 - Uploads contacts to Eloqua shared list via ELQuent.api module
+- Cleans data import dependency after succesful upload
 
 _ToDo:_
 - _Ability to take .xls or .csv as input_
@@ -67,4 +68,4 @@ _ToDo:_
 
 ---
 
-[_Version: 1.4.9_]
+[_Version: 1.4.10_]

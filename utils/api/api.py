@@ -279,6 +279,9 @@ def api_request(root, call='get', api='eloqua', params={}, debug=False, data={})
             root,
             headers=headers,
             data=data)
+    elif call == 'delete':
+        headers['Content-Type'] = 'application/json'
+        response = requests.delete(root, headers=headers)
 
     # Prints status code
     if debug:
@@ -425,6 +428,11 @@ def eloqua_create_sharedlist(export, choice):
         uri = eloqua_import_definition(name, list_id)
         count = eloqua_import_content(contacts, list_id, uri)
         status = eloqua_import_sync(uri)
+        if status == 'success':
+            # Sync_id is syncedInstanceUri from sync response
+            import_id = (uri.split('/'))[-1]
+            root = eloqua_bulk + f'contacts/imports/{import_id}'
+            response = api_request(root, call='delete')
         outcome.append((list_id, name, count, status))
 
     return outcome
@@ -490,7 +498,7 @@ def eloqua_import_sync(uri):
     # Checks stats of sync
     sync_uri = sync_eloqua['uri']
     status = sync_eloqua['status']
-    while status != 'success':
+    while True:
         root = eloqua_bulk + sync_uri
         sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
         response = api_request(root)
@@ -501,7 +509,6 @@ def eloqua_import_sync(uri):
             eloqua_log_sync(sync_uri)
             break
         time.sleep(5)
-    print()
 
     return status
 
@@ -522,7 +529,6 @@ def eloqua_log_sync(sync_uri):
             print(f'\t{Fore.YELLOW}› {item["count"]} {item["message"]}')
         if item['message'] in ['Contacts created.', 'Contacts updated.']:
             print(f'\t{Fore.GREEN}› {item["count"]} {item["message"]}')
-
     return logs_eloqua
 
 
