@@ -24,6 +24,7 @@ __Create landing page__
 - RegEx work automator
 - Allows user to automatically swap Eloqua Form in Landing Page
 - Allows to use built-in landing page templates for quick deployment
+- Creates blindform for confirmation-ty-lp and automatically impelements it
 - Built-in wizard creating all Landing Pages required for campaign
 - Cleans code, appends snippets, changes form code
 
@@ -62,10 +63,9 @@ __Helper module for Eloqua API__
 - Upload landing page to specified folder
 - Upload e-mail to specified folder
 - Update e-mail with new code
-
-_ToDo:_
-- _Broaden API with Form uploads and updates - currently halted due to API bug_
+- Upload form to preconfigured folder
+- Update form with html, css and processing steps
 
 ---
 
-[_Version: 1.4.10_]
+[_Version: 1.4.11_]

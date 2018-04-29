@@ -611,11 +611,10 @@ def eloqua_create_landingpage(name, code):
     # Open in new tab
     id = landing_page['id']
     url = microsite_link + landing_page['relativePath']
-    print(
-        f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
     webbrowser.open(url)
 
-    return id
+    return (id, url)
 
 
 '''
@@ -643,7 +642,7 @@ def eloqua_get_form(id, depth=''):
     return (name, code)
 
 
-def eloqua_create_form(name, data, version='blindform'):
+def eloqua_create_form(name, data):
     '''
     Requires name, json data and version of the form to create it in Eloqua
     Returns Form ID
@@ -659,46 +658,36 @@ def eloqua_create_form(name, data, version='blindform'):
 
     # Open in new tab
     id = form['id']
-    print(
-        f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {id}')
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {id}')
 
-    return id
+    return (id, form)
 
 
-def eloqua_update_form(id, change, type=''):
+def eloqua_update_form(id, css='', html='', processing={}):
     '''
     Requires id and json data of the form to update it in Eloqua
     Returns Form ID
     '''
-    # Gets current data of e-mail to update
-    old_data = eloqua_get_form(id, depth='complete')
-    data = {
-        'type': 'Email',
-        'isTracked': 'true',
-        'htmlContent': {
-            'type': 'RawHtmlContent',
-            'html': code
-        }
-    }
-
-    # Takes care of case where there is lack of element in source mail
-    for element in ['currentStatus', 'id', 'createdAt', 'createdBy', 'folderId', 'name', 'updatedAt', 'updatedBy', 'bounceBackEmail', 'emailFooterId', 'emailGroupId', 'emailHeaderId', 'replyToEmail', 'replyToName', 'senderEmail', 'senderName', 'subject']:
-        try:
-            data[element] = old_data[element]
-        except KeyError:
-            continue
+    # Gets current data of form to update
+    data = eloqua_get_form(id, depth='complete')
+    if css:
+        data['customCSS'] = css
+    if html:
+        data['html'] = html
+    if processing:
+        data['processingSteps'] = processing
 
     # Creating a post call to Eloqua API and taking care of emoticons encoding
     root = f'{eloqua_rest}assets/form/{id}'
     response = api_request(
-        root, call='put', data=json.dumps(data, ensure_ascii=False).encode('utf-8'))
-    email = response.json()
+        root, call='put', data=json.dumps(data))
+    form = response.json()
 
     # Open in new tab
-    id = email['id']
-    url = naming['root'] + '#emails&id=' + id
+    id = form['id']
+    url = naming['root'] + '#forms&id=' + id
     print(
-        f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+        f'{Fore.WHITE}» {SUCCESS}Updated Eloqua Form ID: {id}')
     webbrowser.open(url)
 
     return id

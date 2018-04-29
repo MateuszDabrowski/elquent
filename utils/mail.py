@@ -219,7 +219,8 @@ def mail_constructor(country):
 
     # Lets user choose package to construct
     while True:
-        folder_name, html_files, mjml_files, image_files = package_chooser()
+        # Gets name and files but image_files with index 3
+        folder_name, html_files, mjml_files = package_chooser()[0:3]
         if not html_files and not mjml_files:
             print(
                 f'{ERROR}Chosen package got neither HTML nor MJML file!')

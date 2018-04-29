@@ -69,7 +69,9 @@ def file(file_path, name='LP'):
         'naming': find_data_file('naming.json', dir='api'),
         'jquery': find_data_file('WKCORP_jquery.txt'),
         'blindform': find_data_file(f'WK{source_country}_blindform.json'),
-        'processing-steps': find_data_file(f'WK{source_country}_blindform-processing.json'),
+        'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
+        'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
+        'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
         'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
@@ -824,14 +826,15 @@ def campaign_gen(country):
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
             converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
-        lead_ty_lp.replace('<!-- PRESENTATION -->',
-                           naming[source_country]['converter']['Presentation'])
+        lead_ty_lp = lead_ty_lp.replace('<!-- PRESENTATION -->',
+                                        naming[source_country]['converter']['Presentation'])
         # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         # Saves to Eloqua
-        api.eloqua_create_landingpage(file_name, lead_ty_lp)
+        lead_ty_lp_url = api.eloqua_create_landingpage(
+            file_name, lead_ty_lp)[1]
         # Saves to list of created LPs
         lp_list.append([(f'WK{source_country}_' + file_name), lead_ty_lp])
 
@@ -855,7 +858,8 @@ def campaign_gen(country):
         with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         # Saves to Eloqua
-        api.eloqua_create_landingpage(file_name, contact_ty_lp)
+        contact_ty_lp_url = api.eloqua_create_landingpage(
+            file_name, contact_ty_lp)[1]
         # Saves to list of created LPs
         lp_list.append([(f'WK{source_country}_' + file_name), contact_ty_lp])
 
@@ -863,37 +867,26 @@ def campaign_gen(country):
     =================================================== Gets BlindForm code
     '''
 
-    print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on Confirmation LP',
-        f'\n  {Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}NEW{Fore.WHITE}] Let ELQuent create blindform',
-        f'\n  {Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}EXIST{Fore.WHITE}] Use existing blindform')
-    while True:
-        print(f'  {Fore.YELLOW}Enter number associated with chosen utility:', end='')
-        choice = input(' ')
-        if choice == '1':
-            form_name = (('_').join(campaign_name[0:4]) + '_blind-FORM')
-            html_name = api.eloqua_asset_html_name(form_name)
-            # Loads json data for blindform creation and fills it with name and html_name
-            with open(file('blindform'), 'r', encoding='utf-8') as f:
-                form_json = json.load(f)
-            form_json['name'] = form_name
-            form_json['htmlName'] = html_name
-            # Creates form with given data
-            blindform_id = api.eloqua_create_form(
-                form_name, form_json, version='blindform')
-            form = api.eloqua_get_form(blindform_id)
-            required = ''
-            
-            # For dev purposes
-            raise SystemExit
+    blindform_name = (('_').join(campaign_name[0:4]) + '_blind-FORM')
+    html_name = api.eloqua_asset_html_name(blindform_name)
 
-            break
-        elif choice == '2':
-            form, required = create_form()
-            break
-        else:
-            print(f'  {ERROR}Entered value does not belong to any choice!')
-            choice = ''
+    # Loads json data for blindform creation and fills it with name and html_name
+    with open(file('blindform'), 'r', encoding='utf-8') as f:
+        blindform_json = json.load(f)
+        blindform_json['name'] = blindform_name
+        blindform_json['htmlName'] = html_name
+
+    # Creates form with given data
+    blindform_id, blindform_json = api.eloqua_create_form(
+        blindform_name, blindform_json)
+
+    # Prepares HTML Code of the form
+    with open(file('blindform-html'), 'r', encoding='utf-8') as f:
+        blindform_html = f.read()
+        blindform_html = blindform_html.replace('\\', '').replace(
+            'FORM_ID', blindform_id).replace('HTML_NAME', html_name)
+
+    required = ''
 
     '''
     =================================================== Builds Confirmation-LP
@@ -902,7 +895,7 @@ def campaign_gen(country):
     file_name = (('_').join(campaign_name[1:4]) + '_confirmation-LP')
     with open(file('confirmation-lp'), 'r', encoding='utf-8') as f:
         code = f.read()
-    code = swap_form(code, form)
+    code = swap_form(code, blindform_html)
     code = javascript(code, required)
     code = regex_product_name.sub(product_name, code)
     code = regex_optional_text.sub(optional_text, code)
@@ -917,7 +910,7 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
-    api.eloqua_create_landingpage(file_name, code)
+    confirmation_lp_url = api.eloqua_create_landingpage(file_name, code)[1]
     # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
 
@@ -945,12 +938,48 @@ def campaign_gen(country):
     with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
-    api.eloqua_create_landingpage(file_name, code)
+    confirmation_ty_lp_url = api.eloqua_create_landingpage(file_name, code)[1]
+
     # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
 
     # TODO: Create Content E-mail (store ID)
-    # TODO: Update Blindform with Confirmation-TY-LP ID and Content Email ID
+
+    '''
+    =================================================== Update Blindform
+    '''
+
+    # Gets CSS Code of the form
+    with open(file('blindform-css'), 'r', encoding='utf-8') as f:
+        blindform_css = f.read()
+
+    for field in blindform_json['elements']:
+        if field['htmlName'] == 'emailAddress':
+            email_field_id = field['id']
+        if field['htmlName'] == 'confirmation':
+            confirm_field_id = field['id']
+
+    # TODO Content Email ID from Create Email API
+    send_email_id = '3037'
+
+    # Gets and prepares processing steps json of the form
+    with open(file('blindform-processing'), 'r', encoding='utf-8') as f:
+        blindform_processing = json.load(f)
+        blindform_processing['processingSteps'][0]['mappings'][0]['sourceFormFieldId'] = confirm_field_id
+        blindform_processing['processingSteps'][0]['mappings'][1]['sourceFormFieldId'] = email_field_id
+        blindform_processing['processingSteps'][1]['keyFieldMapping']['sourceFormFieldId'] = email_field_id
+        blindform_processing['processingSteps'][2]['emailAddressFormFieldId'] = email_field_id
+        blindform_processing['processingSteps'][2]['emailId']['constantValue'] = send_email_id
+        blindform_processing['processingSteps'][3]['emailAddressFormFieldId'] = email_field_id
+        blindform_processing['processingSteps'][4]['pageUrl']['constantValue'] = confirmation_ty_lp_url
+
+    api.eloqua_update_form(
+        blindform_id,
+        css=blindform_css,
+        html=blindform_html,
+        processing=blindform_processing['processingSteps']
+    )
+
     # TODO: Build campaign canvas with all those assets
 
     '''
@@ -958,30 +987,8 @@ def campaign_gen(country):
     '''
 
     print(
-        f'\n{Fore.GREEN}Would you like to copy paste code of each Landing Page now?')
-
-    choice = ''
-    while choice.lower() != 'y' and choice.lower() != 'n':
-        print(
-            f'{Fore.WHITE}[{Fore.YELLOW}Y{Fore.WHITE}] Yes, I will create all Landing Pages in Eloqua now',
-            f'\n{Fore.WHITE}[{Fore.YELLOW}N{Fore.WHITE}] No, I will use files saved in Outcomes folder later')
-        choice = input(' ')
-    if choice.lower() == 'y':
-        for i, lp in enumerate(lp_list):
-            print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}{i+1}/{len(lp_list)}: {lp[0]}{Fore.WHITE}]')
-            pyperclip.copy(f'WK{source_country}_' + lp[0])
-            print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset name to Eloqua.',
-                  f'\n{Fore.WHITE}Click [Enter] to continue.', end='')
-            input(' ')
-            pyperclip.copy(lp[1])
-            print(f'{Fore.GREEN}» You can now paste [CTRL+V] asset HTML code to Eloqua.',
-                  f'\n{Fore.WHITE}Click [Enter] to contiue.', end='')
-            input(' ')
-        print(f'\n{Fore.GREEN}All Landing Pages prepared!')
-    elif choice.lower() == 'n':
-        print(f'\n{Fore.YELLOW}Remember to use file names as asset names.')
-    print(f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+        f'\n{Fore.GREEN}All Landing Pages prepared!',
+        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
     return
