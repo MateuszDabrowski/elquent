@@ -120,13 +120,13 @@ def output_method(html_code='', mjml_code=''):
             break
         elif choice == '3':
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste name of the E-mail:')
+                f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] » Write or paste name of the E-mail:')
             name = api.eloqua_asset_name()
             api.eloqua_create_email(name, html_code)
             break
         elif choice == '4':
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}]{Fore.YELLOW} » Write or paste ID of the E-mail to update:')
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}] » Write or paste ID of the E-mail to update:')
             email_id = input(' ')
             api.eloqua_update_email(email_id, html_code)
             break

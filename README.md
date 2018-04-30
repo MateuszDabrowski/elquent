@@ -59,13 +59,14 @@ _ToDo:_
 __Helper module for Eloqua API__
 - Authenticates user
 - Upload contact database to Eloqua shared lists
+- Cleans impor definition after successful upload to clean dependecies
 - Checks if LP, Form, Mail already exists on Eloqua instance
 - Upload landing page to specified folder
-- Upload e-mail to specified folder
+- Upload e-mail to json specified folder
 - Update e-mail with new code
-- Upload form to preconfigured folder
+- Upload form to json specified folder
 - Update form with html, css and processing steps
 
 ---
 
-[_Version: 1.4.11_]
+[_Version: 1.4.12_]

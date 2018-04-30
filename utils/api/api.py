@@ -88,11 +88,11 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write or paste {asset_name} ID and click [Enter] or use [C]lipboard', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset_name} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
 
-        # Skips to get code via pyperclip
-        if asset_id.lower() == 'c':
+        # If there was no input, skips to get code via pyperclip
+        if not asset_id:
             return None
 
         # Checks if input in numerical value
@@ -803,6 +803,38 @@ def eloqua_fill_mail_params(name):
     '''
     Returns eloqua_create_email data based on settings of similar mails from the past
     '''
+
+    def json_fill(name, gatherer):
+        '''
+        Tries to get necessary data for e-mail upload from json file
+        '''
+        try:
+            gatherer[0].append(naming[source_country]
+                               ['mail']['by_name'][(name[-1])][gatherer[1]])
+            return True
+        except KeyError:
+            try:
+                gatherer.append(naming[source_country]
+                                ['mail']['by_name'][(name[-2])][gatherer[1]])
+                return True
+            except KeyError:
+                print(
+                    f'{Fore.YELLOW}Not found {gatherer[1]} for {(name[-1])}_{(name[-2])}')
+                return False
+
+    def gatherer_fill(gatherer):
+        '''
+        If succesfully found param value, adds it to data dict
+        '''
+        if len(gatherer[0]) == 1:
+            data[gatherer[1]] = gatherer[0][0]
+
+    # Builds search name to use for fillers
+    name_split = name.split('_')
+    local_name = name_split[3].split('-')
+    search_name = name_split[0:3]
+    search_name.append(local_name[0])
+
     # Start building data dict
     data = {}
     data['name'] = name
@@ -810,16 +842,8 @@ def eloqua_fill_mail_params(name):
     data['bounceBackEmail'] = naming[source_country]['mail']['bounceback']
     data['replyToName'] = naming[source_country]['mail']['reply_name']
     data['isTracked'] = 'true'
-    # data['subject'] = subject
 
-    # Builds search name to use as param
-    name_split = name.split('_')
-    global_name = ('_').join(name_split[:3])
-    local_name = name_split[3].split('-')
-    search_name = f'{global_name}_{local_name[0]}'
-    previous_mails = eloqua_search_emails(search_name)
-
-    # Builds gatherers for data from found similar emails
+    # Builds gatherers for data various sources
     sender_mail = []
     sender_name = []
     reply_mail = []
@@ -827,6 +851,24 @@ def eloqua_fill_mail_params(name):
     footer = []
     header = []
     group_id = []
+
+    # Gatherer list to iterate over each approach to fill
+    gatherers = [
+        (sender_mail, 'senderEmail'),
+        (sender_name, 'senderName'),
+        (reply_mail, 'replyToEmail'),
+        (folder_id, 'folderId'),
+        (footer, 'emailFooterId'),
+        (header, 'emailHeaderId'),
+        (group_id, 'emailGroupId')
+    ]
+
+    for gatherer in gatherers:
+        if json_fill(search_name, gatherer):
+            gatherer_fill(gatherer)
+
+    # TODO: Fill by historic data and when there is not data
+    previous_mails = eloqua_search_emails(search_name)
 
     # Fills gatherers with data
     for mail in previous_mails['elements']:
@@ -922,8 +964,6 @@ def eloqua_create_email(name, code):
     Requires name and code of the email to create it in Eloqua
     Returns E-mail ID
     '''
-    # Adds source contry to received asset name
-    name = f'WK{source_country}_{name}'
 
     # Checks if there already is E-mail with that name
     eloqua_asset_exist(name, asset='Mail')

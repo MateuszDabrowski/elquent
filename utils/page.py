@@ -114,23 +114,16 @@ def create_landing_page():
         Returns Landing Page Code either form clipoard or from template
         '''
 
-        print()
         if choice == 3:  # Gets code from clipboard and validates if it is HTML page
             lp_id = api.get_asset_id('LP')
             if lp_id:
                 lp_code = (api.eloqua_get_landingpage(lp_id))[1]
             else:
                 while True:
-                    print(
-                        f'\n{Fore.WHITE}» [{Fore.YELLOW}CODE{Fore.WHITE}] Copy code [CTRL+C] and click [Enter]', end='')
-                    input(' ')
-                    code = pyperclip.paste()
+                    lp_code = pyperclip.paste()
                     is_html = re.compile(r'<html[\s\S\n]*?</html>', re.UNICODE)
-                    if is_html.findall(code):
-                        print(
-                            f'{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste new Landing Page name:')
-                        name = api.eloqua_asset_name()
-                        lp_code = (name, code)
+                    if is_html.findall(lp_code):
+                        print(f'  {SUCCESS}Code copied from clipboard')
                         break
                     print(f'  {ERROR}Copied code is not correct HTML')
 
@@ -225,16 +218,10 @@ def create_form():
             form_code = (api.eloqua_get_form(form_id))[1]
         else:
             while True:
-                print(
-                    f'\n{Fore.WHITE}» [{Fore.YELLOW}CODE{Fore.WHITE}] Copy code [CTRL+C] and click [Enter]', end='')
-                input(' ')
                 code = pyperclip.paste()
                 is_html = re.compile(r'<form[\s\S\n]*?</script>', re.UNICODE)
                 if is_html.findall(code):
-                    print(
-                        f'{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste new Form name:')
-                    name = api.eloqua_asset_name()
-                    form_code = (name, code)
+                    print(f'  {SUCCESS}Code copied from clipboard')
                     break
                 print(f'  {ERROR}Copied code is not correct Form HTML')
 
@@ -516,9 +503,10 @@ def swap_form(code, form):
     # Appends Unicode arrow to button text
     regex_submit_text = re.compile(
         r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
-    button_text = '"' + (4 * '&nbsp;&zwnj; ') + \
-        regex_submit_text.findall(code)[0] + ' →"'
-    code = regex_submit_text.sub(button_text, code)
+    if regex_submit_text.findall(code):
+        button_text = '"' + (4 * '&nbsp;&zwnj; ') + \
+            regex_submit_text.findall(code)[0] + ' →"'
+        code = regex_submit_text.sub(button_text, code)
 
     return code
 
