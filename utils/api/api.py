@@ -700,71 +700,6 @@ def eloqua_update_form(id, css='', html='', processing={}):
 '''
 
 
-def eloqua_get_email_group(mail_name):
-    '''
-    Returns chosen email group ID
-    '''
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/email/groups'
-    params = {'depth': 'minimal',
-              'search': f'WK{source_country}*'}
-    response = api_request(root, params=params)
-    email_groups_response = response.json()
-
-    # Tries to automatically select group based on naming
-    mail_name_parts = mail_name.split('_')
-    local_name_parts = (mail_name_parts[3]).split('-')
-    try:
-        id = naming[source_country]['mail']['data'][local_name_parts[0]]['group_id']
-        return id
-    except KeyError:
-        if mail_name_parts[1:3] == ['PROF', 'BOO']:
-            return naming[source_country]['mail']['data']['Profinfo']['group_id']
-
-    email_groups = []
-    for group in email_groups_response['elements']:
-        # Skips email groups waiting for deletion
-        if 'delete' in group['name'].lower():
-            continue
-        name = group['name'].split(' - ')
-        # Skips email groups checked in above part
-        if name[1].lower() in ['newsletter', 'alert', 'profinfo']:
-            continue
-        if len(name) == 2:
-            name = [name[-1]]
-        if len(name) == 3:
-            name = [name[-2], name[-1]]
-        email_groups.append((name, group['id']))
-    email_groups.sort()
-
-    # Prints first level of email groups and single-level email groups
-    print(f'\n{Fore.GREEN}Choose Email Group:')
-    for i, group in enumerate(email_groups):
-        print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» ', end='')
-        if len(group[0]) == 1:
-            print(f'{Fore.WHITE}{group[0][0]}')
-        if len(group[0]) == 2:
-            print(f'{Fore.YELLOW}{group[0][0]}{Fore.WHITE} › {group[0][1]}')
-
-    # Returns id of email group chosen by user
-    while True:
-        print(
-            f'{Fore.YELLOW}Enter number associated with chosen email group:', end='')
-        choice = input(' ')
-        try:
-            choice = int(choice)
-        except (TypeError, ValueError):
-            print(f'{Fore.RED}Please enter numeric value!')
-            choice = ''
-            continue
-        if 0 <= choice < len(email_groups):
-            id = email_groups[choice]
-            return id[1]
-        else:
-            print(f'{Fore.RED}Entered value does not belong to any email group!')
-            choice = ''
-
-
 def eloqua_get_email(id, depth=''):
     '''
     Returns name and code of E-mail of given ID or full response if depth='complete'
@@ -783,22 +718,6 @@ def eloqua_get_email(id, depth=''):
     return (name, code)
 
 
-def eloqua_search_emails(phrase):
-    '''
-    Returns information about e-mails with phrase
-    '''
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/emails'
-    params = {'depth': 'complete',
-              'search': f'{phrase}*',
-              'orderBy': 'id DESC',
-              'count': '5'}
-    response = api_request(root, params=params)
-    email = response.json()
-
-    return email
-
-
 def eloqua_fill_mail_params(name):
     '''
     Returns eloqua_create_email data based on settings of similar mails from the past
@@ -809,18 +728,33 @@ def eloqua_fill_mail_params(name):
         Tries to get necessary data for e-mail upload from json file
         '''
         try:
+            check_name = '_'.join(name[-2:])
             gatherer[0].append(naming[source_country]
-                               ['mail']['by_name'][(name[-1])][gatherer[1]])
+                               ['mail']['by_name'][check_name][gatherer[1]])
             return True
         except KeyError:
             try:
-                gatherer.append(naming[source_country]
-                                ['mail']['by_name'][(name[-2])][gatherer[1]])
+                gatherer[0].append(naming[source_country]
+                                   ['mail']['by_type'][(name[-3])][gatherer[1]])
                 return True
             except KeyError:
-                print(
-                    f'{Fore.YELLOW}Not found {gatherer[1]} for {(name[-1])}_{(name[-2])}')
                 return False
+
+    def build_gatherers(sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id):
+        '''
+        Returns updated gatherers list
+        '''
+        gatherers = [
+            (sender_mail, 'senderEmail'),
+            (sender_name, 'senderName'),
+            (reply_mail, 'replyToEmail'),
+            (folder_id, 'folderId'),
+            (footer, 'emailFooterId'),
+            (header, 'emailHeaderId'),
+            (group_id, 'emailGroupId')
+        ]
+
+        return gatherers
 
     def gatherer_fill(gatherer):
         '''
@@ -828,6 +762,25 @@ def eloqua_fill_mail_params(name):
         '''
         if len(gatherer[0]) == 1:
             data[gatherer[1]] = gatherer[0][0]
+
+    def eloqua_search_emails(phrase):
+        '''
+        Returns information about e-mails with phrase
+        '''
+        # Gets data of requested image name
+        root = f'{eloqua_rest}assets/emails'
+        params = {'depth': 'complete',
+                  'search': f'{phrase}*',
+                  'orderBy': 'id DESC',
+                  'count': '10'}
+        response = api_request(root, params=params)
+        email = response.json()
+
+        return email
+
+    '''
+    =================================================== Prepares necessary data structures
+    '''
 
     # Builds search name to use for fillers
     name_split = name.split('_')
@@ -853,41 +806,78 @@ def eloqua_fill_mail_params(name):
     group_id = []
 
     # Gatherer list to iterate over each approach to fill
-    gatherers = [
-        (sender_mail, 'senderEmail'),
-        (sender_name, 'senderName'),
-        (reply_mail, 'replyToEmail'),
-        (folder_id, 'folderId'),
-        (footer, 'emailFooterId'),
-        (header, 'emailHeaderId'),
-        (group_id, 'emailGroupId')
-    ]
+    gatherers = build_gatherers(
+        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
+    '''
+    =================================================== Step 1: Fill from json
+    '''
 
+    # Fills data from json
     for gatherer in gatherers:
         if json_fill(search_name, gatherer):
             gatherer_fill(gatherer)
 
-    # TODO: Fill by historic data and when there is not data
-    previous_mails = eloqua_search_emails(search_name)
+    # Updates gatherers to keep only missing ones
+    gatherers = [(x, y) for (x, y) in gatherers if len(x) != 1]
+    print(1, gatherers)
+    # Returns data if all data elements were filled
+    try:
+        if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
+            print(f'{SUCCESS}E-mail data ready')
+            return data
+    except KeyError:
+        pass
+
+    '''
+    =================================================== Step 2: Fill from history
+    '''
+
+    # If there is still something to fill, tries fill from last 10 similar
+    search_phrase = '_'.join(search_name)
+    previous_mails = eloqua_search_emails(search_phrase)
 
     # Fills gatherers with data
     for mail in previous_mails['elements']:
-        sender_mail.append(mail['senderEmail'])
-        sender_name.append(mail['senderName'])
-        reply_mail.append(mail['replyToEmail'])
-        folder_id.append(mail['folderId'])
-        footer.append(mail['emailFooterId'])
-        header.append(mail['emailHeaderId'])
-        group_id.append(mail['emailGroupId'])
+        for gatherer in gatherers:
+            try:
+                gatherer[0].append(mail[gatherer[1]])
+            except KeyError:
+                continue
 
-    # Deduplication to check if there is pattern
+    # Deduplicates to check for pattern and fills data if there is
     sender_mail = list(set(sender_mail))
     sender_name = list(set(sender_name))
     reply_mail = list(set(reply_mail))
     folder_id = list(set(folder_id))
     footer = list(set(footer))
     header = list(set(header))
+    if len(header) == 0:
+        header = ['9']  # Default empty header
     group_id = list(set(group_id))
+    gatherers = build_gatherers(
+        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
+    for gatherer in gatherers:
+        gatherer_fill(gatherer)
+
+    # Updates gatherers to keep only missing ones
+    gatherers = [(x, y) for (x, y) in gatherers
+                 if len(x) != 1 or y != 'emailHeaderId']
+    # Returns data if all data elements were filled
+    try:
+        if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
+            print(f'{SUCCESS}E-mail data ready')
+            return data
+    except KeyError:
+        pass
+    '''
+    =================================================== Step 3: Fill from user input
+    '''
+    print(3, data)
+    gatherers = build_gatherers(
+        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
+    print(3, gatherers)
+
+    # TODO: Filling data if previous methods failed
 
     # If there is single pattern, use this for import
     chosen_sender = ''  # Allows to propageate chosen sender as reply address
@@ -952,9 +942,6 @@ def eloqua_fill_mail_params(name):
 
     if len(group_id) == 1:
         data['emailGroupId'] = sender_mail[0]
-    else:
-        group_id = eloqua_get_email_group(name)
-        data['emailGroupId'] = group_id
 
     return data
 
