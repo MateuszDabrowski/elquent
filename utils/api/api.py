@@ -30,7 +30,7 @@ init(autoreset=True)
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
-WARNING = f'{Fore.WHITE}[{Fore.YELLOW}ERROR{Fore.WHITE}] '
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
@@ -805,12 +805,13 @@ def eloqua_fill_mail_params(name):
     header = []
     group_id = []
 
-    # Gatherer list to iterate over each approach to fill
-    gatherers = build_gatherers(
-        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
     '''
     =================================================== Step 1: Fill from json
     '''
+
+    # Gatherer list to iterate over each approach to fill
+    gatherers = build_gatherers(
+        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
 
     # Fills data from json
     for gatherer in gatherers:
@@ -819,11 +820,14 @@ def eloqua_fill_mail_params(name):
 
     # Updates gatherers to keep only missing ones
     gatherers = [(x, y) for (x, y) in gatherers if len(x) != 1]
-    print(1, gatherers)
+
     # Returns data if all data elements were filled
     try:
         if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
-            print(f'{SUCCESS}E-mail data ready')
+            print(f'\n{SUCCESS}E-mail data ready for upload')
+            for value in data.items():
+                print(
+                    f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
             return data
     except KeyError:
         pass
@@ -844,7 +848,7 @@ def eloqua_fill_mail_params(name):
             except KeyError:
                 continue
 
-    # Deduplicates to check for pattern and fills data if there is
+    # Deduplicates to check for pattern
     sender_mail = list(set(sender_mail))
     sender_name = list(set(sender_name))
     reply_mail = list(set(reply_mail))
@@ -854,94 +858,109 @@ def eloqua_fill_mail_params(name):
     if len(header) == 0:
         header = ['9']  # Default empty header
     group_id = list(set(group_id))
+
+    # Rebuilds gatherers list
     gatherers = build_gatherers(
         sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
+
+    # Fills data if there is a single pattern
     for gatherer in gatherers:
         gatherer_fill(gatherer)
 
     # Updates gatherers to keep only missing ones
-    gatherers = [(x, y) for (x, y) in gatherers
-                 if len(x) != 1 or y != 'emailHeaderId']
+    gatherers = [(x, y) for (x, y) in gatherers if len(x) != 1]
+
     # Returns data if all data elements were filled
     try:
         if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
-            print(f'{SUCCESS}E-mail data ready')
+            print(f'\n{SUCCESS}E-mail data ready for upload:')
+            for value in data.items():
+                print(
+                    f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
             return data
     except KeyError:
         pass
+
     '''
     =================================================== Step 3: Fill from user input
     '''
-    print(3, data)
-    gatherers = build_gatherers(
-        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
-    print(3, gatherers)
 
-    # TODO: Filling data if previous methods failed
-
-    # If there is single pattern, use this for import
-    chosen_sender = ''  # Allows to propageate chosen sender as reply address
-    if len(sender_mail) == 1:
-        data['senderEmail'] = sender_mail[0]
-    else:
+    # Fill sender/reply e-mail address based on user choice
+    if not data.get('senderEmail', False):
+        if len(sender_mail) == 0:
+            sender_mail = naming[source_country]['mail']['senders']
+        print(f'\n{Fore.GREEN}Choose sender and reply e-mail address:')
         for i, sender in enumerate(sender_mail):
-            print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {sender}')
+            print(
+                f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» {sender}')
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}S{Fore.WHITE}]\t» Skip choosing sender e-mail')
-        # Returns sender e-mail choosen by user
         while True:
             print(
-                f'{Fore.YELLOW}Enter number associated with chosen sender e-mail:', end='')
+                f'{Fore.YELLOW}Enter number associated with e-mail address or write it down:', end='')
             choice = input(' ')
+            valid_mail = re.compile(
+                r'([\w\.\-\+]+?@[\w\.\-\+]+?\.[\w\.\-\+]+?)', re.UNICODE)
+            if valid_mail.findall(choice):
+                data['senderEmail'] = choice
+                data['replyToEmail'] = choice
+                break
             if choice.lower() == 's':
                 print(
-                    f'{WARNING}Sender e-mail empty')
+                    f'\n{WARNING}Remember to fill sender and reply e-mail addresses in Eloqua')
                 break
             try:
                 choice = int(choice)
             except (TypeError, ValueError):
-                print(f'{Fore.RED}Please enter numeric value!')
+                print(f'{ERROR}Please enter numeric value!')
                 choice = ''
                 continue
             if 0 <= choice < len(sender_mail):
-                chosen_sender = sender_mail[choice]
+                data['senderEmail'] = sender_mail[choice]
+                data['replyToEmail'] = sender_mail[choice]
                 break
             else:
                 print(
-                    f'{Fore.RED}Entered value does not belong to any email address!')
+                    f'{ERROR}Entered value does not belong to any e-mail address!')
                 choice = ''
 
-    if len(sender_name) == 1:
-        data['senderName'] = sender_name[0]
-    else:
-        data['senderName'] = 'Wolters Kluwer'
+    # If there is no chosen e-mail group
+    if not data.get('emailGroupId', False):
+        print(f'\n{Fore.GREEN}Choose e-mail group:')
+        for group in naming[source_country]['mail']['by_group'].items():
+            print(
+                f'{Fore.WHITE}[{Fore.YELLOW}{group[0]}{Fore.WHITE}]\t» {group[1]["group_name"]}')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}S{Fore.WHITE}]\t» Skip choosing e-mail group')
+        while True:
+            print(
+                f'{Fore.YELLOW}Enter number associated with chosen e-mail group:', end='')
+            choice = input(' ')
+            if choice.lower() == 's':
+                print(
+                    f'\n{WARNING}Remember to fill e-mail group in Eloqua')
+                break
+            try:
+                naming[source_country]['mail']['by_group'][choice]['group_name']
+            except KeyError:
+                print(f'{ERROR}Entered value does not belong to any e-mail group!')
+            else:
+                data['emailGroupId'] = choice
+                break
 
-    if len(reply_mail) == 1:
-        data['replyToEmail'] = reply_mail[0]
-    elif chosen_sender:
-        data['replyToEmail'] = chosen_sender
-    else:
-        print(f'{WARNING}Reply e-mail not found')
+    # If there is chosen e-mail group, but there is no e-mail footer yet in data
+    if not data.get('emailFooterId', False) and data.get('emailGroupId', False):
+        group_id = data.get('emailGroupId', False)
+        if group_id:
+            try:
+                data['emailFooterId'] = naming[source_country]['mail']['by_group'][group_id]['emailFooterId']
+            except KeyError:
+                print(
+                    f'\n{WARNING}Remember to pick e-mail footer in Eloqua')
 
-    if len(folder_id) == 1:
-        data['folderId'] = folder_id[0]
-    else:
-        id = naming[source_country]['id']['email'].get(
-            name_split[1], naming[source_country]['id']['email'].get(source_country))
-        data['folderId'] = id
-
-    if len(footer) == 1:
-        data['emailFooterId'] = footer[0]
-    else:
-        print(f'{WARNING}Email footer not found')
-
-    if len(header) == 1:
-        data['emailHeaderId'] = sender_mail[0]
-    else:
-        print(f'{WARNING}Email header not found')
-
-    if len(group_id) == 1:
-        data['emailGroupId'] = sender_mail[0]
+    print(f'\n{SUCCESS}E-mail data ready for upload:')
+    for value in data.items():
+        print(f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
 
     return data
 

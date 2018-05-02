@@ -17,6 +17,7 @@ __Constructs your email packages__
 - RegEx & API builder
 - Automatically adds image links, tracking scripts and pre-header to package
 - Works with both HTML and MJML files
+- Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 
 ---
 ## ELQuent.page
@@ -62,6 +63,7 @@ __Helper module for Eloqua API__
 - Cleans impor definition after successful upload to clean dependecies
 - Checks if LP, Form, Mail already exists on Eloqua instance
 - Upload landing page to specified folder
+- Gets all necessary data to upload an e-mail
 - Upload e-mail to json specified folder
 - Update e-mail with new code
 - Upload form to json specified folder
@@ -69,4 +71,4 @@ __Helper module for Eloqua API__
 
 ---
 
-[_Version: 1.4.13_]
+[_Version: 1.4.14_]
