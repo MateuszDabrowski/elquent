@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils', 'utils.json'],
                     packages=['pyperclip', 'csv', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
                               'platform', 'encodings', 'colorama', 'json', 'multiprocessing',
-                              'time', 'datetime', 'getpass', 'base64'])
+                              'time', 'datetime', 'getpass', 'base64', 'webbrowser'])
 
 base = 'Console'
 

@@ -72,6 +72,7 @@ def file(file_path, name='LP'):
         'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
         'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
         'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
+        'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
         'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
         'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
         'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
@@ -91,7 +92,7 @@ def file(file_path, name='LP'):
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
         'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
-        'landing-page': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
+        'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -647,7 +648,7 @@ def page_gen(country):
 
     # Two way return of new code
     pyperclip.copy(code)
-    with open(file('landing-page'), 'w', encoding='utf-8') as f:
+    with open(file('outcome-file'), 'w', encoding='utf-8') as f:
         f.write(code)
     print(
         f'\n{Fore.GREEN}» You can now paste new Landing Page to Eloqua [CTRL+V].',
@@ -735,6 +736,10 @@ def campaign_gen(country):
         converter_choice = input(' ')
         if converter_choice in ['0', '1', '2', '3', '4', '5']:
             converter_choice = converter_values[int(converter_choice) + 2]
+            print(
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {converter_choice}')
+            asset_name = input(' ')
+            regex_asset_name = re.compile(r'ASSET_NAME', re.UNICODE)
             break
         else:
             print(f'{ERROR}Entered value does not belong to any choice!')
@@ -745,7 +750,7 @@ def campaign_gen(country):
         product_name = naming[source_country]['product'][local_name[0]]
     else:
         print(
-            f'\n{Fore.WHITE}» Could not recognize product name, please write its name: ', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}] Could not recognize product name, please write its name: ', end='')
         product_name = input(' ')
     regex_product_name = re.compile(r'PRODUCT_NAME', re.UNICODE)
 
@@ -758,8 +763,9 @@ def campaign_gen(country):
     # Regex for GTM tag
     regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
 
-    # List of created Landing Pages:
+    # List of created Landing Pages and E-mails:
     lp_list = []
+    eml_list = []
 
     '''
     =================================================== Builds main page
@@ -783,7 +789,7 @@ def campaign_gen(country):
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
     api.eloqua_create_landingpage(file_name, code)
@@ -818,7 +824,7 @@ def campaign_gen(country):
                                         naming[source_country]['converter']['Presentation'])
         # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         # Saves to Eloqua
         lead_ty_lp_url = api.eloqua_create_landingpage(
@@ -843,7 +849,7 @@ def campaign_gen(country):
                 rf'{converter_value}', contact_ty_lp)
         # Saves to Outcomes file
         print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-        with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         # Saves to Eloqua
         contact_ty_lp_url = api.eloqua_create_landingpage(
@@ -856,13 +862,14 @@ def campaign_gen(country):
     '''
 
     blindform_name = (('_').join(campaign_name[0:4]) + '_blind-FORM')
-    html_name = api.eloqua_asset_html_name(blindform_name)
+    blindform_html_name = api.eloqua_asset_html_name(blindform_name)
+    regex_blindform_html_name = re.compile('HTML_FORM_NAME', re.UNICODE)
 
     # Loads json data for blindform creation and fills it with name and html_name
     with open(file('blindform'), 'r', encoding='utf-8') as f:
         blindform_json = json.load(f)
         blindform_json['name'] = blindform_name
-        blindform_json['htmlName'] = html_name
+        blindform_json['htmlName'] = blindform_html_name
 
     # Creates form with given data
     blindform_id, blindform_json = api.eloqua_create_form(
@@ -872,7 +879,7 @@ def campaign_gen(country):
     with open(file('blindform-html'), 'r', encoding='utf-8') as f:
         blindform_html = f.read()
         blindform_html = blindform_html.replace('\\', '').replace(
-            'FORM_ID', blindform_id).replace('HTML_NAME', html_name)
+            'FORM_ID', blindform_id).replace('HTML_NAME', blindform_html_name)
 
     required = ''
 
@@ -895,15 +902,43 @@ def campaign_gen(country):
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
     confirmation_lp_url = api.eloqua_create_landingpage(file_name, code)[1]
     # Saves to list of created LPs
     lp_list.append([(f'WK{source_country}_' + file_name), code])
 
-    # TODO: Create Confirmation Email with Blindform
+    '''
+    =================================================== Builds Confirmation Email
+    '''
+
+    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-EML')
+    with open(file('confirmation-eml'), 'r', encoding='utf-8') as f:
+        code = f.read()
+    code = regex_product_name.sub(product_name, code)
+    code = regex_asset_name.sub(asset_name, code)
+    code = regex_blindform_html_name.sub(blindform_html_name, code)
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
+        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+        converter_value = naming[source_country]['converter'][converter_choice][i]
+        code = regex_converter.sub(rf'{converter_value}', code)
+    # Saves to Outcomes file
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(code)
+    # Saves to Eloqua
+    confirmation_eml_id = api.eloqua_create_email(file_name, code)
+    # Saves to list of created EMLs
+    eml_list.append([(f'WK{source_country}_' + file_name), code])
+
+    '''
+    =================================================== Builds Confirmation Reminder Email
+    '''
+
     # TODO: Create Confirmation Reminder Email with link to Confirmation-LP (store ID)
+
     # TODO: Update original Form with Confirmation Email ID and contact-TY/lead-TY LP's
 
     '''
@@ -923,7 +958,7 @@ def campaign_gen(country):
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
-    with open(file('landing-page', file_name), 'w', encoding='utf-8') as f:
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
     confirmation_ty_lp_url = api.eloqua_create_landingpage(file_name, code)[1]

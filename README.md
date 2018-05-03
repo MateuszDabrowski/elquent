@@ -26,6 +26,7 @@ __Create landing page__
 - Allows user to automatically swap Eloqua Form in Landing Page
 - Allows to use built-in landing page templates for quick deployment
 - Creates blindform for confirmation-ty-lp and automatically impelements it
+- Creates confirmation e-mail and fills it with gathered data
 - Built-in wizard creating all Landing Pages required for campaign
 - Cleans code, appends snippets, changes form code
 
@@ -71,4 +72,4 @@ __Helper module for Eloqua API__
 
 ---
 
-[_Version: 1.4.14_]
+[_Version: 1.4.15_]
