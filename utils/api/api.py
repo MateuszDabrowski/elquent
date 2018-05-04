@@ -610,12 +610,12 @@ def eloqua_create_landingpage(name, code):
 
     # Open in new tab
     id = landing_page['id']
-    url = naming['root'] + '#landing_pages&id=' + id
-    # url = microsite_link + landing_page['relativePath'] to open page directly
+    asset_url = naming['root'] + '#landing_pages&id=' + id
+    direct_url = microsite_link + landing_page['relativePath']
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
-    webbrowser.open(url)
+    webbrowser.open(asset_url)
 
-    return (id, url)
+    return (id, asset_url, direct_url)
 
 
 '''
@@ -825,10 +825,10 @@ def eloqua_fill_mail_params(name):
     # Returns data if all data elements were filled
     try:
         if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
-            print(f'\n{SUCCESS}E-mail data ready for upload')
+            print(f'  {SUCCESS}E-mail data ready for upload')
             for value in data.items():
                 print(
-                    f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
+                    f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
             return data
     except KeyError:
         pass
@@ -874,10 +874,10 @@ def eloqua_fill_mail_params(name):
     # Returns data if all data elements were filled
     try:
         if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
-            print(f'\n{SUCCESS}E-mail data ready for upload:')
+            print(f'\n  {SUCCESS}E-mail data ready for upload:')
             for value in data.items():
                 print(
-                    f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
+                    f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
             return data
     except KeyError:
         pass
@@ -959,9 +959,10 @@ def eloqua_fill_mail_params(name):
                 print(
                     f'\n{WARNING}Remember to pick e-mail footer in Eloqua')
 
-    print(f'\n{SUCCESS}E-mail data ready for upload:')
+    print(f'\n  {SUCCESS}E-mail data ready for upload:')
     for value in data.items():
-        print(f'{Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
+        print(
+            f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
 
     return data
 

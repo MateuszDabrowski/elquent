@@ -26,12 +26,15 @@ __Create landing page__
 - Allows user to automatically swap Eloqua Form in Landing Page
 - Allows to use built-in landing page templates for quick deployment
 - Creates blindform for confirmation-ty-lp and automatically impelements it
-- Creates confirmation e-mail and fills it with gathered data
+- Creates confirmation (plus reminder) e-mail and fills it with gathered data
+- Creates asset name with link to the chosen asset
+- Updates confirmation form with asset e-mail and asset link
 - Built-in wizard creating all Landing Pages required for campaign
 - Cleans code, appends snippets, changes form code
 
 _ToDo:_
 - _Change from two (one and two column) LP templates to just one modular template_
+- _Update main form with confirmation e-mail ID and thank-you-page urls_
 - _When not recognized product name, try to find best matches from a list_
 
 ---
@@ -72,4 +75,4 @@ __Helper module for Eloqua API__
 
 ---
 
-[_Version: 1.4.15_]
+[_Version: 1.5.0_]
