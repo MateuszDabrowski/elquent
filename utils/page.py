@@ -915,31 +915,40 @@ def campaign_gen(country):
 
     file_name = (('_').join(campaign_name[1:4]) + '_confirmation-EML')
     with open(file('confirmation-eml'), 'r', encoding='utf-8') as f:
-        code = f.read()
-    code = regex_product_name.sub(product_name, code)
-    code = regex_asset_name.sub(asset_name, code)
-    code = regex_blindform_html_name.sub(blindform_html_name, code)
+        confirmation_code = f.read()
+    confirmation_code = regex_product_name.sub(product_name, confirmation_code)
+    confirmation_code = regex_asset_name.sub(asset_name, confirmation_code)
+    confirmation_code = regex_blindform_html_name.sub(
+        blindform_html_name, confirmation_code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
-        code = regex_converter.sub(rf'{converter_value}', code)
+        confirmation_code = regex_converter.sub(
+            rf'{converter_value}', confirmation_code)
     # Saves to Outcomes file
     print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-        f.write(code)
+        f.write(confirmation_code)
     # Saves to Eloqua
-    confirmation_eml_id = api.eloqua_create_email(file_name, code)
+    api.eloqua_create_email(file_name, confirmation_code)
     # Saves to list of created EMLs
-    eml_list.append([(f'WK{source_country}_' + file_name), code])
+    eml_list.append([(f'WK{source_country}_' + file_name), confirmation_code])
 
     '''
     =================================================== Builds Confirmation Reminder Email
     '''
 
-    # TODO: Create Confirmation Reminder Email with link to Confirmation-LP (store ID)
-
-    # TODO: Update original Form with Confirmation Email ID and contact-TY/lead-TY LP's
+    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-reminder-EML')
+    # Saves to Outcomes file
+    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(confirmation_code)
+    # Saves to Eloqua
+    api.eloqua_create_email(
+        file_name, confirmation_code)
+    # Saves to list of created EMLs
+    eml_list.append([(f'WK{source_country}_' + file_name), confirmation_code])
 
     '''
     =================================================== Builds Confirmation-TY-LP
