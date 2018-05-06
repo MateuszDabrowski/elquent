@@ -72,6 +72,7 @@ def file(file_path, name='LP'):
         'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
         'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
         'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
+        'content-campaign': find_data_file(f'WK{source_country}_content-campaign.json'),
         'asset-eml': find_data_file(f'WK{source_country}_asset-eml.txt'),
         'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
         'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
@@ -737,8 +738,9 @@ def campaign_gen(country):
         converter_choice = input(' ')
         if converter_choice in ['0', '1', '2', '3', '4', '5']:
             converter_choice = converter_values[int(converter_choice) + 2]
+            asset_type = converter_choice.split(' ')[0]
             print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {converter_choice}')
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
             asset_name = input(' ')
             regex_asset_name = re.compile(r'ASSET_NAME', re.UNICODE)
             break
@@ -784,7 +786,7 @@ def campaign_gen(country):
     '''
 
     print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on Main LP')
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on main Landing Page', end='')
     file_name = (('_').join(campaign_name[1:4]) + '_LP')
     with open(file('two-column-lp'), 'r', encoding='utf-8') as f:
         code = f.read()
@@ -870,7 +872,7 @@ def campaign_gen(country):
         lp_list.append([f'WK{source_country}_{file_name}', contact_ty_lp])
 
     '''
-    =================================================== Gets BlindForm code
+    =================================================== Build BlindForm
     '''
 
     blindform_name = (('_').join(
@@ -1016,7 +1018,7 @@ def campaign_gen(country):
     eml_list.append([f'WK{source_country}_{file_name}', asset_code])
 
     '''
-    =================================================== Update Blindform
+    =================================================== Update BlindForm
     '''
 
     # Gets CSS Code of the form
@@ -1047,14 +1049,42 @@ def campaign_gen(country):
         processing=blindform_processing['processingSteps']
     )
 
-    # TODO: Build campaign canvas with all those assets
+    '''
+    =================================================== Create Campaign
+    '''
+
+    # Chosses correct folder ID for campaign
+    folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
+
+    # Gets campaign code out of the campaign name
+    try:
+        campaign_code = []
+        for part in campaign_name[3].split('-'):
+            if part.startswith(tuple(naming[source_country]['psp'])):
+                campaign_code.append(part)
+        campaign_code = '-'.join(campaign_code)
+    except:
+        campaign_code = ''
+
+    # Loads json data for campaign canvas creation and fills it with data
+    with open(file('content-campaign'), 'r', encoding='utf-8') as f:
+        campaign_json = json.load(f)
+        campaign_json['name'] = '_'.join(campaign_name)
+        campaign_json['folderId'] = folder_id
+        campaign_json['region'] = campaign_name[0]
+        campaign_json['campaignType'] = campaign_name[2]
+        campaign_json['product'] = campaign_name[-1]
+        campaign_json['fieldValues'][0]['value'] = campaign_code
+
+    # Creates campaign with given data
+    api.eloqua_create_campaign(campaign_name, campaign_json)
 
     '''
     =================================================== Finished :)
     '''
 
     print(
-        f'\n{Fore.GREEN}All Landing Pages prepared!',
+        f'\n{SUCCESS}Campaign prepared!',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 

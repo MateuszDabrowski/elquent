@@ -33,9 +33,10 @@ ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
+
 '''
 =================================================================================
-                            File Path Getter
+                                File Path Getter
 =================================================================================
 '''
 
@@ -64,152 +65,6 @@ def file(file_path):
     }
 
     return file_paths.get(file_path)
-
-
-'''
-=================================================================================
-                                Eloqua Asset Helpers
-=================================================================================
-'''
-
-
-def get_asset_id(asset):
-    '''
-    Returns valid ID of chosen Eloqua asset
-    '''
-
-    assets = {
-        'LP': 'Landing Page',
-        'Form': 'Form',
-        'Mail': 'E-mail'
-    }
-
-    asset_name = assets.get(asset)
-
-    while True:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset_name} ID or copy the code and click [Enter]', end='')
-        asset_id = input(' ')
-
-        # If there was no input, skips to get code via pyperclip
-        if not asset_id:
-            return None
-
-        # Checks if input in numerical value
-        try:
-            asset_id = int(asset_id)
-        except ValueError:
-            print(f'{ERROR}It is not valid Eloqua {asset_name} ID')
-            continue
-
-        # Checks if there is asset with that ID
-        try:
-            if asset == 'LP':
-                asset_exists = eloqua_get_landingpage(asset_id)
-            elif asset == 'Form':
-                asset_exists = eloqua_get_form(asset_id)
-            elif asset == 'Mail':
-                asset_exists = eloqua_get_email(asset_id)
-        except json.decoder.JSONDecodeError:
-            asset_exists = False
-
-        # Gets ID confirmation from user
-        if asset_exists:
-            choice = ''
-            while choice.lower() != 'y' and choice.lower() != 'n':
-                print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
-                choice = input(' ')
-            if choice.lower() == 'y':
-                return asset_id
-            elif choice.lower() == 'n':
-                get_asset_id(asset)
-        else:
-            print(f'{ERROR}Not found Eloqua {asset_name} with given ID')
-
-
-def eloqua_asset_exist(name, asset):
-    '''
-    Returns True if there is already asset in Eloqua instance with that name
-    '''
-
-    assets = {
-        'LP': 'landingPages',
-        'Form': 'forms',
-        'Mail': 'emails'
-    }
-
-    endpoint = assets.get(asset)
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/{endpoint}'
-    params = {'search': name}
-    response = api_request(root, params=params)
-    elq_asset = response.json()
-
-    if elq_asset['total']:
-        id = elq_asset['elements'][0]['id']
-        print(
-            f'\n  {WARNING}{asset} "{name}" already exists! [ID: {id}]')
-        while True:
-            print(
-                f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
-            choice = input(' ')
-            if not choice:
-                return id
-            elif choice.lower() == 'q':
-                print(f'\n{Fore.GREEN}Ahoj!')
-                raise SystemExit
-            else:
-                print(
-                    f'\n{ERROR}Entered value is not a valid choice!')
-    else:
-        return False
-
-
-def eloqua_asset_html_name(name):
-    '''
-    Returns correct html_name for the asset
-    '''
-    html_name = ''
-    date_element = re.compile(r'\d\d', re.UNICODE)
-    local_name = name.split('_')[-2]  # Gets local name from asset name
-    for part in local_name.split('-'):
-        # Skip if part belongs to PSP
-        if part.startswith(tuple(naming[source_country]['psp'])):
-            continue
-        # Skip if part is a date
-        elif date_element.search(part):
-            continue
-        else:
-            html_name += f'{part}-'
-    # Gets asset type last part of html_name
-    html_name += name.split('_')[-1]
-
-    return html_name
-
-
-def eloqua_asset_name():
-    '''
-    Returns correct name for the asset
-    '''
-    while True:
-        name = input(' ')
-        name_check = name.split('_')
-        if len(name_check) != 5:
-            print(
-                f'{ERROR}Expected 5 name elements, found {len(name_check)}')
-        elif name_check[0][:2] != 'WK':
-            print(
-                f'{ERROR}"{name_check[0]}" is not existing country code')
-        elif name_check[1] not in naming[source_country]['segment']:
-            print(
-                f'{ERROR}"{name_check[1]}" is not existing segment name')
-        elif name_check[2] not in naming['campaign']:
-            print(
-                f'{ERROR}"{name_check[2]}" is not existing campaign type')
-        else:
-            return name
-        print(f'{Fore.YELLOW}Please write or paste correct name:')
 
 
 '''
@@ -288,6 +143,154 @@ def api_request(root, call='get', api='eloqua', params={}, debug=False, data={})
         status_code(response, root)
 
     return response
+
+
+'''
+=================================================================================
+                                Eloqua Asset Helpers
+=================================================================================
+'''
+
+
+def get_asset_id(asset):
+    '''
+    Returns valid ID of chosen Eloqua asset
+    '''
+
+    assets = {
+        'LP': 'Landing Page',
+        'Form': 'Form',
+        'Mail': 'E-mail'
+    }
+
+    asset_name = assets.get(asset)
+
+    while True:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset_name} ID or copy the code and click [Enter]', end='')
+        asset_id = input(' ')
+
+        # If there was no input, skips to get code via pyperclip
+        if not asset_id:
+            return None
+
+        # Checks if input in numerical value
+        try:
+            asset_id = int(asset_id)
+        except ValueError:
+            print(f'{ERROR}It is not valid Eloqua {asset_name} ID')
+            continue
+
+        # Checks if there is asset with that ID
+        try:
+            if asset == 'LP':
+                asset_exists = eloqua_get_landingpage(asset_id)
+            elif asset == 'Form':
+                asset_exists = eloqua_get_form(asset_id)
+            elif asset == 'Mail':
+                asset_exists = eloqua_get_email(asset_id)
+        except json.decoder.JSONDecodeError:
+            asset_exists = False
+
+        # Gets ID confirmation from user
+        if asset_exists:
+            choice = ''
+            while choice.lower() != 'y' and choice.lower() != 'n':
+                print(
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                choice = input(' ')
+            if choice.lower() == 'y':
+                return asset_id
+            elif choice.lower() == 'n':
+                get_asset_id(asset)
+        else:
+            print(f'{ERROR}Not found Eloqua {asset_name} with given ID')
+
+
+def eloqua_asset_exist(name, asset):
+    '''
+    Returns True if there is already asset in Eloqua instance with that name
+    '''
+
+    assets = {
+        'LP': 'landingPages',
+        'Form': 'forms',
+        'Mail': 'emails',
+        'Campaign': 'campaigns'
+
+    }
+
+    endpoint = assets.get(asset)
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/{endpoint}'
+    params = {'search': name}
+    response = api_request(root, params=params)
+    elq_asset = response.json()
+
+    if elq_asset['total']:
+        id = elq_asset['elements'][0]['id']
+        print(
+            f'\n  {WARNING}{asset} "{name}" already exists! [ID: {id}]')
+        while True:
+            print(
+                f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
+            choice = input(' ')
+            if not choice:
+                return id
+            elif choice.lower() == 'q':
+                print(f'\n{Fore.GREEN}Ahoj!')
+                raise SystemExit
+            else:
+                print(
+                    f'\n{ERROR}Entered value is not a valid choice!')
+    else:
+        return False
+
+
+def eloqua_asset_html_name(name):
+    '''
+    Returns correct html_name for the asset
+    '''
+    html_name = ''
+    date_element = re.compile(r'\d\d', re.UNICODE)
+    local_name = name.split('_')[-2]  # Gets local name from asset name
+    for part in local_name.split('-'):
+        # Skip if part belongs to PSP
+        if part.startswith(tuple(naming[source_country]['psp'])):
+            continue
+        # Skip if part is a date
+        elif date_element.search(part):
+            continue
+        else:
+            html_name += f'{part}-'
+    # Gets asset type last part of html_name
+    html_name += name.split('_')[-1]
+
+    return html_name
+
+
+def eloqua_asset_name():
+    '''
+    Returns correct name for the asset
+    '''
+    while True:
+        name = input(' ')
+        name_check = name.split('_')
+        if len(name_check) != 5:
+            print(
+                f'{ERROR}Expected 5 name elements, found {len(name_check)}')
+        elif name_check[0][:2] != 'WK':
+            print(
+                f'{ERROR}"{name_check[0]}" is not existing country code')
+        elif name_check[1] not in naming[source_country]['segment']:
+            print(
+                f'{ERROR}"{name_check[1]}" is not existing segment name')
+        elif name_check[2] not in naming['campaign']:
+            print(
+                f'{ERROR}"{name_check[2]}" is not existing campaign type')
+        else:
+            return name
+        print(f'{Fore.YELLOW}Please write or paste correct name:')
 
 
 '''
@@ -529,6 +532,7 @@ def eloqua_log_sync(sync_uri):
             print(f'\t{Fore.YELLOW}› {item["count"]} {item["message"]}')
         if item['message'] in ['Contacts created.', 'Contacts updated.']:
             print(f'\t{Fore.GREEN}› {item["count"]} {item["message"]}')
+
     return logs_eloqua
 
 
@@ -551,13 +555,14 @@ def eloqua_get_landingpage(id):
 
     name = landing_page['name']
     code = landing_page['htmlContent']['html']
+
     return (name, code)
 
 
 def eloqua_create_landingpage(name, code):
     '''
     Requires name and code of the landing page to create LP in Eloqua
-    Returns Landing Page ID
+    Returns Landing Page ID, eloqua asset url and direct url
     '''
     # Adds source contry to received asset name
     name = f'WK{source_country}_{name}'
@@ -613,7 +618,7 @@ def eloqua_create_landingpage(name, code):
     asset_url = naming['root'] + '#landing_pages&id=' + id
     direct_url = microsite_link + landing_page['relativePath']
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
-    webbrowser.open(asset_url)
+    webbrowser.open(asset_url, new=2, autoraise=False)
 
     return (id, asset_url, direct_url)
 
@@ -640,13 +645,14 @@ def eloqua_get_form(id, depth=''):
 
     name = form['name']
     code = form['html']
+
     return (name, code)
 
 
 def eloqua_create_form(name, data):
     '''
-    Requires name, json data and version of the form to create it in Eloqua
-    Returns Form ID
+    Requires name and json data of the form to create it in Eloqua
+    Returns Form ID and response of created form
     '''
     # Checks if there already is Form with that name
     eloqua_asset_exist(name, asset='Form')
@@ -689,7 +695,7 @@ def eloqua_update_form(id, css='', html='', processing={}):
     url = naming['root'] + '#forms&id=' + id
     print(
         f'{Fore.WHITE}» {SUCCESS}Updated Eloqua Form ID: {id}')
-    webbrowser.open(url)
+    webbrowser.open(url, new=2, autoraise=False)
 
     return id
 
@@ -716,6 +722,7 @@ def eloqua_get_email(id, depth=''):
 
     name = email['name']
     code = email['htmlContent']['html']
+
     return (name, code)
 
 
@@ -995,7 +1002,7 @@ def eloqua_create_email(name, code):
     url = naming['root'] + '#emails&id=' + id
     print(
         f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua E-mail ID: {id}')
-    webbrowser.open(url)
+    webbrowser.open(url, new=2, autoraise=False)
 
     return id
 
@@ -1035,9 +1042,39 @@ def eloqua_update_email(id, code):
     url = naming['root'] + '#emails&id=' + id
     print(
         f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
-    webbrowser.open(url)
+    webbrowser.open(url, new=2, autoraise=False)
 
     return id
+
+
+'''
+=================================================================================
+                                Campaign API
+=================================================================================
+'''
+
+
+def eloqua_create_campaign(name, data):
+    '''
+    Requires name and json data of the campaign canvas to create it in Eloqua
+    Returns ID and reponse of created campaign canvas
+    '''
+    # Checks if there already is Campaign with that name
+    eloqua_asset_exist(name, asset='Campaign')
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/campaign'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    campaign = response.json()
+
+    # Open in new tab
+    id = campaign['id']
+    url = naming['root'] + '#campaigns&id=' + id
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Campaign ID: {id}')
+    webbrowser.open(url, new=2, autoraise=True)
+
+    return (id, campaign)
 
 
 '''

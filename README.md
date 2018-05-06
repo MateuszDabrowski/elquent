@@ -25,12 +25,13 @@ __Create landing page__
 - RegEx work automator
 - Allows user to automatically swap Eloqua Form in Landing Page
 - Allows to use built-in landing page templates for quick deployment
+- Built-in wizard creating all Landing Pages required for campaign
+- Cleans code, appends snippets, changes form code
 - Creates blindform for confirmation-ty-lp and automatically impelements it
 - Creates confirmation (plus reminder) e-mail and fills it with gathered data
 - Creates asset name with link to the chosen asset
 - Updates confirmation form with asset e-mail and asset link
-- Built-in wizard creating all Landing Pages required for campaign
-- Cleans code, appends snippets, changes form code
+- Creates campaign canvas filled with created content
 
 _ToDo:_
 - _Change from two (one and two column) LP templates to just one modular template_
@@ -72,7 +73,8 @@ __Helper module for Eloqua API__
 - Update e-mail with new code
 - Upload form to json specified folder
 - Update form with html, css and processing steps
+- Create campaign canvas from in-app updated json file
 
 ---
 
-[_Version: 1.5.0_]
+[_Version: 1.5.1_]
