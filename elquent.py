@@ -24,6 +24,7 @@ from colorama import Fore, init
 import utils.mail as mail
 import utils.link as link
 import utils.page as page
+import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.api.api as api
@@ -194,7 +195,7 @@ def menu(choice=''):
     utils = {
         'build_mail': (mail.mail_constructor, f'E-mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Form›LP{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'campaign_gen': (page.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
+        'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
         'webinar': (webinar.click_to_elq, f'Webinars{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'database': (database.contact_list, f'Database{Fore.WHITE}] Create contact upload file with correct structure'),
         'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in E-mail links'),
