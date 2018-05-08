@@ -22,7 +22,7 @@ import getpass
 import requests
 import encodings
 import webbrowser
-from colorama import Fore, init
+from colorama import Fore, Style, init
 from collections import defaultdict
 
 # Initialize colorama
@@ -197,12 +197,12 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
             elif choice.lower() == 'n':
-                get_asset_id(asset)
+                continue
         else:
             print(f'{ERROR}Not found Eloqua {asset_name} with given ID')
 

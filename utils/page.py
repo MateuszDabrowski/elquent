@@ -17,7 +17,7 @@ import sys
 import json
 import encodings
 import pyperclip
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -301,7 +301,7 @@ def create_form():
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -330,7 +330,7 @@ def create_form():
         # Asks if information about data administrator should be appended
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Add information about data administrator? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                f'\t{Fore.WHITE}Add information about data administrator? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -414,7 +414,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n':
                 print(
-                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 requiredOptins.append(optin[1])
@@ -447,7 +447,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}):', end='')
+                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)

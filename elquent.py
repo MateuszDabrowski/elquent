@@ -18,7 +18,7 @@ import json
 import pickle
 import requests
 import encodings
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.mail as mail
@@ -283,7 +283,7 @@ elif sys.argv[1] == 'mail':
 elif sys.argv[1] == 'page':
     page.page_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'campaign':
-    page.campaign_gen(SOURCE_COUNTRY)
+    campaign.campaign_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
     webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':

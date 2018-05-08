@@ -83,4 +83,4 @@ __Helper module for Eloqua API__
 
 ---
 
-[_Version: 1.5.2_]
+[_Version: 1.5.3_]

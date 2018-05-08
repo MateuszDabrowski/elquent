@@ -16,7 +16,7 @@ import re
 import sys
 import json
 import encodings
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api

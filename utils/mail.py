@@ -16,7 +16,7 @@ import sys
 import requests
 import encodings
 import pyperclip
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -361,7 +361,7 @@ def mail_constructor(country):
     output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         mail_constructor(country)
