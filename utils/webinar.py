@@ -282,7 +282,7 @@ def click_export_attendees(click_sessions, export_time_range):
             psp_name = naming[source_country]['webinar']['progman_psp'] if 'Progman' in room_name else naming[source_country]['webinar']['webinar_psp']
 
             # Naming convention for shared list of uploaded attendees
-            shared_list_name = naming[source_country]['webinar']['name'] + room_name + \
+            shared_list_name = naming[source_country]['webinar']['name'] + str(session_id) + '-' + room_name + \
                 session_date + psp_name + '_uczestnicy'
             while '--' in shared_list_name:
                 shared_list_name = shared_list_name.replace('--', '-')
