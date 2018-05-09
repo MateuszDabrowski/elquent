@@ -204,9 +204,15 @@ def click_export_registered(active_rooms):
                                    '@wolterskluwer.' not in user.lower() and len(user) > 8]
 
                 # Modifying values for Eloqua naming convention
-                room_name = room_name.replace(',', '').replace(
-                    '!', '').replace('-', '').replace('.', '').replace(
-                        ':', '').replace('?', '').replace('–', '').replace(' ', '-')
+                room_name = room_name\
+                    .replace(',', '')\
+                    .replace('!', '')\
+                    .replace('-', '')\
+                    .replace('.', '')\
+                    .replace(':', '')\
+                    .replace('?', '')\
+                    .replace('–', '')\
+                    .replace(' ', '-')
                 room_name = room_name[:26] + '-' if len(room_name) > 26 \
                     else room_name + '-'
                 psp_name = naming[source_country]['webinar']['progman_psp'] if 'Progman' in room_name else naming[source_country]['webinar']['webinar_psp']
@@ -273,9 +279,15 @@ def click_export_attendees(click_sessions, export_time_range):
                               '@wolterskluwer.' not in att.lower() and len(att) > 8]
 
             # Modifying values for Eloqua naming convention
-            room_name = room_name.replace(',', '').replace(
-                '!', '').replace('-', '').replace('.', '').replace(
-                    ':', '').replace('?', '').replace('–', '').replace(' ', '-')
+            room_name = room_name\
+                .replace(',', '')\
+                .replace('!', '')\
+                .replace('-', '')\
+                .replace('.', '')\
+                .replace(':', '')\
+                .replace('?', '')\
+                .replace('–', '')\
+                .replace(' ', '-')
             room_name = room_name[:29] + '-' if len(room_name) > 29 \
                 else room_name + '-'
             session_date = f'{session_date[8:10]}-{session_date[5:7]}-{session_date[2:4]}-'

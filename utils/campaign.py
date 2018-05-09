@@ -250,13 +250,18 @@ def campaign_gen(country):
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
-    api.eloqua_create_landingpage(file_name, code)
+    main_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
     # Saves to list of created LPs
     lp_list.append([f'WK{source_country}_{file_name}', code])
+
+    # Gets main form id for future campaign canvas API calls
+    form_id_regex = re.compile(r'id="form(\d+?)"', re.UNICODE)
+    form_id = form_id_regex.findall(form)[0]
 
     '''
     =================================================== Builds TY-LP
@@ -282,15 +287,15 @@ def campaign_gen(country):
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
             converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
-        lead_ty_lp = lead_ty_lp.replace('<!-- PRESENTATION -->',
-                                        naming[source_country]['converter']['Presentation'])
+        lead_ty_lp = lead_ty_lp\
+            .replace('<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
         # Saves to Outcomes file
-        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        print(
+            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
         with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
             f.write(lead_ty_lp)
         # Saves to Eloqua
-        lead_ty_lp_url = api.eloqua_create_landingpage(
-            file_name, lead_ty_lp)[1]
+        api.eloqua_create_landingpage(file_name, lead_ty_lp)
         # Saves to list of created LPs
         lp_list.append([f'WK{source_country}_{file_name}', lead_ty_lp])
 
@@ -310,12 +315,12 @@ def campaign_gen(country):
             contact_ty_lp = regex_converter.sub(
                 rf'{converter_value}', contact_ty_lp)
         # Saves to Outcomes file
-        print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+        print(
+            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
         with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
             f.write(contact_ty_lp)
         # Saves to Eloqua
-        contact_ty_lp_url = api.eloqua_create_landingpage(
-            file_name, contact_ty_lp)[1]
+        api.eloqua_create_landingpage(file_name, contact_ty_lp)
         # Saves to list of created LPs
         lp_list.append([f'WK{source_country}_{file_name}', contact_ty_lp])
 
@@ -341,8 +346,10 @@ def campaign_gen(country):
     # Prepares HTML Code of the form
     with open(file('blindform-html'), 'r', encoding='utf-8') as f:
         blindform_html = f.read()
-        blindform_html = blindform_html.replace('\\', '').replace(
-            'FORM_ID', blindform_id).replace('HTML_NAME', blindform_html_name)
+        blindform_html = blindform_html\
+            .replace('\\', '')\
+            .replace('FORM_ID', blindform_id)\
+            .replace('HTML_NAME', blindform_html_name)
 
     required = ''
 
@@ -364,11 +371,12 @@ def campaign_gen(country):
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
-    confirmation_lp_url = api.eloqua_create_landingpage(file_name, code)[1]
+    api.eloqua_create_landingpage(file_name, code)
     # Saves to list of created LPs
     lp_list.append([f'WK{source_country}_{file_name}', code])
 
@@ -390,7 +398,8 @@ def campaign_gen(country):
         confirmation_code = regex_converter.sub(
             rf'{converter_value}', confirmation_code)
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(confirmation_code)
     # Saves to Eloqua
@@ -405,11 +414,12 @@ def campaign_gen(country):
 
     file_name = (('_').join(campaign_name[1:4]) + '_confirmation-reminder-EML')
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(confirmation_code)
     # Saves to Eloqua
-    api.eloqua_create_email(
+    confirmation_reminder_eml_id = api.eloqua_create_email(
         f'WK{source_country}_{file_name}', confirmation_code)
     # Saves to list of created EMLs
     eml_list.append([f'WK{source_country}_{file_name}', confirmation_code])
@@ -430,11 +440,12 @@ def campaign_gen(country):
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
     # Saves to Eloqua
-    confirmation_ty_lp_url = api.eloqua_create_landingpage(file_name, code)[2]
+    confirmation_ty_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
 
     # Saves to list of created LPs
     lp_list.append([f'WK{source_country}_{file_name}', code])
@@ -456,7 +467,8 @@ def campaign_gen(country):
         asset_code = regex_converter.sub(
             rf'{converter_value}', asset_code)
     # Saves to Outcomes file
-    print(f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] {file_name}')
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(asset_code)
     # Saves to Eloqua
@@ -482,13 +494,15 @@ def campaign_gen(country):
     # Gets and prepares processing steps json of the form
     with open(file('blindform-processing'), 'r', encoding='utf-8') as f:
         blindform_processing = json.load(f)
-        blindform_processing['processingSteps'][0]['mappings'][0]['sourceFormFieldId'] = confirm_field_id
-        blindform_processing['processingSteps'][0]['mappings'][1]['sourceFormFieldId'] = email_field_id
-        blindform_processing['processingSteps'][1]['keyFieldMapping']['sourceFormFieldId'] = email_field_id
-        blindform_processing['processingSteps'][2]['emailAddressFormFieldId'] = email_field_id
-        blindform_processing['processingSteps'][2]['emailId']['constantValue'] = asset_email_id
-        blindform_processing['processingSteps'][3]['emailAddressFormFieldId'] = email_field_id
-        blindform_processing['processingSteps'][4]['pageUrl']['constantValue'] = confirmation_ty_lp_url
+        # Change to string for easy replacing
+        blindform_string = json.dumps(blindform_processing)
+        blindform_string = blindform_string\
+            .replace('EMAIL_FIELD_ID', email_field_id)\
+            .replace('SEND_EMAIL_ID', asset_email_id)\
+            .replace('TY_LP_ID', confirmation_ty_lp_id)\
+            .replace('CONFIRM_FIELD_ID', confirm_field_id)
+        # Change back to json for API call
+        blindform_processing = json.loads(blindform_string)
 
     api.eloqua_update_form(
         blindform_id,
@@ -517,6 +531,16 @@ def campaign_gen(country):
     # Loads json data for campaign canvas creation and fills it with data
     with open(file('content-campaign'), 'r', encoding='utf-8') as f:
         campaign_json = json.load(f)
+        # Change to string for easy replacing
+        campaign_string = json.dumps(campaign_json)
+        campaign_string = campaign_string\
+            .replace('ASSET_TYPE', asset_type)\
+            .replace('ASSET_EMAIL', asset_email_id)\
+            .replace('CONFIRMATION_EMAIL', confirmation_reminder_eml_id)\
+            .replace('FORM_ID', form_id)\
+            .replace('LP_ID', main_lp_id)
+        # Change back to json for API call
+        campaign_json = json.loads(campaign_string)
         campaign_json['name'] = '_'.join(campaign_name)
         campaign_json['folderId'] = folder_id
         campaign_json['region'] = campaign_name[0]
