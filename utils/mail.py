@@ -13,8 +13,6 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
-import requests
-import encodings
 import pyperclip
 from colorama import Fore, Style, init
 
@@ -24,9 +22,13 @@ import utils.api.api as api
 # Initialize colorama
 init(autoreset=True)
 
+# Globals
+source_country = None
+
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+
 
 '''
 =================================================================================
@@ -40,29 +42,29 @@ def file(file_path, file_name='', folder_name=''):
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir='incomes', folder_name=''):
+    def find_data_file(filename, directory='incomes', folder_name=''):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'main':  # Files in main directory
+        if directory == 'main':  # Files in main directory
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, filename)
-        elif dir == 'incomes':  # For reading user files
+        elif directory == 'incomes':  # For reading user files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, dir, filename)
-        elif dir == 'outcomes':  # For writing outcome files
+            return os.path.join(datadir, directory, filename)
+        elif directory == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, dir, filename)
-        elif dir == 'package':  # For reading package files
+            return os.path.join(datadir, directory, filename)
+        elif directory == 'package':  # For reading package files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
@@ -70,11 +72,11 @@ def file(file_path, file_name='', folder_name=''):
             return os.path.join(datadir, 'incomes', folder_name, filename)
 
     file_paths = {
-        'incomes': find_data_file('incomes', dir='main'),
+        'incomes': find_data_file('incomes', directory='main'),
         'package': find_data_file(f'{file_name}'),
-        'package_file': find_data_file(f'{file_name}', dir='package', folder_name=folder_name),
-        'mail_html': find_data_file(f'WK{source_country}_{file_name}.txt', dir='outcomes'),
-        'mail_mjml': find_data_file(f'WK{source_country}_{file_name}.mjml', dir='outcomes')
+        'package_file': find_data_file(f'{file_name}', directory='package', folder_name=folder_name),
+        'mail_html': find_data_file(f'WK{source_country}_{file_name}.txt', directory='outcomes'),
+        'mail_mjml': find_data_file(f'WK{source_country}_{file_name}.mjml', directory='outcomes')
     }
 
     return file_paths.get(file_path)

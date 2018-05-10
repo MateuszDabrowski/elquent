@@ -17,8 +17,6 @@ import sys
 import json
 import pickle
 import datetime
-import requests
-import encodings
 from colorama import Fore, init
 
 # ELQuent imports
@@ -26,6 +24,12 @@ import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
+
+# Globals
+naming = None
+click_key = None
+click_root = None
+source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -39,31 +43,31 @@ SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 '''
 
 
-def file(file_path, name='LP'):
+def file(file_path):
     '''
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir='templates'):
+    def find_data_file(filename, directory='templates'):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'templates':  # For reading template files
+        if directory == 'templates':  # For reading template files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
-        elif dir == 'api':  # For writing auth files
+            return os.path.join(datadir, 'utils', directory, filename)
+        elif directory == 'api':  # For writing auth files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
+            return os.path.join(datadir, 'utils', directory, filename)
 
     file_paths = {
-        'naming': find_data_file('naming.json', dir='api'),
-        'click': find_data_file('click.p', dir='api')
+        'naming': find_data_file('naming.json', directory='api'),
+        'click': find_data_file('click.p', directory='api')
     }
 
     return file_paths.get(file_path)
@@ -322,7 +326,7 @@ def click_export_attendees(click_sessions, export_time_range):
 
 def click_to_elq(country):
     '''
-    Gets attendees and users registered to ClickMeeting webinars 
+    Gets attendees and users registered to ClickMeeting webinars
     and uploads them to Eloqua as a shared list
     '''
     # Gets required auths

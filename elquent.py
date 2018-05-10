@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 # -*- coding: utf8 -*-
+#pylint: disable=unused-argument
 
 '''
 ELQuent.menu
@@ -17,8 +18,7 @@ import sys
 import json
 import pickle
 import requests
-import encodings
-from colorama import Fore, Style, init
+from colorama import Fore, init
 
 # ELQuent imports
 import utils.mail as mail
@@ -27,6 +27,7 @@ import utils.page as page
 import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
+import utils.dashboard as dashboard
 import utils.api.api as api
 
 # Initialize colorama
@@ -45,30 +46,30 @@ def file(file_path):
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir='main'):
+    def find_data_file(filename, directory='main'):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'main':  # Files in main directory
+        if directory == 'main':  # Files in main directory
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, filename)
-        elif dir == 'api':  # Auths saved in api directory
+        elif directory == 'api':  # Auths saved in api directory
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
+            return os.path.join(datadir, 'utils', directory, filename)
 
     file_paths = {
         'incomes': find_data_file('incomes'),
         'outcomes': find_data_file('outcomes'),
         'utils': find_data_file('utils.json'),
         'readme': find_data_file('readme.md'),
-        'country': find_data_file('country.p', dir='api'),
-        'eloqua': find_data_file('eloqua.p', dir='api')
+        'country': find_data_file('country.p', directory='api'),
+        'eloqua': find_data_file('eloqua.p', directory='api')
     }
 
     return file_paths.get(file_path)
@@ -128,8 +129,8 @@ def new_version():
     Returns True if there is newer version of the app available
     '''
     # Gets current version number of running app
-    with open(file('readme'), 'r', encoding='utf-8') as f:
-        readme = f.read()
+    with open(file('readme'), 'r', encoding='utf-8') as files:
+        readme = files.read()
     check_current_version = re.compile(r'\[_Version: (.*?)_\]', re.UNICODE)
     current_version = check_current_version.findall(readme)
 
@@ -140,10 +141,7 @@ def new_version():
     available_version = check_available_version.findall(github.text)
 
     # Compares versions
-    if current_version != available_version:
-        return True
-    else:
-        return False
+    return bool(current_version != available_version)
 
 
 '''
@@ -157,8 +155,8 @@ def clean_outcomes(country):
     '''
     Cleans all content of Outcomes folder
     '''
-    for f in os.listdir(file('outcomes')):
-        file_path = os.path.join(file('outcomes'), f)
+    for files in os.listdir(file('outcomes')):
+        file_path = os.path.join(file('outcomes'), files)
         if os.path.isfile(file_path):
             os.unlink(file_path)
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
@@ -170,8 +168,8 @@ def clean_incomes(country):
     '''
     Cleans all content of Incomes folder
     '''
-    for f in os.listdir(file('incomes')):
-        file_path = os.path.join(file('incomes'), f)
+    for files in os.listdir(file('incomes')):
+        file_path = os.path.join(file('incomes'), files)
         if os.path.isfile(file_path):
             os.unlink(file_path)
     print(f'\n{Fore.GREEN}» Incomes folder cleaned.')
@@ -201,7 +199,8 @@ def menu(choice=''):
         'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in E-mail links'),
         'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
-        'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder')
+        'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
+        'form_fill': (dashboard.form_fill_dash, f'Report{Fore.WHITE}] Eloqua Form Dashboard')
     }
 
     # Gets dict of utils available for users source country

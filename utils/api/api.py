@@ -19,11 +19,17 @@ import time
 import base64
 import pickle
 import getpass
-import requests
-import encodings
 import webbrowser
+import requests
 from colorama import Fore, Style, init
-from collections import defaultdict
+
+# Globals
+naming = None
+eloqua_key = None
+eloqua_bulk = None
+eloqua_rest = None
+shared_list = None
+source_country = None
 
 # Initialize colorama
 init(autoreset=True)
@@ -98,7 +104,7 @@ def status_code(response, root):
     return connected
 
 
-def api_request(root, call='get', api='eloqua', params={}, debug=False, data={}):
+def api_request(root, call='get', api='eloqua', params=None, debug=False, data=None):
     '''
     Arguments:
         root - root URL of API call
@@ -228,15 +234,15 @@ def eloqua_asset_exist(name, asset):
     elq_asset = response.json()
 
     if elq_asset['total']:
-        id = elq_asset['elements'][0]['id']
+        asset_id = elq_asset['elements'][0]['id']
         print(
-            f'\n  {WARNING}{asset} "{name}" already exists! [ID: {id}]')
+            f'\n  {WARNING}{asset} "{name}" already exists! [ID: {asset_id}]')
         while True:
             print(
                 f'  {Fore.WHITE}» Click [Enter] to continue with current name or [Q] to quit', end='')
             choice = input(' ')
             if not choice:
-                return id
+                return asset_id
             elif choice.lower() == 'q':
                 print(f'\n{Fore.GREEN}Ahoj!')
                 raise SystemExit
@@ -314,7 +320,7 @@ def get_eloqua_auth(country):
         global naming
         naming = json.load(f)
 
-    def get_eloqua_root(eloqua_auth):
+    def get_eloqua_root():
         '''
         Returns Eloqua base URL for your instance.
         '''
@@ -347,7 +353,7 @@ def get_eloqua_auth(country):
 
         # Gets Eloqua root URL
         try:
-            login_data = get_eloqua_root(eloqua_key)
+            login_data = get_eloqua_root()
             eloqua_root = login_data['urls']['base']
         except TypeError:
             print(f'{ERROR}Login failed!')
@@ -429,7 +435,7 @@ def eloqua_create_sharedlist(export, choice):
                     return outcome
 
         uri = eloqua_import_definition(name, list_id)
-        count = eloqua_import_content(contacts, list_id, uri)
+        count = eloqua_import_content(contacts, uri)
         status = eloqua_import_sync(uri)
         if status == 'success':
             # Sync_id is syncedInstanceUri from sync response
@@ -464,10 +470,10 @@ def eloqua_import_definition(name, list_id):
     return uri
 
 
-def eloqua_import_content(contacts, list_id, uri):
+def eloqua_import_content(contacts, uri):
     '''
     Uploads contacts from ClickWebinar to Eloqua
-    Requires list of contacts for upload, shared list ID and uri key
+    Requires list of contacts for upload and uri key
     Returns count of uploaded contacts
     '''
     count = 0
@@ -523,8 +529,8 @@ def eloqua_log_sync(sync_uri):
     Returns logs of sync
     '''
     print(f'{Fore.WHITE}{sync_uri[1:]}')
-    id = (sync_uri.split('/'))[-1]
-    root = eloqua_bulk + f'syncs/{id}/logs'
+    sync_id = (sync_uri.split('/'))[-1]
+    root = eloqua_bulk + f'syncs/{sync_id}/logs'
     response = api_request(root)
     logs_eloqua = response.json()
     for item in logs_eloqua['items']:
@@ -543,12 +549,12 @@ def eloqua_log_sync(sync_uri):
 '''
 
 
-def eloqua_get_landingpage(id):
+def eloqua_get_landingpage(lp_id):
     '''
     Returns name and code of Landing Page of given ID
     '''
     # Gets data of requested image name
-    root = f'{eloqua_rest}assets/landingPage/{id}'
+    root = f'{eloqua_rest}assets/landingPage/{lp_id}'
     params = {'depth': 'complete'}
     response = api_request(root, params=params)
     landing_page = response.json()
@@ -600,13 +606,13 @@ def eloqua_create_landingpage(name, code):
         landing_page = response.json()
 
         # Checks if there is error
-        if type(landing_page) is list and len(landing_page) == 1 and landing_page[0]['type'] == 'ObjectValidationError' and landing_page[0]['property'] == 'relativePath' and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
+        if isinstance(landing_page, list) and len(landing_page) == 1 and landing_page[0]['type'] == 'ObjectValidationError' and landing_page[0]['property'] == 'relativePath' and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
             print(
                 f'\n  {ERROR}URL ending "/{html_name}" already exists!',
                 f'\n  {Fore.WHITE}» Enter new URL ending:', end='')
             html_name = input(' ')
             continue
-        elif type(landing_page) is list:  # Other errors
+        elif isinstance(landing_page, list):  # Other errors
             print(f'{Fore.YELLOW}{landing_page}')
         elif landing_page['type'] == 'LandingPage':
             break
@@ -614,13 +620,13 @@ def eloqua_create_landingpage(name, code):
             print(f'{Fore.YELLOW}{landing_page}')
 
     # Open in new tab
-    id = landing_page['id']
+    lp_id = landing_page['id']
     asset_url = naming['root'] + '#landing_pages&id=' + id
     direct_url = microsite_link + landing_page['relativePath']
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
     webbrowser.open(asset_url, new=2, autoraise=False)
 
-    return (id, asset_url, direct_url)
+    return (lp_id, asset_url, direct_url)
 
 
 '''
@@ -630,12 +636,12 @@ def eloqua_create_landingpage(name, code):
 '''
 
 
-def eloqua_get_form(id, depth=''):
+def eloqua_get_form(form_id, depth=''):
     '''
     Returns name and code of Form of given ID
     '''
     # Gets data of requested image name
-    root = f'{eloqua_rest}assets/form/{id}'
+    root = f'{eloqua_rest}assets/form/{form_id}'
     params = {'depth': 'complete'}
     response = api_request(root, params=params)
     form = response.json()
@@ -664,19 +670,19 @@ def eloqua_create_form(name, data):
     form = response.json()
 
     # Open in new tab
-    id = form['id']
-    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {id}')
+    form_id = form['id']
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {form_id}')
 
-    return (id, form)
+    return (form_id, form)
 
 
-def eloqua_update_form(id, css='', html='', processing={}):
+def eloqua_update_form(form_id, css='', html='', processing=''):
     '''
     Requires id and json data of the form to update it in Eloqua
     Returns Form ID
     '''
     # Gets current data of form to update
-    data = eloqua_get_form(id, depth='complete')
+    data = eloqua_get_form(form_id, depth='complete')
     if css:
         data['customCSS'] = css
     if html:
@@ -685,19 +691,19 @@ def eloqua_update_form(id, css='', html='', processing={}):
         data['processingSteps'] = processing
 
     # Creating a post call to Eloqua API and taking care of emoticons encoding
-    root = f'{eloqua_rest}assets/form/{id}'
+    root = f'{eloqua_rest}assets/form/{form_id}'
     response = api_request(
         root, call='put', data=json.dumps(data))
     form = response.json()
 
     # Open in new tab
-    id = form['id']
-    url = naming['root'] + '#forms&id=' + id
+    form_id = form['id']
+    url = naming['root'] + '#forms&id=' + form_id
     print(
-        f'{Fore.WHITE}» {SUCCESS}Updated Eloqua Form ID: {id}')
+        f'{Fore.WHITE}» {SUCCESS}Updated Eloqua Form ID: {form_id}')
     webbrowser.open(url, new=2, autoraise=False)
 
-    return id
+    return form_id
 
 
 '''
@@ -707,12 +713,12 @@ def eloqua_update_form(id, css='', html='', processing={}):
 '''
 
 
-def eloqua_get_email(id, depth=''):
+def eloqua_get_email(email_id, depth=''):
     '''
     Returns name and code of E-mail of given ID or full response if depth='complete'
     '''
     # Gets data of requested image name
-    root = f'{eloqua_rest}assets/email/{id}'
+    root = f'{eloqua_rest}assets/email/{email_id}'
     params = {'depth': 'complete'}
     response = api_request(root, params=params)
     email = response.json()
@@ -863,7 +869,7 @@ def eloqua_fill_mail_params(name):
     folder_id = list(set(folder_id))
     footer = list(set(footer))
     header = list(set(header))
-    if len(header) == 0:
+    if not header:
         header = ['9']  # Default empty header
     group_id = list(set(group_id))
 
@@ -895,7 +901,7 @@ def eloqua_fill_mail_params(name):
 
     # Fill sender/reply e-mail address based on user choice
     if not data.get('senderEmail', False):
-        if len(sender_mail) == 0:
+        if not sender_mail:
             sender_mail = naming[source_country]['mail']['senders']
         print(f'\n{Fore.GREEN}Choose sender and reply e-mail address:')
         for i, sender in enumerate(sender_mail):
@@ -998,22 +1004,22 @@ def eloqua_create_email(name, code):
     email = response.json()
 
     # Open in new tab
-    id = email['id']
-    url = naming['root'] + '#emails&id=' + id
+    email_id = email['id']
+    url = naming['root'] + '#emails&id=' + email_id
     print(
-        f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua E-mail ID: {id}')
+        f'\n{Fore.WHITE}» {SUCCESS}Created Eloqua E-mail ID: {email_id}')
     webbrowser.open(url, new=2, autoraise=False)
 
-    return id
+    return email_id
 
 
-def eloqua_update_email(id, code):
+def eloqua_update_email(email_id, code):
     '''
     Requires id and code of the email to update it in Eloqua
     Returns E-mail ID
     '''
     # Gets current data of e-mail to update
-    old_data = eloqua_get_email(id, depth='complete')
+    old_data = eloqua_get_email(email_id, depth='complete')
     code = code.replace('"', '\"')
     data = {
         'type': 'Email',
@@ -1032,19 +1038,19 @@ def eloqua_update_email(id, code):
             continue
 
     # Creating a post call to Eloqua API and taking care of emoticons encoding
-    root = f'{eloqua_rest}assets/email/{id}'
+    root = f'{eloqua_rest}assets/email/{email_id}'
     response = api_request(
         root, call='put', data=json.dumps(data, ensure_ascii=False).encode('utf-8'))
     email = response.json()
 
     # Open in new tab
-    id = email['id']
-    url = naming['root'] + '#emails&id=' + id
+    email_id = email['id']
+    url = naming['root'] + '#emails&id=' + email_id
     print(
-        f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {id}')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}UPDATED{Fore.WHITE}] Eloqua E-mail ID: {email_id}')
     webbrowser.open(url, new=2, autoraise=False)
 
-    return id
+    return email_id
 
 
 '''
@@ -1069,12 +1075,12 @@ def eloqua_create_campaign(name, data):
     campaign = response.json()
 
     # Open in new tab
-    id = campaign['id']
-    url = naming['root'] + '#campaigns&id=' + id
-    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Campaign ID: {id}')
+    campaign_id = campaign['id']
+    url = naming['root'] + '#campaigns&id=' + campaign_id
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Campaign ID: {campaign_id}')
     webbrowser.open(url, new=2, autoraise=True)
 
-    return (id, campaign)
+    return (campaign_id, campaign)
 
 
 '''

@@ -14,7 +14,6 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
-import encodings
 import pyperclip
 from colorama import Fore, init
 
@@ -24,9 +23,13 @@ import utils.api.api as api
 # Initialize colorama
 init(autoreset=True)
 
+# Globals
+source_country = None
+
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+
 
 '''
 =================================================================================

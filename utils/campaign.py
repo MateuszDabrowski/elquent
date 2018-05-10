@@ -15,8 +15,7 @@ import os
 import re
 import sys
 import json
-import encodings
-from colorama import Fore, Style, init
+from colorama import Fore, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -24,6 +23,10 @@ import utils.page as page
 
 # Initialize colorama
 init(autoreset=True)
+
+# Globals
+naming = None
+source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -56,31 +59,31 @@ def file(file_path, name='LP'):
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir='templates'):
+    def find_data_file(filename, directory='templates'):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'templates':  # For reading template files
+        if directory == 'templates':  # For reading template files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
-        elif dir == 'api':  # For reading api files
+            return os.path.join(datadir, 'utils', directory, filename)
+        elif directory == 'api':  # For reading api files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
-        elif dir == 'outcomes':  # For writing outcome files
+            return os.path.join(datadir, 'utils', directory, filename)
+        elif directory == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, dir, filename)
+            return os.path.join(datadir, directory, filename)
 
     file_paths = {
-        'naming': find_data_file('naming.json', dir='api'),
+        'naming': find_data_file('naming.json', directory='api'),
         'jquery': find_data_file('WKCORP_jquery.txt'),
         'blindform': find_data_file(f'WK{source_country}_blindform.json'),
         'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
@@ -108,7 +111,7 @@ def file(file_path, name='LP'):
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
         'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
-        'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', dir='outcomes')
+        'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', directory='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -328,6 +331,9 @@ def campaign_gen(country):
     =================================================== Build BlindForm
     '''
 
+    blindform_folder_id = naming[source_country]['id']['form'].get(
+        campaign_name[1])
+
     blindform_name = (('_').join(
         campaign_name[0:4]) + '_confirmation-blindFORM')
     blindform_html_name = api.eloqua_asset_html_name(blindform_name)
@@ -338,6 +344,7 @@ def campaign_gen(country):
         blindform_json = json.load(f)
         blindform_json['name'] = blindform_name
         blindform_json['htmlName'] = blindform_html_name
+        blindform_json['folderId'] = blindform_folder_id
 
     # Creates form with given data
     blindform_id, blindform_json = api.eloqua_create_form(
@@ -519,14 +526,11 @@ def campaign_gen(country):
     folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
 
     # Gets campaign code out of the campaign name
-    try:
-        campaign_code = []
-        for part in campaign_name[3].split('-'):
-            if part.startswith(tuple(naming[source_country]['psp'])):
-                campaign_code.append(part)
-        campaign_code = '-'.join(campaign_code)
-    except:
-        campaign_code = ''
+    campaign_code = []
+    for part in campaign_name[3].split('-'):
+        if part.startswith(tuple(naming[source_country]['psp'])):
+            campaign_code.append(part)
+    campaign_code = '-'.join(campaign_code)
 
     # Loads json data for campaign canvas creation and fills it with data
     with open(file('content-campaign'), 'r', encoding='utf-8') as f:

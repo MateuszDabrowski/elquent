@@ -79,7 +79,7 @@ _ToDo:_
 
 ### [ELQuent.database](utils/database.py)
 
-#### Create Eloqua-compliant contact upload file__
+#### Create Eloqua-compliant contact upload file
 
 - Gets input from user
 - Allows appending, trimming and intersecting e-mail uploads
@@ -90,6 +90,16 @@ _ToDo:_
 _ToDo:_
 
 - [ ] _Ability to take .xls or .csv as input_
+
+---
+
+### [ELQuent.dashboard](utils/dashboard.py)
+
+#### Prepares report data and creates interactive dashboard
+
+_ToDo:_
+
+- [ ] _Everything_
 
 ---
 
@@ -117,4 +127,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.4_]
+[_Version: 1.5.5_]
