@@ -636,6 +636,40 @@ def eloqua_create_landingpage(name, code):
 '''
 
 
+def eloqua_get_forms():
+    '''
+    Returns name and code of Form of given ID
+    '''
+    all_forms = []
+    page = 1
+
+    print(
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}API{Fore.WHITE}] Getting form data from Eloqua: ', end='', flush=True)
+    while True:
+        # Gets data of requested image name
+        root = f'{eloqua_rest}assets/forms'
+        params = {'depth': 'complete',
+                  'search': f'WK{source_country}*',
+                  'orderBy': 'id DESC',
+                  'count': '50',
+                  'page': page}
+        response = api_request(root, params=params)
+        forms = response.json()
+
+        all_forms.extend(forms['elements'])
+        print(f'{Fore.GREEN}|', end='', flush=True)
+
+        # Stops iteration when full list is obtained
+        if forms['total'] - page * int(params.get('count')) < 0:
+            break
+
+        # Increments page to get next part of outcomes
+        page += 1
+
+    print()
+    return all_forms
+
+
 def eloqua_get_form(form_id, depth=''):
     '''
     Returns name and code of Form of given ID

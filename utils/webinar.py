@@ -36,6 +36,20 @@ ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 
+def country_naming_setter(country):
+    '''
+    Sets source_country for all functions
+    Loads json file with naming convention
+    '''
+    global source_country
+    source_country = country
+
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
+
 '''
 =================================================================================
                             File Path Getter
@@ -329,21 +343,13 @@ def click_to_elq(country):
     Gets attendees and users registered to ClickMeeting webinars
     and uploads them to Eloqua as a shared list
     '''
-    # Gets required auths
-    click_auth = get_click_auth()
 
-    # Gets data from naming.json
-    with open(file('naming'), 'r', encoding='utf-8') as f:
-        global naming
-        naming = json.load(f)
-
-    # Creates global source_country from main module
-    global source_country
-    source_country = country
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
 
     # Creates globals related to Click API
     global click_key
-    click_key = click_auth
+    click_key = get_click_auth()
     global click_root
     click_root = 'https://api.clickmeeting.com/v1/'
 

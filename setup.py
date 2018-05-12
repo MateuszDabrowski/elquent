@@ -16,9 +16,8 @@ if os.name == 'nt':  # Required on Windows to freeze Dash
 
 buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils', 'utils.json'],
                     packages=['pyperclip', 'csv', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
-                              'platform', 'colorama', 'json', 'multiprocessing', 'dash', 'plotly',
-                              'time', 'datetime', 'getpass', 'base64', 'webbrowser', 'pkg_resources',
-                              'asyncio', 'jinja2', 'flask'])
+                              'platform', 'colorama', 'json', 'multiprocessing',
+                              'time', 'datetime', 'getpass', 'base64', 'webbrowser'])
 
 base = 'Console'
 

@@ -27,7 +27,7 @@ import utils.page as page
 import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
-import utils.dashboard as dashboard
+import utils.report as report
 import utils.api.api as api
 
 # Initialize colorama
@@ -200,7 +200,7 @@ def menu(choice=''):
         'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
         'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
-        'form_fill': (dashboard.form_fill_dash, f'Report{Fore.WHITE}] Eloqua Form Dashboard')
+        'form_fill': (report.form_fill_report, f'Report{Fore.WHITE}] Form Fields Filling')
     }
 
     # Gets dict of utils available for users source country

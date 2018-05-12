@@ -93,14 +93,19 @@ _ToDo:_
 
 ---
 
-### [ELQuent.dashboard](utils/dashboard.py)
+### [ELQuent.report](utils/report.py)
 
-#### Prepares report data and creates interactive dashboard
+#### Prepares report data and creates visualisations
+
+- Gathers data about forms (name, id and fields with appropriate data)
 
 _ToDo:_
 
-- [ ] _Everything_
-
+- [ ] _Getting form fill data_
+- [ ] _Matching form fill data with form data_
+- [ ] _Building table with contextual form fill data_
+- [ ] _Visualisation of the above_
+ 
 ---
 
 ## Helper modules
@@ -127,4 +132,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.5_]
+[_Version: 1.5.6_]
