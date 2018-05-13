@@ -100,38 +100,82 @@ def form_fill_report(country):
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
 
-    # Getting full form data from Eloqua
-    forms_full_data = api.eloqua_get_forms()
+    def get_form_fields():
+        '''
+        Returns list of form with name, id and fields (id, name, html name, type, requirement) in .json
+        '''
+        # Getting full form data from Eloqua
+        forms_full_data = api.eloqua_get_forms()
 
-    forms = []
-    # Creates cleaned list of dicts with important data
-    for form in forms_full_data:
-        single_form = {}
-        single_form['id'] = form['id']
-        single_form['name'] = form['name']
-        fields = []
-        # Dives into list of form fields
-        for element in form['elements']:
-            field = {}
-            field['field_name'] = element.get('name', None)
-            field['id'] = element.get('id', None)
-            field['field_html_name'] = element.get('htmlName', None)
-            field['field_type'] = element.get('displayType', None)
-            # Dives into list of validations - if they exist for form field
-            if element.get('validations', False):
-                for validation in element['validations']:
-                    if validation['condition'].get('type', None) == 'IsRequiredCondition' and validation.get('isEnabled', None) == 'true':
-                        field['field_required'] = 'true'
-                        break
-            if not field.get('field_required', False):
-                field['field_required'] = 'false'
-            fields.append(field)
-        single_form['fields'] = fields
-        forms.append(single_form)
+        forms = []
+        # Creates cleaned list of dicts with important data
+        for form in forms_full_data:
+            single_form = {}
+            single_form['id'] = form['id']
+            single_form['name'] = form['name']
+            fields = []
+            # Dives into list of form fields
+            for element in form['elements']:
+                field = {}
+                field['field_name'] = element.get('name', None)
+                field['id'] = element.get('id', None)
+                field['field_html_name'] = element.get('htmlName', None)
+                field['field_type'] = element.get('displayType', None)
+                # Dives into list of validations - if they exist for form field
+                if element.get('validations', False):
+                    for validation in element['validations']:
+                        if validation['condition'].get('type', None) == 'IsRequiredCondition' and validation.get('isEnabled', None) == 'true':
+                            field['field_required'] = 'true'
+                            break
+                if not field.get('field_required', False):
+                    field['field_required'] = 'false'
+                fields.append(field)
+            single_form['fields'] = fields
+            forms.append(single_form)
 
-    # Saves cleaned form list as json file to outcomes
-    with open(file('forms'), 'w', encoding='utf-8') as f:
-        json.dump(forms, f, ensure_ascii=False)
-    print(f'  {SUCCESS}Data of {len(forms_full_data)} forms saved to Outcomes folder')
+        # Saves cleaned form list as json file to outcomes
+        with open(file('forms'), 'w', encoding='utf-8') as f:
+            json.dump(forms, f, ensure_ascii=False)
+        print(
+            f'  {SUCCESS}Data of {len(forms_full_data)} forms saved to Outcomes folder')
+
+        return forms
+
+    def get_form_fills(form_id):
+        '''
+        Returns number of fills for each form field for given form id
+        '''
+        form_fills_data, fill_number = api.eloqua_get_form_data(form_id)
+
+        # Increments number of fills of each form field
+        fills = {}
+        for fill in form_fills_data:
+            for field in fill['fieldValues']:
+                if not 'value' in field.keys():
+                    continue
+                elif not field['id'] in fills and field['value']:
+                    fills[field['id']] = 1
+                elif field['id'] in fills and field['value']:
+                    fills[field['id']] += 1
+
+        # Saves number of all fills of that form
+        fill_total = {}
+        fill_total[form_id] = fill_number
+
+        print(
+            f'  {Fore.WHITE}[{Fore.GREEN}FORM ID {form_id}{Fore.WHITE}] {fill_number} fills')
+
+        return (fills, fill_total)
+
+    forms = get_form_fields()
+    fills = {}
+    fills_total = {}
+    print(
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}FILLS{Fore.WHITE}] Getting form fill data from Eloqua: ', end='', flush=True)
+    for form in forms:
+        fill, fill_number = get_form_fills(form['id'])
+        fills = {**fills, **fill}
+        fills_total = {**fills_total, **fill_number}
+        print(f'{Fore.GREEN}|', end='', flush=True)
 
     return

@@ -98,10 +98,10 @@ _ToDo:_
 #### Prepares report data and creates visualisations
 
 - Gathers data about forms (name, id and fields with appropriate data)
+- Gathers form fill data along with total number of fills for each form
 
 _ToDo:_
 
-- [ ] _Getting form fill data_
 - [ ] _Matching form fill data with form data_
 - [ ] _Building table with contextual form fill data_
 - [ ] _Visualisation of the above_
@@ -118,7 +118,7 @@ _ToDo:_
 
 - Authenticates user
 - Upload contact database to Eloqua shared lists
-- Cleans impor definition after successful upload to clean dependecies
+- Cleans import definition after successful upload to clean dependecies
 - Checks if LP, Form, Mail already exists on Eloqua instance
 - Upload landing page to specified folder
 - Gets all necessary data to upload an e-mail
@@ -126,10 +126,11 @@ _ToDo:_
 - Update e-mail with new code
 - Upload form to json specified folder
 - Update form with html, css and processing steps
+- Gets form fields and form fills data
 - Create campaign canvas from in-app updated json file
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.6_]
+[_Version: 1.5.7_]

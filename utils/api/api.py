@@ -644,9 +644,9 @@ def eloqua_get_forms():
     page = 1
 
     print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}API{Fore.WHITE}] Getting form data from Eloqua: ', end='', flush=True)
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}FORMS{Fore.WHITE}] Getting form field data from Eloqua: ', end='', flush=True)
     while True:
-        # Gets data of requested image name
+        # Gets data of requested form
         root = f'{eloqua_rest}assets/forms'
         params = {'depth': 'complete',
                   'search': f'WK{source_country}*',
@@ -672,7 +672,7 @@ def eloqua_get_forms():
 
 def eloqua_get_form(form_id, depth=''):
     '''
-    Returns name and code of Form of given ID
+    Returns name and code of Form with given ID
     '''
     # Gets data of requested image name
     root = f'{eloqua_rest}assets/form/{form_id}'
@@ -687,6 +687,34 @@ def eloqua_get_form(form_id, depth=''):
     code = form['html']
 
     return (name, code)
+
+
+def eloqua_get_form_data(form_id):
+    '''
+    Returns form data of Form with given ID
+    '''
+    all_fills = []
+    page = 1
+
+    while True:
+        # Gets fills of requested form
+        root = f'{eloqua_rest}data/form/{form_id}'
+        params = {'depth': 'complete',
+                  'count': '100',
+                  'page': page}
+        response = api_request(root, params=params)
+        fills = response.json()
+
+        all_fills.extend(fills['elements'])
+
+        # Stops iteration when full list is obtained
+        if fills['total'] - page * int(params.get('count')) < 0:
+            break
+
+        # Increments page to get next part of outcomes
+        page += 1
+
+    return (all_fills, fills['total'])
 
 
 def eloqua_create_form(name, data):
