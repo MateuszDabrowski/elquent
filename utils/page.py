@@ -337,12 +337,6 @@ def create_form():
             swapping = input(' ')
 
         if swapping.lower() == 'y':
-            # Prepare GDPR information with correct field id
-            with open(file('gdpr-info'), 'r', encoding='utf-8') as f:
-                snippet = f.read()
-            regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
-            snippet = regex_id.sub(str(id), snippet)
-
             # Gets place where GDPR info should be appended
             search_checkbox = re.compile(r'type="checkbox"', re.UNICODE)
             search_submit = re.compile(r'type="submit"', re.UNICODE)
@@ -354,6 +348,12 @@ def create_form():
                 elif search_submit.findall(field[0]):
                     form_number = (search_id.findall(field[0]))[0]
                     break
+            
+            # Prepare GDPR information with correct field id
+            with open(file('gdpr-info'), 'r', encoding='utf-8') as f:
+                snippet = f.read()
+            regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
+            snippet = regex_id.sub(form_number, snippet)
 
             # Add GDPR information to form
             regex_gdpr_info = re.compile(
@@ -468,6 +468,7 @@ def create_form():
 
         return (form, required_checkbox)
 
+    built_in_regex = re.compile(r'<built-in function id>', re.UNICODE)
     # Gets form and modifies it
     form = get_form()
     if source_country == 'PL':
@@ -486,7 +487,7 @@ def create_form():
 '''
 
 
-def swap_form(code, form, ):
+def swap_form(code, form):
     '''
     Returns LP code with new form
     '''
@@ -501,7 +502,7 @@ def swap_form(code, form, ):
         code = regex_form.sub(form, code)
         print(f'\t{Fore.GREEN} » Swapping Form in Landing Page')
     elif not match:
-        regex_placeholder = re.compile(r'<INSERT_FORM>')
+        regex_placeholder = re.compile(r'INSERT_FORM')
         is_placeholder = regex_placeholder.findall(code)
         if is_placeholder:
             code = regex_placeholder.sub(form, code)
@@ -509,9 +510,13 @@ def swap_form(code, form, ):
         else:
             print(
                 f'\t{ERROR}There is no form or placeholder in code.\n',
-                f'{Fore.WHITE} (Add <INSERT_FORM> where you want the form and rerun program)')
+                f'\t{Fore.WHITE}Add INSERT_FORM to the LP code to mark where you want the Form')
+            input(' ')
+            raise SystemExit
     elif len(match) >= 1:
         print(f'\t{ERROR}There are {len(match)} forms in the code')
+        input(' ')
+        raise SystemExit
 
     # Changes CSS of submit button
     regex_submit_css = re.compile(
