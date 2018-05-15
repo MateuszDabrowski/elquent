@@ -28,6 +28,7 @@ import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.report as report
+import utils.corp as corp
 import utils.api.api as api
 
 # Initialize colorama
@@ -200,12 +201,16 @@ def menu(choice=''):
         'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
         'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
-        'form_fill': (report.form_fill_report, f'Report{Fore.WHITE}] Form Fields Filling')
+        'form_fill': (report.form_fill_report, f'Report{Fore.WHITE}] Form Fields Filling'),
+        'mail_groups': (corp.email_groups, f'Generator{Fore.WHITE}] Creates assets for Email Group Program')
     }
 
     # Gets dict of utils available for users source country
     available_utils = {k: v for (k, v) in utils.items()
                        if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
+    # Access to all utils for admin
+    if ELOQUA_USER == 'Mateusz.Dabrowski':
+        available_utils = utils
     util_names = list(available_utils.keys())
 
     print(f'\n{Fore.GREEN}ELQuent Utilites:')

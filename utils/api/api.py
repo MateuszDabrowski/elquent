@@ -222,8 +222,8 @@ def eloqua_asset_exist(name, asset):
         'LP': 'landingPages',
         'Form': 'forms',
         'Mail': 'emails',
-        'Campaign': 'campaigns'
-
+        'Campaign': 'campaigns',
+        'Filter': 'contact/filters'
     }
 
     endpoint = assets.get(asset)
@@ -627,6 +627,34 @@ def eloqua_create_landingpage(name, code):
     webbrowser.open(asset_url, new=2, autoraise=False)
 
     return (lp_id, asset_url, direct_url)
+
+
+'''
+=================================================================================
+                                    SharedFilter API
+=================================================================================
+'''
+
+
+def eloqua_create_filter(name, data):
+    '''
+    Requires name and json data of the shared filter to create it in Eloqua
+    Returns Filter ID and response of created filter
+    '''
+    # Checks if there already is Form with that name
+    eloqua_asset_exist(name, asset='Filter')
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/contact/filter'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    sharedfilter = response.json()
+
+    # Open in new tab
+    sharedfilter_id = sharedfilter['id']
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Filter ID: {sharedfilter_id}')
+
+    return (sharedfilter_id, sharedfilter)
 
 
 '''

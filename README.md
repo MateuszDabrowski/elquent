@@ -105,7 +105,15 @@ _ToDo:_
 - [ ] _Matching form fill data with form data_
 - [ ] _Building table with contextual form fill data_
 - [ ] _Visualisation of the above_
- 
+
+---
+
+### [ELQuent.corp](utils/corp.py)
+
+#### Specialized utils for core admins
+
+- Creates number of forms and shared lists for e-mail group control based on country splitted json file
+
 ---
 
 ## Helper modules
@@ -128,9 +136,10 @@ _ToDo:_
 - Update form with html, css and processing steps
 - Gets form fields and form fills data
 - Create campaign canvas from in-app updated json file
+- Create shared filters
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.7_]
+[_Version: 1.5.8_]

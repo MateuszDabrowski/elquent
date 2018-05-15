@@ -1,36 +1,40 @@
 {
-    "country": ["AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
+    "country": ["CORP", "AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
+    "ADMIN": ["clean_outcomes", "clean_incomes", "clean_elq_track", "swap_utm_track",
+        "build_mail", "page_gen", "campaign_gen", "database", "webinar", "form_fill", "mail_groups"],
+    "CORP": ["clean_outcomes", "clean_incomes",
+        "clean_elq_track", "swap_utm_track", "build_mail", "mail_groups"],
     "AK": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "BE": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "CZ": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "DE": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "page_gen", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail", "page_gen"
     ],
     "ES": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "FR": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "HU": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "IT": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "LSW": [
         "clean_outcomes", "clean_incomes",
@@ -38,14 +42,14 @@
     ],
     "NL": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ],
     "PL": [
         "clean_outcomes", "clean_incomes", "clean_elq_track", "swap_utm_track",
-        "build_mail", "page_gen", "campaign_gen", "database", "webinar", "form_fill"
+        "build_mail", "page_gen", "campaign_gen", "database", "webinar"
     ],
     "SK": [
         "clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "database"
+        "clean_elq_track", "swap_utm_track", "build_mail"
     ]
 }
