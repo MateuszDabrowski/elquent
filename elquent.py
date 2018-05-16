@@ -202,15 +202,16 @@ def menu(choice=''):
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
         'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
         'form_fill': (report.form_fill_report, f'Report{Fore.WHITE}] Form Fields Filling'),
-        'mail_groups': (corp.email_groups, f'Generator{Fore.WHITE}] Creates assets for Email Group Program')
+        'mail_groups': (corp.email_groups, f'Generator{Fore.WHITE}] Helper for GDPR Email Group Program')
     }
 
-    # Gets dict of utils available for users source country
-    available_utils = {k: v for (k, v) in utils.items()
-                       if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
     # Access to all utils for admin
     if ELOQUA_USER == 'Mateusz.Dabrowski':
         available_utils = utils
+    # Gets dict of utils available for users source country
+    else:
+        available_utils = {k: v for (k, v) in utils.items()
+                           if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
     util_names = list(available_utils.keys())
 
     print(f'\n{Fore.GREEN}ELQuent Utilites:')

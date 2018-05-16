@@ -14,7 +14,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import sys
 import json
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -52,7 +52,7 @@ def country_naming_setter(country):
 '''
 
 
-def file(file_path, name='LP'):
+def file(file_path, name=''):
     '''
     Returns file path to template files
     '''
@@ -85,7 +85,7 @@ def file(file_path, name='LP'):
         'form': find_data_file(f'WKCORP_form-email-group.json'),
         'filter': find_data_file(f'WKCORP_filter-email-group.json'),
         'email-groups': find_data_file(f'WKCORP_email-groups.json'),
-        'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', directory='outcomes')
+        'outcome-file': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -119,7 +119,7 @@ def email_groups(country):
             print(
                 f'\n{Fore.WHITE}[{Fore.YELLOW}CREATING{Fore.WHITE}] {email_group[0]} Form:')
 
-            form_name = f'WK{source_country}_{email_group[0]}-{email_group[1]}_FORM'
+            form_name = f'{email_group[0]}-{email_group[1]}_FORM'
             form_html_name = f'{email_group[0]}'
 
             # Change form json to string for easy replacing
@@ -135,10 +135,13 @@ def email_groups(country):
             form_json = json.loads(form_string)
 
             # Creates form with given data
-            form_id, form_response_json = api.eloqua_create_form(
-                form_name, form_json)
+            form_id = api.eloqua_create_form(form_name, form_json)[0]
+
+            # Save to outcome json file
+            assets_created[form_name] = form_id
 
             break
+
 
     def sharedfilter_builder(countries, groups):
         '''
@@ -173,8 +176,10 @@ def email_groups(country):
             filter_sub_json = json.loads(filter_sub_string)
 
             # Creates form with given data
-            filter_id, filter_response_json = api.eloqua_create_filter(
-                filter_sub_name, filter_sub_json)
+            filter_id = api.eloqua_create_filter(filter_sub_name, filter_sub_json)[0]
+
+            # Save to outcome json file
+            assets_created[filter_sub_name] = filter_id
 
             # ---------------------------------- Creating Unsubscription Shared Filter
             filter_unsub_name = f'WK{source_country}_{email_group[0]}-{email_group[1]}_UNSUB-FILTER'
@@ -190,8 +195,10 @@ def email_groups(country):
             filter_unsub_json = json.loads(filter_unsub_string)
 
             # Creates form with given data
-            filter_id, filter_response_json = api.eloqua_create_filter(
-                filter_unsub_name, filter_unsub_json)
+            filter_id = api.eloqua_create_filter(filter_unsub_name, filter_unsub_json)[0]
+
+            # Save to outcome json file
+            assets_created[filter_unsub_name] = filter_id
 
             break
 
@@ -235,8 +242,20 @@ def email_groups(country):
     groups = countries.get(countries_list[choice])
     groups = list(groups.items())
 
+    assets_created = {}
     form_builder(countries, groups)
     sharedfilter_builder(countries, groups)
+
+    with open(file('outcome-file', name='GDPR-Email-Group-Assets'), 'w', encoding='utf-8') as f:
+        json.dump(assets_created, f)
+
+    print(f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] List of created assets saved to Outcomes folder')
+
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        email_groups(country)
 
     # TODO Check how canvas creation API works
 

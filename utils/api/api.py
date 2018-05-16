@@ -621,9 +621,9 @@ def eloqua_create_landingpage(name, code):
 
     # Open in new tab
     lp_id = landing_page['id']
-    asset_url = naming['root'] + '#landing_pages&id=' + id
+    asset_url = naming['root'] + '#landing_pages&id=' + lp_id
     direct_url = microsite_link + landing_page['relativePath']
-    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {id}')
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {lp_id}')
     webbrowser.open(asset_url, new=2, autoraise=False)
 
     return (lp_id, asset_url, direct_url)
@@ -760,7 +760,14 @@ def eloqua_create_form(name, data):
     form = response.json()
 
     # Open in new tab
-    form_id = form['id']
+    try:
+        form_id = form['id']
+    except TypeError:
+        conflicting_form = form[0]['requirement'].get('conflictingId')
+        conflicting_value = form[0].get('value')
+        print(f'{ERROR}Form ID {conflicting_form} already has the same html name: {conflicting_value}')
+        input(' ')
+        raise SystemExit
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {form_id}')
 
     return (form_id, form)

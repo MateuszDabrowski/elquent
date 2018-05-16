@@ -357,8 +357,7 @@ def mail_constructor(country):
         with open(file('mail_mjml', file_name=folder_name), 'w', encoding='utf-8') as f:
             f.write(mjml)
 
-    print(
-        f'\n{SUCCESS}Code saved to Outcomes folder')
+    print(f'\n{SUCCESS}Code saved to Outcomes folder')
 
     output_method(html, mjml)
 
