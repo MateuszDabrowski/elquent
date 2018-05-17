@@ -163,17 +163,9 @@ def get_asset_id(asset):
     Returns valid ID of chosen Eloqua asset
     '''
 
-    assets = {
-        'LP': 'Landing Page',
-        'Form': 'Form',
-        'Mail': 'E-mail'
-    }
-
-    asset_name = assets.get(asset)
-
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset_name} ID or copy the code and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
 
         # If there was no input, skips to get code via pyperclip
@@ -184,7 +176,7 @@ def get_asset_id(asset):
         try:
             asset_id = int(asset_id)
         except ValueError:
-            print(f'{ERROR}It is not valid Eloqua {asset_name} ID')
+            print(f'{ERROR}It is not valid Eloqua {asset} ID')
             continue
 
         # Checks if there is asset with that ID
@@ -210,7 +202,7 @@ def get_asset_id(asset):
             elif choice.lower() == 'n':
                 continue
         else:
-            print(f'{ERROR}Not found Eloqua {asset_name} with given ID')
+            print(f'{ERROR}Not found Eloqua {asset} with given ID')
 
 
 def eloqua_asset_exist(name, asset):
@@ -223,6 +215,7 @@ def eloqua_asset_exist(name, asset):
         'Form': 'forms',
         'Mail': 'emails',
         'Campaign': 'campaigns',
+        'Program': 'programs',
         'Filter': 'contact/filters'
     }
 
@@ -765,7 +758,8 @@ def eloqua_create_form(name, data):
     except TypeError:
         conflicting_form = form[0]['requirement'].get('conflictingId')
         conflicting_value = form[0].get('value')
-        print(f'{ERROR}Form ID {conflicting_form} already has the same html name: {conflicting_value}')
+        print(
+            f'{ERROR}Form ID {conflicting_form} already has the same html name: {conflicting_value}')
         input(' ')
         raise SystemExit
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Form ID: {form_id}')
@@ -1178,6 +1172,36 @@ def eloqua_create_campaign(name, data):
     webbrowser.open(url, new=2, autoraise=True)
 
     return (campaign_id, campaign)
+
+
+'''
+=================================================================================
+                                Program API
+=================================================================================
+'''
+
+
+def eloqua_create_program(name, data):
+    '''
+    Requires name and json data of the program canvas to create it in Eloqua
+    Returns ID and reponse of created program canvas
+    '''
+    # Checks if there already is Campaign with that name
+    eloqua_asset_exist(name, asset='Program')
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/program'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    program = response.json()
+
+    # Open in new tab
+    program_id = program['id']
+    url = naming['root'] + '#programs&id=' + program_id
+    print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Program ID: {program_id}')
+    webbrowser.open(url, new=2, autoraise=True)
+
+    return (program_id, program)
 
 
 '''

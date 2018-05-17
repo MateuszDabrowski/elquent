@@ -112,7 +112,8 @@ _ToDo:_
 
 #### Specialized utils for core admins
 
-- Creates number of forms and shared lists for e-mail group control based on country splitted json file
+- Creates forms and shared lists for e-mail group control based on country splitted json file
+- Creates program canvas and automatically adds above assets to program steps
 
 ---
 
@@ -125,21 +126,21 @@ _ToDo:_
 #### Helper module for Eloqua API__
 
 - Authenticates user
-- Upload contact database to Eloqua shared lists
+- Uploads contact database to Eloqua shared lists
 - Cleans import definition after successful upload to clean dependecies
 - Checks if LP, Form, Mail already exists on Eloqua instance
-- Upload landing page to specified folder
+- Uploads landing page to specified folder
 - Gets all necessary data to upload an e-mail
-- Upload e-mail to json specified folder
-- Update e-mail with new code
-- Upload form to json specified folder
-- Update form with html, css and processing steps
+- Uploads e-mail to json specified folder
+- Updates e-mail with new code
+- Uploads form to json specified folder
+- Updates form with html, css and processing steps
 - Gets form fields and form fills data
-- Create campaign canvas from in-app updated json file
-- Create shared filters
+- Creates campaign and program canvas
+- Creates shared filters
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.8_]
+[_Version: 1.5.10_]
