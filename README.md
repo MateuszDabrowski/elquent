@@ -143,4 +143,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.10_]
+[_Version: 1.5.111_]

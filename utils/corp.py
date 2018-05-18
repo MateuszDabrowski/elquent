@@ -144,7 +144,6 @@ def email_groups(country):
             # Save to outcome json file
             assets_created[email_group[0]].append([form_name, form_id])
 
-
     def sharedfilter_builder(countries, groups):
         '''
         Creates pair of shared filters (sub/unsub) for each given e-mail group
@@ -205,11 +204,13 @@ def email_groups(country):
             assets_created[email_group[0]].append(
                 [filter_unsub_name, filter_id])
 
-
     def program_builder(assets_created):
         '''
         Creates program canvas with built assets
         '''
+        print(
+            f'\n{Fore.WHITE}[{Fore.YELLOW}CREATING{Fore.WHITE}] Program Canvas:')
+
         # Gets program canvas json
         with open(file('program-canvas'), 'r', encoding='utf-8') as f:
             program_canvas = f.read()
@@ -234,15 +235,14 @@ def email_groups(country):
 
             filled_program_steps = program_steps\
                 .replace('EMAIL_GROUP', group)\
-                .replace('COUNTER_PLUS', str(counter * 100 + 100))\
-                .replace('COUNTER', str(counter * 100))\
+                .replace('COUNTER_PLUS', str(counter * 150 + 100))\
+                .replace('COUNTER', str(counter * 150))\
                 .replace('FILTER_SUB_ID', sub_id)\
                 .replace('FILTER_UNSUB_ID', unsub_id)
 
             program_canvas = program_canvas.replace(
                 'INSERT_STEPS', filled_program_steps)
             counter += 1
-
 
         # Changes back to json for API call
         program_canvas_json = json.loads(program_canvas)

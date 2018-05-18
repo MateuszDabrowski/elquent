@@ -29,6 +29,7 @@ eloqua_key = None
 eloqua_bulk = None
 eloqua_rest = None
 shared_list = None
+asset_names = None
 source_country = None
 
 # Initialize colorama
@@ -181,12 +182,7 @@ def get_asset_id(asset):
 
         # Checks if there is asset with that ID
         try:
-            if asset == 'LP':
-                asset_exists = eloqua_get_landingpage(asset_id)
-            elif asset == 'Form':
-                asset_exists = eloqua_get_form(asset_id)
-            elif asset == 'Mail':
-                asset_exists = eloqua_get_email(asset_id)
+            asset_exists = eloqua_asset_get(asset_id, asset_type=asset)
         except json.decoder.JSONDecodeError:
             asset_exists = False
 
@@ -209,17 +205,10 @@ def eloqua_asset_exist(name, asset):
     '''
     Returns True if there is already asset in Eloqua instance with that name
     '''
+    # Gets required endpoint
+    endpoint = asset_names.get(asset)
+    endpoint += 's'  # for multiple assets endpoint
 
-    assets = {
-        'LP': 'landingPages',
-        'Form': 'forms',
-        'Mail': 'emails',
-        'Campaign': 'campaigns',
-        'Program': 'programs',
-        'Filter': 'contact/filters'
-    }
-
-    endpoint = assets.get(asset)
     # Gets data of requested image name
     root = f'{eloqua_rest}assets/{endpoint}'
     params = {'search': name}
@@ -292,6 +281,37 @@ def eloqua_asset_name():
         print(f'{Fore.YELLOW}Please write or paste correct name:')
 
 
+def eloqua_asset_get(asset_id, asset_type, depth=''):
+    '''
+    Returns name and optionally code of Eloqua asst of given ID
+    '''
+
+    # Gets required endpoint
+    endpoint = asset_names.get(asset_type)
+
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/{endpoint}/{asset_id}'
+    params = {'depth': 'complete'}
+    response = api_request(root, params=params)
+    asset_response = response.json()
+
+    # Returns full response
+    if depth == 'complete':
+        return asset_response
+
+    # Gets name and code of the asset
+    name = asset_response['name']
+    if asset_type in ['LP', 'Mail']:
+        code = asset_response['htmlContent']['html']
+    elif asset_type == 'Form':
+        code = asset_response['html']
+
+    if asset_type in ['LP', 'Mail', 'Form']:
+        return (name, code)
+    else:
+        return name
+
+
 '''
 =================================================================================
                                 Eloqua Authentication
@@ -307,6 +327,16 @@ def get_eloqua_auth(country):
     # Creates global source_country from main module
     global source_country
     source_country = country
+
+    global asset_names
+    asset_names = {
+        'LP': 'landingPage',
+        'Form': 'form',
+        'Mail': 'email',
+        'Campaign': 'campaign',
+        'Program': 'program',
+        'Filter': 'contact/filter'
+    }
 
     # Gets data from naming.json
     with open(file('naming'), 'r', encoding='utf-8') as f:
@@ -542,22 +572,6 @@ def eloqua_log_sync(sync_uri):
 '''
 
 
-def eloqua_get_landingpage(lp_id):
-    '''
-    Returns name and code of Landing Page of given ID
-    '''
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/landingPage/{lp_id}'
-    params = {'depth': 'complete'}
-    response = api_request(root, params=params)
-    landing_page = response.json()
-
-    name = landing_page['name']
-    code = landing_page['htmlContent']['html']
-
-    return (name, code)
-
-
 def eloqua_create_landingpage(name, code):
     '''
     Requires name and code of the landing page to create LP in Eloqua
@@ -691,25 +705,6 @@ def eloqua_get_forms():
     return all_forms
 
 
-def eloqua_get_form(form_id, depth=''):
-    '''
-    Returns name and code of Form with given ID
-    '''
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/form/{form_id}'
-    params = {'depth': 'complete'}
-    response = api_request(root, params=params)
-    form = response.json()
-
-    if depth == 'complete':
-        return form
-
-    name = form['name']
-    code = form['html']
-
-    return (name, code)
-
-
 def eloqua_get_form_data(form_id):
     '''
     Returns form data of Form with given ID
@@ -773,7 +768,7 @@ def eloqua_update_form(form_id, css='', html='', processing=''):
     Returns Form ID
     '''
     # Gets current data of form to update
-    data = eloqua_get_form(form_id, depth='complete')
+    data = eloqua_asset_get(form_id, asset_type='Form', depth='complete')
     if css:
         data['customCSS'] = css
     if html:
@@ -802,25 +797,6 @@ def eloqua_update_form(form_id, css='', html='', processing=''):
                                     E-mail API
 =================================================================================
 '''
-
-
-def eloqua_get_email(email_id, depth=''):
-    '''
-    Returns name and code of E-mail of given ID or full response if depth='complete'
-    '''
-    # Gets data of requested image name
-    root = f'{eloqua_rest}assets/email/{email_id}'
-    params = {'depth': 'complete'}
-    response = api_request(root, params=params)
-    email = response.json()
-
-    if depth == 'complete':
-        return email
-
-    name = email['name']
-    code = email['htmlContent']['html']
-
-    return (name, code)
 
 
 def eloqua_fill_mail_params(name):
@@ -1110,7 +1086,7 @@ def eloqua_update_email(email_id, code):
     Returns E-mail ID
     '''
     # Gets current data of e-mail to update
-    old_data = eloqua_get_email(email_id, depth='complete')
+    old_data = eloqua_asset_get(email_id, asset_type='Mail', depth='complete')
     code = code.replace('"', '\"')
     data = {
         'type': 'Email',
@@ -1211,7 +1187,7 @@ def eloqua_create_program(name, data):
 '''
 
 
-def eloqua_get_image(image_name):
+def eloqua_get_images(image_name):
     '''
     Returns url of uploaded image
     '''

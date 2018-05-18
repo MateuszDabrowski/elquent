@@ -78,7 +78,7 @@ def get_code():
     '''
     email_id = api.get_asset_id('Mail')
     if email_id:
-        email = api.eloqua_get_email(email_id)
+        email = api.eloqua_asset_get(email_id, asset_type='Mail')
     else:
         while True:
             print(

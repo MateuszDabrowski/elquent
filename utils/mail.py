@@ -266,7 +266,7 @@ def mail_constructor(country):
         print(f'\n{Fore.WHITE}» HTML ', end='')
         # Gets image link from Eloqua and adds it to the code
         for image in linkable_images_html:
-            image_link = api.eloqua_get_image(image)
+            image_link = api.eloqua_get_images(image)
             html = html.replace(image, image_link)
             print(f'{Fore.GREEN}|', end='', flush=True)
 
@@ -281,7 +281,7 @@ def mail_constructor(country):
         # Gets image link from Eloqua and adds it to the code
         for image in linkable_images_mjml:
             image = (image.split('/'))[-1]
-            image_link = api.eloqua_get_image(image)
+            image_link = api.eloqua_get_images(image)
             mjml = mjml.replace('../Gfx/' + image, image_link)
             print(f'{Fore.GREEN}|', end='', flush=True)
 
