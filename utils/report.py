@@ -141,41 +141,6 @@ def form_fill_report(country):
 
         return forms
 
-    def get_form_fills(form_id):
-        '''
-        Returns number of fills for each form field for given form id
-        '''
-        form_fills_data, fill_number = api.eloqua_get_form_data(form_id)
-
-        # Increments number of fills of each form field
-        fills = {}
-        for fill in form_fills_data:
-            for field in fill['fieldValues']:
-                if not 'value' in field.keys():
-                    continue
-                elif not field['id'] in fills and field['value']:
-                    fills[field['id']] = 1
-                elif field['id'] in fills and field['value']:
-                    fills[field['id']] += 1
-
-        # Saves number of all fills of that form
-        fill_total = {}
-        fill_total[form_id] = fill_number
-
-        print(
-            f'  {Fore.WHITE}[{Fore.GREEN}FORM ID {form_id}{Fore.WHITE}] {fill_number} fills')
-
-        return (fills, fill_total)
-
     forms = get_form_fields()
-    fills = {}
-    fills_total = {}
-    print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}FILLS{Fore.WHITE}] Getting form fill data from Eloqua: ', end='', flush=True)
-    for form in forms:
-        fill, fill_number = get_form_fills(form['id'])
-        fills = {**fills, **fill}
-        fills_total = {**fills_total, **fill_number}
-        print(f'{Fore.GREEN}|', end='', flush=True)
 
     return

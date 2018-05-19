@@ -25,6 +25,10 @@ import utils.api.api as api
 # Initialize colorama
 init(autoreset=True)
 
+# Globals
+naming = None
+source_country = None
+
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
@@ -41,7 +45,7 @@ def file(file_path, name=''):
     Returns file path to template files
     '''
 
-    def find_data_file(filename, dir):
+    def find_data_file(filename, directory):
         '''
         Returns correct file path for both script and frozen app
         '''
@@ -50,17 +54,17 @@ def file(file_path, name=''):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', dir, filename)
+            return os.path.join(datadir, 'utils', directory, filename)
         elif dir == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, dir, filename)
+            return os.path.join(datadir, directory, filename)
 
     file_paths = {
-        'naming': find_data_file('naming.json', dir='api'),
-        'database': find_data_file(f'{name}.txt', dir='outcomes')
+        'naming': find_data_file('naming.json', directory='api'),
+        'database': find_data_file(f'{name}.txt', directory='outcomes')
     }
 
     return file_paths.get(file_path)

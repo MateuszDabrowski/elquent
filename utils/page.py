@@ -348,7 +348,7 @@ def create_form():
                 elif search_submit.findall(field[0]):
                     form_number = (search_id.findall(field[0]))[0]
                     break
-            
+
             # Prepare GDPR information with correct field id
             with open(file('gdpr-info'), 'r', encoding='utf-8') as f:
                 snippet = f.read()
@@ -468,7 +468,6 @@ def create_form():
 
         return (form, required_checkbox)
 
-    built_in_regex = re.compile(r'<built-in function id>', re.UNICODE)
     # Gets form and modifies it
     form = get_form()
     if source_country == 'PL':
