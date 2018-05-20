@@ -93,21 +93,6 @@ _ToDo:_
 
 ---
 
-### [ELQuent.report](utils/report.py)
-
-#### Prepares report data and creates visualisations
-
-- Gathers data about forms (name, id and fields with appropriate data)
-- Gathers form fill data along with total number of fills for each form
-
-_ToDo:_
-
-- [ ] _Matching form fill data with form data_
-- [ ] _Building table with contextual form fill data_
-- [ ] _Visualisation of the above_
-
----
-
 ### [ELQuent.corp](utils/corp.py)
 
 #### Specialized utils for core admins

@@ -27,7 +27,6 @@ import utils.page as page
 import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
-import utils.report as report
 import utils.corp as corp
 import utils.api.api as api
 
@@ -201,7 +200,6 @@ def menu(choice=''):
         'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
         'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
         'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
-        'form_fill': (report.form_fill_report, f'Report{Fore.WHITE}] Form Fields Filling'),
         'mail_groups': (corp.email_groups, f'Generator{Fore.WHITE}] Helper for GDPR Email Group Program')
     }
 
