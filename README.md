@@ -93,6 +93,14 @@ _ToDo:_
 
 ---
 
+### [ELQuent.export](utils/export.py)
+
+#### Module focused on exporting data from Eloqua instance
+
+- Gets full bounceback activity data from chosen timeframe
+
+---
+
 ### [ELQuent.corp](utils/corp.py)
 
 #### Specialized utils for core admins
@@ -123,9 +131,10 @@ _ToDo:_
 - Gets form fields and form fills data
 - Creates campaign and program canvas
 - Creates shared filters
+- Creates export definition for activity API and downloads data from it
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.5.11_]
+[_Version: 1.6.0_]

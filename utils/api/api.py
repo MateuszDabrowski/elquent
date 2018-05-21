@@ -458,8 +458,8 @@ def eloqua_create_sharedlist(export, choice):
                     return outcome
 
         uri = eloqua_import_definition(name, list_id)
-        count = eloqua_import_content(contacts, uri)
-        status = eloqua_import_sync(uri)
+        count = eloqua_import_contacts(contacts, uri)
+        status = eloqua_post_sync(uri)
         if status == 'success':
             # Sync_id is syncedInstanceUri from sync response
             import_id = (uri.split('/'))[-1]
@@ -493,7 +493,7 @@ def eloqua_import_definition(name, list_id):
     return uri
 
 
-def eloqua_import_content(contacts, uri):
+def eloqua_import_contacts(contacts, uri):
     '''
     Uploads contacts from ClickWebinar to Eloqua
     Requires list of contacts for upload and uri key
@@ -513,7 +513,39 @@ def eloqua_import_content(contacts, uri):
     return count
 
 
-def eloqua_import_sync(uri):
+'''
+=================================================================================
+                    Export Bouncebacks Activity API Flow
+=================================================================================
+'''
+
+
+def eloqua_post_export(data, export_type):
+    '''
+    Creates definition for activity export
+    Requires data and type (for example 'activity')
+    Returns uri key needed for data download
+    '''
+    if export_type == 'activity':
+        endpoint = 'activities'
+
+    root = eloqua_bulk + f'{endpoint}/exports'
+    response = api_request(root, call='post', data=json.dumps(data))
+    export_eloqua = response.json()
+    print(export_eloqua)
+    uri = export_eloqua['uri'][1:]
+
+    return uri
+
+
+'''
+=================================================================================
+                                Eloqua Sync API
+=================================================================================
+'''
+
+
+def eloqua_post_sync(uri, return_uri=False):
     '''
     Requests to sync import
     Checks status of sync
@@ -530,6 +562,11 @@ def eloqua_import_sync(uri):
     # Checks stats of sync
     sync_uri = sync_eloqua['uri']
     status = sync_eloqua['status']
+
+    # If return_uri is True, return uri without waiting for success
+    if return_uri:
+        return sync_uri
+
     while True:
         root = eloqua_bulk + sync_uri
         sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
@@ -563,6 +600,25 @@ def eloqua_log_sync(sync_uri):
             print(f'\t{Fore.GREEN}› {item["count"]} {item["message"]}')
 
     return logs_eloqua
+
+
+def eloqua_sync_data(sync_uri):
+    '''
+    Returns json of data from response
+    '''
+    offset = 0
+    response = []
+    while True:
+        root = eloqua_bulk + f'{sync_uri}/data'
+        params = {'limit': '50000',
+                  'offset': str(offset)}
+        partial_response = api_request(root, params=params)
+        response.extend(partial_response.json())
+        if not partial_response['hasMore']:
+            break
+        offset += 50000
+
+    return response
 
 
 '''
