@@ -532,7 +532,6 @@ def eloqua_post_export(data, export_type):
     root = eloqua_bulk + f'{endpoint}/exports'
     response = api_request(root, call='post', data=json.dumps(data))
     export_eloqua = response.json()
-    print(export_eloqua)
     uri = export_eloqua['uri'][1:]
 
     return uri
@@ -563,10 +562,6 @@ def eloqua_post_sync(uri, return_uri=False):
     sync_uri = sync_eloqua['uri']
     status = sync_eloqua['status']
 
-    # If return_uri is True, return uri without waiting for success
-    if return_uri:
-        return sync_uri
-
     while True:
         root = eloqua_bulk + sync_uri
         sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
@@ -578,6 +573,9 @@ def eloqua_post_sync(uri, return_uri=False):
             eloqua_log_sync(sync_uri)
             break
         time.sleep(5)
+
+    if return_uri:
+        return sync_uri
 
     return status
 
@@ -613,7 +611,9 @@ def eloqua_sync_data(sync_uri):
         params = {'limit': '50000',
                   'offset': str(offset)}
         partial_response = api_request(root, params=params)
-        response.extend(partial_response.json())
+        partial_response = partial_response.json()
+        if partial_response['totalResults'] > 0:
+            response.extend(partial_response['items'])
         if not partial_response['hasMore']:
             break
         offset += 50000

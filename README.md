@@ -98,6 +98,7 @@ _ToDo:_
 #### Module focused on exporting data from Eloqua instance
 
 - Gets full bounceback activity data from chosen timeframe
+- Saves bounceback export data to .json and .csv files
 
 ---
 

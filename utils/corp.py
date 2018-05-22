@@ -264,9 +264,9 @@ def email_groups(country):
 
     # Prints countires available in json file
     print(f'\n{Fore.GREEN}Countries available in json:')
-    for i, country in enumerate(countries_list):
+    for i, country_option in enumerate(countries_list):
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{country}{Fore.WHITE}]')
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{country_option}{Fore.WHITE}]')
     print(
         f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
 
