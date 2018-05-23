@@ -388,7 +388,6 @@ def create_form():
             'Tracking': file('tracking-optin')
         }
 
-        requiredOptins = []
         # Creates dict of {(optin_type, optin_path): 'in_form_optin_name'}
         form_optins = {}
         for optin in naming[source_country]['optins']:
@@ -413,35 +412,22 @@ def create_form():
             regex_language = re.compile(r'<INSERT_OPTIN>', re.UNICODE)
             optin_text = regex_language.sub(rf'{optin[1]}', optin_text)
 
-            # Asks if opt-in is required and apply choice
-            required = ''
-            while required.lower() != 'y' and required.lower() != 'n':
-                print(
-                    f'\t{Fore.WHITE}Is {optin[0]} Opt-in ({optin[1]}) required? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
-                required = input(' ')
-            if required.lower() == 'y':
-                requiredOptins.append(optin[1])
-                regex_req = re.compile(r'read-more-wrap">', re.UNICODE)
-                optin_text = regex_req.sub(
-                    'read-more-wrap"><span class="required">*</span> ', optin_text, 1)
-            print(
-                f'\t{Fore.CYAN} » Expanding {optin[0]} Opt-in ({optin[1]})')
-
             # Adds new opt-ins to form code
+            print(f'\t{Fore.CYAN} » Expanding {optin[0]} Opt-in ({optin[1]})')
             form = regex_optin.sub(optin_text, form)
 
-        form, requiredOptins = additional_required_checkboxes(
-            form, optins, requiredOptins)
+        form, requiredOptins = required_checkboxes(
+            form, optins)
 
         return (form, requiredOptins)
 
-    def additional_required_checkboxes(form, optins, required):
+    def required_checkboxes(form, optins):
         '''
         Returns full list of required checkboxes
         '''
 
         checkbox = get_checkboxes(form)
-        required_checkbox = [(x, y) for (x, y) in checkbox if y in required]
+        required_checkbox = []
         unknown_checkbox = [(x, y)
                             for (x, y) in checkbox if y not in optins.values()]
 
@@ -455,9 +441,9 @@ def create_form():
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)
                 regex_req = re.compile(
-                    rf'(formElement{checkbox[0]}[\s\S]*?checkbox-label...)(\n)', re.UNICODE)
+                    rf'(formElement{checkbox[0]}[\s\S]*?checkbox-label")( >)', re.UNICODE)
                 form = regex_req.sub(
-                    r'\1<span class="required">*</span> ', form, 1)
+                    r'\1 ><span class="required">*</span> ', form, 1)
                 print(f'\t{Fore.CYAN} » Adding {checkbox[1]} as required')
             elif required.lower() == 'n':
                 print(f'\t{Fore.CYAN} » Setting {checkbox[1]} as not required')

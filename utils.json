@@ -3,8 +3,8 @@
     "ADMIN": ["clean_outcomes", "clean_incomes", "clean_elq_track", "swap_utm_track",
         "build_mail", "page_gen", "campaign_gen", "database", "webinar", "mail_groups", "bouncebacks"
     ],
-    "CORP": ["clean_outcomes", "clean_incomes",
-        "clean_elq_track", "swap_utm_track", "build_mail", "mail_groups"
+    "CORP": ["clean_outcomes", "clean_incomes", "clean_elq_track", "swap_utm_track",
+        "build_mail", "mail_groups", "bouncebacks"
     ],
     "AK": [
         "clean_outcomes", "clean_incomes",
