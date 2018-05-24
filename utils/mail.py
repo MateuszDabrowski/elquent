@@ -365,6 +365,8 @@ def mail_constructor(country):
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
+        print(
+            f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         mail_constructor(country)
 
     return

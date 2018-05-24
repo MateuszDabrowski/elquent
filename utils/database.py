@@ -33,6 +33,21 @@ source_country = None
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
+
+def country_naming_setter(country):
+    '''
+    Sets source_country for all functions
+    Loads json file with naming convention
+    '''
+    global source_country
+    source_country = country
+
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
+
 '''
 =================================================================================
                             File Path Getter
@@ -49,13 +64,13 @@ def file(file_path, name=''):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if dir == 'api':  # For reading api files
+        if directory == 'api':  # For reading api files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, 'utils', directory, filename)
-        elif dir == 'outcomes':  # For writing outcome files
+        elif directory == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
@@ -180,14 +195,8 @@ def contact_list(country):
     compliant with Eloqua for manual import.
     '''
 
-    # Create global source_country from main module
-    global source_country
-    source_country = country
-
-    # Loads json file with naming convention
-    with open(file('naming'), 'r', encoding='utf-8') as f:
-        global naming
-        naming = json.load(f)
+    # Create global source_country and naming
+    country_naming_setter(country)
 
     # Gets contact list from user
     contacts = get_contacts()
