@@ -515,6 +515,37 @@ def eloqua_import_contacts(contacts, uri):
 
 '''
 =================================================================================
+                            Contact Segment API
+=================================================================================
+'''
+
+def eloqua_segment_refresh(segment_id):
+    '''
+    Returns segment count when segment is refreshed (string)
+    '''
+
+    # Post refresh queue
+    root = eloqua_rest + 'assets/contact/segment/queue/' + segment_id
+    queue = api_request(root, call='post')
+    queue_data = queue.json()
+    queued_at = queue_data['queuedAt']
+
+    # Check if queue has been resolved and segment is refreshed
+    root = eloqua_rest + 'assets/contact/segment/' + segment_id + '/count'
+    while True:
+        time.sleep(5)
+        refresh = api_request(root)
+        refresh_data = refresh.json()
+        calculated_at = refresh_data.get('lastCalculatedAt', '0')
+        if int(caculated_at) > int(queued_at):
+            break
+    
+    return refreshed_data['count']
+
+
+
+'''
+=================================================================================
                     Export Bouncebacks Activity API Flow
 =================================================================================
 '''
