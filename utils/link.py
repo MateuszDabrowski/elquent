@@ -33,7 +33,7 @@ SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 '''
 =================================================================================
-                            File Path Getter
+                                File Path Getter
 =================================================================================
 '''
 
@@ -78,7 +78,10 @@ def get_code():
     '''
     email_id = api.get_asset_id('Mail')
     if email_id:
-        email = api.eloqua_asset_get(email_id, asset_type='Mail')
+        try:
+            email = api.eloqua_asset_get(email_id, asset_type='Mail')
+        except KeyError:
+            print(f'  {ERROR}Cannot clean drag & drop e-mail')
     else:
         while True:
             print(
@@ -136,17 +139,15 @@ def output_method(code, email_id, name):
 
 '''
 =================================================================================
-                            Cleaning functions
+                                Cleaning functions
 =================================================================================
 '''
 
 
-def clean_elq_track(country):
+def clean_elq_track():
     '''
     Returns code without elqTrack UTMs
     '''
-    global source_country
-    source_country = country
 
     # Gets required data points
     name_and_code, email_id = get_code()
@@ -171,24 +172,22 @@ def clean_elq_track(country):
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        clean_elq_track(country)
+        clean_elq_track()
 
     return
 
 
 '''
 =================================================================================
-                            Swapping functions
+                                Swapping functions
 =================================================================================
 '''
 
 
-def swap_utm_track(country, code='', email_id='', name=''):
+def swap_utm_track(code='', email_id='', name=''):
     '''
     Returns code with swapped tracking scripts in links
     '''
-    global source_country
-    source_country = country
 
     while True:
         # Gets Email code
@@ -242,10 +241,46 @@ def swap_utm_track(country, code='', email_id='', name=''):
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
-        swap_utm_track(country)
+        swap_utm_track()
     elif choice.lower() == 'a':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------', end='\n')
-        swap_utm_track(country, code, email_id, name)
+        swap_utm_track(code, email_id, name)
 
     return
+
+
+'''
+=================================================================================
+                                Link module menu
+=================================================================================
+'''
+
+
+def link_module(country):
+    '''
+    Lets user choose which link module utility he wants to use
+    '''
+    global source_country
+    source_country = country
+
+    print(
+        f'\n{Fore.GREEN}ELQuent.link Utilites:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}ELQ{Fore.WHITE}] Delete elqTrack code in E-mail links'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}UTM{Fore.WHITE}] Swap UTM tracking code in E-mail links'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+    )
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            clean_elq_track()
+            break
+        elif choice == '2':
+            swap_utm_track()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''

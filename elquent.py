@@ -152,7 +152,7 @@ def new_version():
 '''
 
 
-def clean_outcomes(country):
+def clean_outcomes():
     '''
     Cleans all content of Outcomes folder
     '''
@@ -165,7 +165,7 @@ def clean_outcomes(country):
     return
 
 
-def clean_incomes(country):
+def clean_incomes():
     '''
     Cleans all content of Incomes folder
     '''
@@ -176,6 +176,37 @@ def clean_incomes(country):
     print(f'\n{Fore.GREEN}» Incomes folder cleaned.')
 
     return
+
+
+def clean_folders(country):
+    '''
+    Cleaning functions menu
+    '''
+    print(
+        f'\n{Fore.GREEN}ELQuent.clean Utilites:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Incomes{Fore.WHITE}] Clean Incomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Outcomes{Fore.WHITE}] Clean Outcomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Both{Fore.WHITE}] Clean Incomes & Outcomes folders'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+    )
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            clean_incomes()
+            break
+        elif choice == '2':
+            clean_outcomes()
+            break
+        elif choice == '3':
+            clean_incomes()
+            clean_outcomes()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
 
 
 '''
@@ -192,17 +223,15 @@ def menu(choice=''):
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     utils = {
-        'build_mail': (mail.mail_constructor, f'E-mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
-        'page_gen': (page.page_gen, f'Form›LP{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
-        'webinar': (webinar.click_to_elq, f'Webinars{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Cleans files in Income/Outcome folders'),
+        'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_tracking and elqTrack codes in e-mail links'),
+        'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
+        'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
         'database': (database.contact_list, f'Database{Fore.WHITE}] Create contact upload file with correct structure'),
-        'clean_elq_track': (link.clean_elq_track, f'elqTrack{Fore.WHITE}] Delete elqTrack code in E-mail links'),
-        'swap_utm_track': (link.swap_utm_track, f'utmTrack{Fore.WHITE}] Swap UTM tracking code in E-mail links'),
-        'clean_outcomes': (clean_outcomes, f'Outcomes{Fore.WHITE}] Clean Outcomes folder'),
-        'clean_incomes': (clean_incomes, f'Incomes{Fore.WHITE}] Clean Incomes folder'),
-        'bouncebacks': (export.export_bouncebacks, f'Bouncebacks{Fore.WHITE}] Exports and saves bounceback report'),
-        'mail_groups': (corp.email_groups, f'Generator{Fore.WHITE}] Helper for GDPR Email Group Program')
+        'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
+        'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'bouncebacks': (export.export_bouncebacks, f'Report{Fore.WHITE}] Exports and saves bounceback report'),
+        'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Helper for GDPR Email Group Program')
     }
 
     # Access to all utils for admin
@@ -279,10 +308,8 @@ print(
 # Checks for terminal arguments of shell function
 if len(sys.argv) < 2:
     menu()
-elif sys.argv[1] == 'track':
-    link.clean_elq_track(SOURCE_COUNTRY)
-elif sys.argv[1] == 'utm':
-    link.swap_utm_track(SOURCE_COUNTRY)
+elif sys.argv[1] == 'link':
+    link.link_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'mail':
     mail.mail_constructor(SOURCE_COUNTRY)
 elif sys.argv[1] == 'page':

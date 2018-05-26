@@ -196,14 +196,14 @@ def create_landing_page():
     print(f'\n{Fore.GREEN}You can:')
     for i, option in enumerate(options):
         print(f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t{option}')
-    print(f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}Quit')
+    print(
+        f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t{Fore.WHITE}[{Fore.YELLOW}Quit to main menu{Fore.WHITE}]')
 
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         choice = input(' ')
         if choice.lower() == 'q':
-            print(f'\n{Fore.GREEN}Ahoj!')
-            raise SystemExit
+            return False
         try:
             choice = int(choice)
         except ValueError:
@@ -644,6 +644,8 @@ def page_gen(country):
 
     # Landing Page code manipulation
     code = create_landing_page()
+    if not code:
+        return False
     form, required = create_form()
     code = swap_form(code, form)
     code = javascript(code, required)

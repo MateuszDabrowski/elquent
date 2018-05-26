@@ -533,14 +533,14 @@ def eloqua_segment_refresh(segment_id):
     # Check if queue has been resolved and segment is refreshed
     root = eloqua_rest + 'assets/contact/segment/' + segment_id + '/count'
     while True:
-        time.sleep(5)
+        time.sleep(10)
         refresh = api_request(root)
         refresh_data = refresh.json()
         calculated_at = refresh_data.get('lastCalculatedAt', '0')
-        if int(caculated_at) > int(queued_at):
+        if int(calculated_at) > int(queued_at):
             break
-    
-    return refreshed_data['count']
+
+    return refresh_data['count']
 
 
 
