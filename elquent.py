@@ -28,6 +28,7 @@ import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.export as export
+import utils.report as report
 import utils.corp as corp
 import utils.api.api as api
 
@@ -227,10 +228,11 @@ def menu(choice=''):
         'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_tracking and elqTrack codes in e-mail links'),
         'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'database': (database.contact_list, f'Database{Fore.WHITE}] Create contact upload file with correct structure'),
         'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
+        'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
-        'bouncebacks': (export.export_bouncebacks, f'Report{Fore.WHITE}] Exports and saves bounceback report'),
+        'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Exports and saves hard bounceback data'),
+        'report': (report.kpi_report, f'Report{Fore.WHITE}] Creates KPI report'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Helper for GDPR Email Group Program')
     }
 

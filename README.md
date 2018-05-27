@@ -9,8 +9,6 @@ Can help with implementation_
 
 ## Main modules
 
----
-
 ### [ELQuent.link](utils/link.py)
 
 #### Clean your links
@@ -102,6 +100,21 @@ _ToDo:_
 
 ---
 
+### [ELQuent.report](utils/report.py)
+
+#### Module creating reports from data of predefined contact segments
+
+- Refreshes predefined segments
+- Gathers numbers required for report
+
+_ToDo:_
+
+- [ ] _Full KPI data_
+- [ ] _Structured output of report_
+- [ ] _Report visualisations_
+
+---
+
 ### [ELQuent.corp](utils/corp.py)
 
 #### Specialized utils for core admins
@@ -112,8 +125,6 @@ _ToDo:_
 ---
 
 ## Helper modules
-
----
 
 ### [ELQuent.api](utils/api/api.py)
 
@@ -138,4 +149,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.6.1_]
+[_Version: 1.6.2_]

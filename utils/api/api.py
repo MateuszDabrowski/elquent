@@ -335,7 +335,8 @@ def get_eloqua_auth(country):
         'Mail': 'email',
         'Campaign': 'campaign',
         'Program': 'program',
-        'Filter': 'contact/filter'
+        'Filter': 'contact/filter',
+        'Segment': 'contact/segment'
     }
 
     # Gets data from naming.json
@@ -519,6 +520,7 @@ def eloqua_import_contacts(contacts, uri):
 =================================================================================
 '''
 
+
 def eloqua_segment_refresh(segment_id):
     '''
     Returns segment count when segment is refreshed (string)
@@ -541,7 +543,6 @@ def eloqua_segment_refresh(segment_id):
             break
 
     return refresh_data['count']
-
 
 
 '''
