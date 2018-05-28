@@ -105,12 +105,11 @@ _ToDo:_
 #### Module creating reports from data of predefined contact segments
 
 - Refreshes predefined segments
-- Gathers numbers required for report
+- Gathers numbers required for the report
+- Builds table with report data and exports it to .csv file
 
 _ToDo:_
 
-- [ ] _Full KPI data_
-- [ ] _Structured output of report_
 - [ ] _Report visualisations_
 
 ---
@@ -149,4 +148,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.6.2_]
+[_Version: 1.6.3_]

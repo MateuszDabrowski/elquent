@@ -16,6 +16,8 @@ import sys
 import json
 from datetime import date
 from colorama import Fore, init
+import datascience as ds
+import matplotlib.pyplot as plots
 
 # ELQuent imports
 import utils.api.api as api
@@ -23,6 +25,9 @@ import utils.api.api as api
 # Globals
 naming = None
 source_country = None
+
+# Plots style
+plots.style.use('fivethirtyeight')
 
 # Initialize colorama
 init(autoreset=True)
@@ -105,40 +110,102 @@ def kpi_report(country):
     # Shortcut for getting particular kpi segment id's
     kpi = naming[source_country]['kpi']
 
-    def contact_count():
+    def segment_array_for(category):
         '''
-        Returns data about:
-        - Eloqua contact count
-        - Conctact count of particular marketing segments
+        Returns array of results for given KPI category
         '''
+
         # Refresh segment to get up to date data
-        api.eloqua_segment_refresh(kpi['contact_count'])
+        api.eloqua_segment_refresh(kpi[category])
 
         # Gets data from segment
         segment_json = api.eloqua_asset_get(
-            kpi['contact_count'],
+            kpi[category],
             asset_type='Segment',
             depth='complete'
         )
 
         # Saves counts to appropriate variables
         for element in segment_json['elements']:
-            if element['filter']['name'] == 'ALL':
-                eloqua_contacts = int(element['filter']['count'])
-            elif element['filter']['name'] == 'PRW':
-                prw_contacts = int(element['filter']['count'])
-            elif element['filter']['name'] == 'PUB':
-                pub_contacts = int(element['filter']['count'])
-            elif element['filter']['name'] == 'FIR':
-                fir_contacts = int(element['filter']['count'])
+            if element['filter']['name'] == 'ALL+WMR':
+                eloqua_and_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'LEG+WMR':
+                leg_and_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'PUB+WMR':
+                pub_and_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'FIR+WMR':
+                fir_and_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'ALL-WMR':
+                eloqua_sans_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'LEG-WMR':
+                leg_sans_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'PUB-WMR':
+                pub_sans_wmr_contacts = int(element['filter']['count'])
+            elif element['filter']['name'] == 'FIR-WMR':
+                fir_sans_wmr_contacts = int(element['filter']['count'])
 
         # Calculates others
-        oth_contacts = eloqua_contacts - \
-            (prw_contacts + pub_contacts + fir_contacts)
+        oth_and_wmr_contacts = eloqua_and_wmr_contacts - \
+            (leg_and_wmr_contacts + pub_and_wmr_contacts + fir_and_wmr_contacts)
+        oth_sans_wmr_contacts = eloqua_sans_wmr_contacts - \
+            (leg_sans_wmr_contacts + pub_sans_wmr_contacts + fir_sans_wmr_contacts)
 
-        return (eloqua_contacts, prw_contacts, pub_contacts, fir_contacts, oth_contacts)
+        print(f'{SUCCESS}Import finished for {category}')
 
-    contact_counts = contact_count()
-    print(contact_counts)
+        return ds.make_array(
+            eloqua_and_wmr_contacts, eloqua_sans_wmr_contacts,
+            leg_and_wmr_contacts, leg_sans_wmr_contacts,
+            pub_and_wmr_contacts, pub_sans_wmr_contacts,
+            fir_and_wmr_contacts, fir_sans_wmr_contacts,
+            oth_and_wmr_contacts, oth_sans_wmr_contacts
+        )
+
+    # Creating table for KPI data
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Importing data from Eloqua')
+    kpi_table = ds.Table().with_column(
+        'Segment',
+        ds.make_array(
+            'ALL + WMR', 'ALL - WMR',
+            'LEG + WMR', 'LEG - WMR',
+            'PUB + WMR', 'PUB - WMR',
+            'FIR + WMR', 'FIR - WMR',
+            'OTH + WMR', 'OTH - WMR'
+        )
+    )
+
+    # Getting data for particular columns
+    contact_count = segment_array_for('contact_count')
+    newsletter_count = segment_array_for('newsletter_count')
+    newsletter_profinfo_count = segment_array_for('newsletter_profinfo_count')
+    alert_count = segment_array_for('alert_count')
+    sent_count = segment_array_for('sent_count')
+    open_count = segment_array_for('open_count')
+    click_count = segment_array_for('click_count')
+    form_count = segment_array_for('form_count')
+    not_opened_count = segment_array_for('not_opened_count')
+    cookie_count = segment_array_for('cookie_count')
+
+    # Adding data columns to KPI table
+    kpi_table = kpi_table.with_columns(
+        'Contacts', contact_count,
+        'NSL', newsletter_count,
+        'NSL Prof', newsletter_profinfo_count,
+        'Alert', alert_count,
+        'Sent (M)', sent_count,
+        'Open (M)', open_count,
+        'Click (M)', click_count,
+        'Form (M)', form_count,
+        # TODO: 'Unsub (M)', » form data API
+        'Not Opened 10+ (Y)', not_opened_count,
+        'Cookie Linked (A)', cookie_count
+    )
+
+    today = str(date.today().strftime('%d-%m-%y'))
+    kpi_table.to_csv(f'WK{source_country}_KPI_{today}.csv')
+
+    print(
+        f'\n{SUCCESS}Report prepared and saved to ELQuent folder!',
+        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
 
     return
