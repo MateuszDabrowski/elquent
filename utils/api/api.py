@@ -209,7 +209,7 @@ def eloqua_asset_exist(name, asset):
     endpoint = asset_names.get(asset)
     endpoint += 's'  # for multiple assets endpoint
 
-    # Gets data of requested image name
+    # Gets data of requested asset
     root = f'{eloqua_rest}assets/{endpoint}'
     params = {'search': name}
     response = api_request(root, params=params)
@@ -289,7 +289,7 @@ def eloqua_asset_get(asset_id, asset_type, depth=''):
     # Gets required endpoint
     endpoint = asset_names.get(asset_type)
 
-    # Gets data of requested image name
+    # Gets data of requested asset
     root = f'{eloqua_rest}assets/{endpoint}/{asset_id}'
     params = {'depth': 'complete'}
     response = api_request(root, params=params)
@@ -936,7 +936,7 @@ def eloqua_fill_mail_params(name):
         '''
         Returns information about e-mails with phrase
         '''
-        # Gets data of requested image name
+        # Gets data of requested e-mail
         root = f'{eloqua_rest}assets/emails'
         params = {'depth': 'complete',
                   'search': f'{phrase}*',

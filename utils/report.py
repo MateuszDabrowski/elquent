@@ -14,7 +14,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import sys
 import json
-from datetime import date
+import datetime
 from colorama import Fore, init
 import datascience as ds
 import matplotlib.pyplot as plots
@@ -82,7 +82,7 @@ def file(file_path):
             return os.path.join(datadir, directory, filename)
 
     # Gets current date
-    today = str(date.today().strftime('%d-%m-%y'))
+    today = str(datetime.date.today().strftime('%d-%m-%y'))
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
@@ -160,6 +160,40 @@ def kpi_report(country):
             oth_and_wmr_contacts, oth_sans_wmr_contacts
         )
 
+    def blacklist_data():
+        '''
+        Returns number of blacklisted users via Subscription Center unsub form
+        '''
+        unsub_form_id = kpi['unsub_form']
+
+        # Gets unsubscription form data
+        unsub_list = api.eloqua_get_form_data(unsub_form_id)[0]
+
+        # Create list of tuples (mail, submit_date)
+        blacklisted = []
+        for submit in unsub_list:
+            for field in submit['fieldValues']:
+                email_address = field.get('value', '')
+                if '@' in email_address:
+                    break
+            submit_date = int(submit.get('submittedAt', '0'))
+            blacklisted.append((email_address, submit_date))
+
+        # Calculate epoch month ago
+        timeframe = datetime.datetime.now() + datetime.timedelta(-31)
+        epoch_timeframe = int(timeframe.timestamp())
+
+        # Filter only submissions from last month
+        last_month_blacklist = [mail for mail,
+                                date in blacklisted if date > epoch_timeframe]
+
+        # Deduplicate mails
+        last_month_blacklist = list(set(last_month_blacklist))
+
+        print(f'{SUCCESS}Import finished for unsub_count')
+
+        return ds.make_array(0, len(last_month_blacklist), 0, 0, 0, 0, 0, 0, 0, len(last_month_blacklist))
+
     # Creating table for KPI data
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Importing data from Eloqua')
     kpi_table = ds.Table().with_column(
@@ -182,6 +216,7 @@ def kpi_report(country):
     open_count = segment_array_for('open_count')
     click_count = segment_array_for('click_count')
     form_count = segment_array_for('form_count')
+    unsub_count = blacklist_data()
     not_opened_count = segment_array_for('not_opened_count')
     cookie_count = segment_array_for('cookie_count')
 
@@ -195,16 +230,16 @@ def kpi_report(country):
         'Open (M)', open_count,
         'Click (M)', click_count,
         'Form (M)', form_count,
-        # TODO: 'Unsub (M)', » form data API
+        'Unsub (M)', unsub_count,
         'Not Opened 10+ (Y)', not_opened_count,
         'Cookie Linked (A)', cookie_count
     )
 
-    today = str(date.today().strftime('%d-%m-%y'))
+    today = str(datetime.date.today().strftime('%d-%m-%y'))
     kpi_table.to_csv(f'WK{source_country}_KPI_{today}.csv')
 
     print(
-        f'\n{SUCCESS}Report prepared and saved to ELQuent folder!',
+        f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] Report prepared and saved to ELQuent folder!',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
