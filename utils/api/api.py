@@ -68,7 +68,8 @@ def file(file_path):
         'click': find_data_file('click.p'),
         'eloqua': find_data_file('eloqua.p'),
         'country': find_data_file('country.p'),
-        'naming': find_data_file('naming.json')
+        'naming': find_data_file('naming.json'),
+        'image': find_data_file('image.jpg')
     }
 
     return file_paths.get(file_path)
@@ -105,7 +106,7 @@ def status_code(response, root):
     return connected
 
 
-def api_request(root, call='get', api='eloqua', params=None, debug=False, data=None):
+def api_request(root, call='get', api='eloqua', params=None, debug=False, data=None, files=None):
     '''
     Arguments:
         root - root URL of API call
@@ -130,17 +131,21 @@ def api_request(root, call='get', api='eloqua', params=None, debug=False, data=N
             headers=headers,
             params=params)
     elif call == 'post':
-        headers['Content-Type'] = 'application/json'
+        if not files:
+            headers['Content-Type'] = 'application/json'
         response = requests.post(
             root,
             headers=headers,
-            data=data)
+            data=data,
+            files=files)
     elif call == 'put':
-        headers['Content-Type'] = 'application/json'
+        if not files:
+            headers['Content-Type'] = 'application/json'
         response = requests.put(
             root,
             headers=headers,
-            data=data)
+            data=data,
+            files=files)
     elif call == 'delete':
         headers['Content-Type'] = 'application/json'
         response = requests.delete(root, headers=headers)
@@ -1287,6 +1292,8 @@ def eloqua_get_images(image_name):
               'search': image_name}
     response = api_request(root, params=params)
     image_info = response.json()
+
+    # Builds image_link
     image_link = image_info['elements'][0]['fullImageUrl']
     image_link = (image_link.split('/'))[-1]
     image_link = naming['image'] + image_link
@@ -1295,6 +1302,25 @@ def eloqua_get_images(image_name):
     if int(image_info['total']) > 1:
         print(
             f'\n{WARNING}More then one image found - adding newest ', end='')
+
+    return image_link
+
+
+def eloqua_post_images():
+    '''
+    Returns url of uploaded image
+    '''
+    # File TODO: Allow to take path as argument
+    files = {'file': open(file('image'), 'rb')}
+
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/image/content'
+    response = api_request(root, call='post', files=files)
+    image_info = response.json()
+
+    # Builds image_link
+    image_url = image_info['fullImageUrl']
+    image_link = naming['image'] + image_url
 
     return image_link
 
