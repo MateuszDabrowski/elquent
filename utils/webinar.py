@@ -233,7 +233,10 @@ def click_export_registered(active_rooms):
                     .replace(' ', '-')
                 room_name = room_name[:26] + '-' if len(room_name) > 26 \
                     else room_name + '-'
-                psp_name = naming[source_country]['webinar']['progman_psp'] if 'Progman' in room_name else naming[source_country]['webinar']['webinar_psp']
+                if 'Progman' in room_name:
+                    psp_name = naming[source_country]['webinar']['progman_psp']
+                else:
+                    psp_name = naming[source_country]['webinar']['webinar_psp']
 
                 # Naming convention for shared list of uploaded registered users
                 shared_list_name = naming[source_country]['webinar']['name'] + \
@@ -309,7 +312,10 @@ def click_export_attendees(click_sessions, export_time_range):
             room_name = room_name[:29] + '-' if len(room_name) > 29 \
                 else room_name + '-'
             session_date = f'{session_date[8:10]}-{session_date[5:7]}-{session_date[2:4]}-'
-            psp_name = naming[source_country]['webinar']['progman_psp'] if 'Progman' in room_name else naming[source_country]['webinar']['webinar_psp']
+            if 'Progman' in room_name:
+                psp_name = naming[source_country]['webinar']['progman_psp']
+            else:
+                psp_name = naming[source_country]['webinar']['webinar_psp']
 
             # Naming convention for shared list of uploaded attendees
             shared_list_name = naming[source_country]['webinar']['name'] + str(session_id) + '-' + room_name + \

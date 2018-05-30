@@ -185,10 +185,14 @@ def clean_folders(country):
     '''
     print(
         f'\n{Fore.GREEN}ELQuent.clean Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Incomes{Fore.WHITE}] Clean Incomes folder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Outcomes{Fore.WHITE}] Clean Outcomes folder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Both{Fore.WHITE}] Clean Incomes & Outcomes folders'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}Incomes{Fore.WHITE}] Clean Incomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}Outcomes{Fore.WHITE}] Clean Outcomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}Both{Fore.WHITE}] Clean Incomes & Outcomes folders'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
@@ -225,7 +229,7 @@ def menu(choice=''):
 
     utils = {
         'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Cleans files in Income/Outcome folders'),
-        'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_tracking and elqTrack codes in e-mail links'),
+        'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_track and elqTrack codes in e-mail links'),
         'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
         'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),

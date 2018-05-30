@@ -304,7 +304,8 @@ def create_form():
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? ',
+                f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -333,7 +334,8 @@ def create_form():
         # Asks if information about data administrator should be appended
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Add information about data administrator? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\t{Fore.WHITE}Add information about data administrator? ',
+                f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -436,7 +438,8 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? ',
+                    f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 required = input(' ')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)
@@ -539,7 +542,8 @@ def javascript(code, required, ):
         '''
 
         regex_validation = re.compile(
-            r'(<script type="text/javascript">[\s\n]*\$\(document\)[\s\S\n]*?requiredChecked[\s\S\n]*?</script>)', re.UNICODE)
+            r'(<script type="text/javascript">[\s\n]*\$\(document\)[\s\S\n]*?requiredChecked[\s\S\n]*?</script>)',
+            re.UNICODE)
         if regex_validation.findall(code):
             print(f'\t{Fore.CYAN} » Cleaning Checkbox Validation')
         code = regex_validation.sub('', code)

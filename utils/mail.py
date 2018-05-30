@@ -95,16 +95,21 @@ def output_method(html_code='', mjml_code=''):
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» [{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
     if html_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» ',
+            f'[{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
     if mjml_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» ',
+            f'[{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» ',
+        f'[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -194,7 +199,12 @@ def package_chooser():
             choice = ''
 
     folder_name = folders[choice]
-    return (folder_name, packages.get(folder_name).get('html'), packages.get(folder_name).get('mjml'), packages.get(folder_name).get('img'))
+    return (
+        folder_name,
+        packages.get(folder_name).get('html'),
+        packages.get(folder_name).get('mjml'),
+        packages.get(folder_name).get('img')
+    )
 
 
 '''
@@ -215,7 +225,8 @@ def mail_constructor(country):
 
     # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with {Fore.YELLOW}Images, HTML, MJML{Fore.WHITE} to Incomes folder.',
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with ',
+        f'{Fore.YELLOW}Images, HTML, MJML{Fore.WHITE} to Incomes folder.',
         f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
@@ -293,7 +304,8 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new {Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
+            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new ',
+            f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
         if utm.lower() == 's':
             break
@@ -336,7 +348,8 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired {Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired ',
+            f'{Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
         preheader = input(' ')
 
         if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
@@ -362,7 +375,8 @@ def mail_constructor(country):
     output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ',
+          f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

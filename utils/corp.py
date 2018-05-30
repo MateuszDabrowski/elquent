@@ -307,7 +307,8 @@ def email_groups(country):
         f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] List of created assets saved to Outcomes folder')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? ',
+          f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         email_groups(country)

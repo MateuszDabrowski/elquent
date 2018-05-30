@@ -171,7 +171,8 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] Write/paste {asset} ID or copy the code and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] ',
+            f'Write/paste {asset} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
 
         # If there was no input, skips to get code via pyperclip
@@ -196,7 +197,8 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ',
+                    f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -706,7 +708,12 @@ def eloqua_create_landingpage(name, code):
         landing_page = response.json()
 
         # Checks if there is error
-        if isinstance(landing_page, list) and len(landing_page) == 1 and landing_page[0]['type'] == 'ObjectValidationError' and landing_page[0]['property'] == 'relativePath' and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
+        if isinstance(landing_page, list)\
+                and len(landing_page) == 1\
+                and landing_page[0]['type'] == 'ObjectValidationError'\
+                and landing_page[0]['property'] == 'relativePath'\
+                and landing_page[0]['requirement']['type'] == 'UniquenessRequirement':
+
             print(
                 f'\n  {ERROR}URL ending "/{html_name}" already exists!',
                 f'\n  {Fore.WHITE}» Enter new URL ending:', end='')
@@ -997,7 +1004,13 @@ def eloqua_fill_mail_params(name):
 
     # Returns data if all data elements were filled
     try:
-        if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
+        if data['senderEmail']\
+                and data['senderName']\
+                and data['replyToEmail']\
+                and data['folderId']\
+                and data['emailFooterId']\
+                and data['emailHeaderId']\
+                and data['emailGroupId']:
             print(f'  {SUCCESS}E-mail data ready for upload')
             for value in data.items():
                 print(
@@ -1046,7 +1059,13 @@ def eloqua_fill_mail_params(name):
 
     # Returns data if all data elements were filled
     try:
-        if data['senderEmail'] and data['senderName'] and data['replyToEmail'] and data['folderId'] and data['emailFooterId'] and data['emailHeaderId'] and data['emailGroupId']:
+        if data['senderEmail']\
+                and data['senderName']\
+                and data['replyToEmail']\
+                and data['folderId']\
+                and data['emailFooterId']\
+                and data['emailHeaderId']\
+                and data['emailGroupId']:
             print(f'\n  {SUCCESS}E-mail data ready for upload:')
             for value in data.items():
                 print(
@@ -1191,7 +1210,10 @@ def eloqua_update_email(email_id, code):
     }
 
     # Takes care of case where there is lack of element in source mail
-    for element in ['currentStatus', 'id', 'createdAt', 'createdBy', 'folderId', 'name', 'updatedAt', 'updatedBy', 'bounceBackEmail', 'emailFooterId', 'emailGroupId', 'emailHeaderId', 'replyToEmail', 'replyToName', 'senderEmail', 'senderName', 'subject']:
+    for element in ['currentStatus', 'id', 'createdAt', 'createdBy',
+                    'folderId', 'name', 'updatedAt', 'updatedBy', 'bounceBackEmail',
+                    'emailFooterId', 'emailGroupId', 'emailHeaderId', 'replyToEmail',
+                    'replyToName', 'senderEmail', 'senderName', 'subject']:
         try:
             data[element] = old_data[element]
         except KeyError:
@@ -1313,7 +1335,7 @@ def eloqua_post_images():
     # File TODO: Allow to take path as argument
     files = {'file': open(file('image'), 'rb')}
 
-    # Gets data of requested image name
+    # Posts image to Eloqua TODO: Change folder id
     root = f'{eloqua_rest}assets/image/content'
     response = api_request(root, call='post', files=files)
     image_info = response.json()
