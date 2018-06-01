@@ -14,10 +14,12 @@ if os.name == 'nt':  # Required on Windows to freeze Dash
     os.environ['TCL_LIBRARY'] = "C:\\Program Files (x86)\\Python35-32\\tcl\\tcl8.6"
     os.environ['TK_LIBRARY'] = "C:\\Program Files (x86)\\Python35-32\\tcl\\tk8.6"
 
-buildOptions = dict(include_files=['README.md', 'LICENSE', 'utils', 'utils.json'],
-                    packages=['pyperclip', 'csv', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
-                              'platform', 'colorama', 'json', 'multiprocessing',
-                              'time', 'datetime', 'getpass', 'base64', 'webbrowser'])
+buildOptions = dict(
+    include_files=['README.md', 'LICENSE', 'utils', 'utils.json'],
+    packages=['pyperclip', 'csv', 're', 'os', 'sys', 'pickle', 'requests', 'idna',
+              'platform', 'colorama', 'json', 'multiprocessing',
+              'time', 'datetime', 'getpass', 'base64', 'webbrowser']
+)
 
 base = 'Console'
 
@@ -26,7 +28,7 @@ executables = [
 ]
 
 setup(name='ELQuent',
-      version='1.5',
+      version='1.6',
       description='Eloqua automation utility bundle',
       author='Mateusz Dąbrowski',
       url='https://github.com/MateuszDabrowski/',

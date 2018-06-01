@@ -100,20 +100,6 @@ _ToDo:_
 
 ---
 
-### [ELQuent.report](utils/report.py)
-
-#### Module creating reports from data of predefined contact segments
-
-- Refreshes predefined segments
-- Gathers numbers required for the report
-- Builds table with report data and exports it to .csv file
-
-_ToDo:_
-
-- [ ] _Report visualisations_
-
----
-
 ### [ELQuent.corp](utils/corp.py)
 
 #### Specialized utils for core admins
@@ -143,9 +129,10 @@ _ToDo:_
 - Creates campaign and program canvas
 - Creates shared filters
 - Creates export definition for activity API and downloads data from it
+- Refreshes and download segment counts
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.6.3_]
+[_Version: 1.6.4_]

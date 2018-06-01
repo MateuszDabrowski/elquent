@@ -1,6 +1,6 @@
 {
     "country": ["CORP", "AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "LSW", "NL", "PL", "SK"],
-    "ADMIN": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "contacts", "webinar", "mail_groups", "bouncebacks", "report"],
+    "ADMIN": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "contacts", "webinar", "mail_groups", "bouncebacks"],
     "CORP": ["clean_folders", "change_links", "build_mail", "mail_groups", "bouncebacks"],
     "AK": ["clean_folders", "change_links", "build_mail"],
     "BE": ["clean_folders", "change_links", "build_mail"],

@@ -28,7 +28,6 @@ import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.export as export
-import utils.report as report
 import utils.corp as corp
 import utils.api.api as api
 
@@ -185,14 +184,14 @@ def clean_folders(country):
     '''
     print(
         f'\n{Fore.GREEN}ELQuent.clean Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}Incomes{Fore.WHITE}] Clean Incomes folder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}Outcomes{Fore.WHITE}] Clean Outcomes folder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}Both{Fore.WHITE}] Clean Incomes & Outcomes folders'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}Incomes{Fore.WHITE}] Clean Incomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}Outcomes{Fore.WHITE}] Clean Outcomes folder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}{Fore.WHITE}[{Fore.YELLOW}Both{Fore.WHITE}] Clean Incomes & Outcomes folders'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
@@ -236,7 +235,6 @@ def menu(choice=''):
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Exports and saves hard bounceback data'),
-        'report': (report.kpi_report, f'Report{Fore.WHITE}] Creates KPI report'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Helper for GDPR Email Group Program')
     }
 
@@ -326,6 +324,8 @@ elif sys.argv[1] == 'web':
     webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
+elif sys.argv[1] == 'bounce':
+    export.export_bouncebacks(SOURCE_COUNTRY)
 
 # Allows to cycle through options after first errand
 while True:
