@@ -25,7 +25,7 @@ Can help with implementation_
 #### Constructs your email packages
 
 - RegEx & API builder
-- Automatically adds image links, tracking scripts and pre-header to package
+- Automatically uploads images and adds image links, tracking scripts and pre-header to package
 - Works with both HTML and MJML files
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 
@@ -135,4 +135,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.6.4_]
+[_Version: 1.6.5_]

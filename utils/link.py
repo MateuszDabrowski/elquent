@@ -106,16 +106,16 @@ def output_method(code, email_id, name):
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}COPY{Fore.WHITE}] Copied to clipboard for pasting [CTRL+V]',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail with new elqTrack')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}COPY{Fore.WHITE}] Copied to clipboard for pasting [CTRL+V]',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail with new elqTrack')
     if email_id:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» ',
-            f'[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua to original E-mail with new elqTrack')
+            f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t»',
+            f'{Fore.WHITE}[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua to original E-mail with new elqTrack')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -161,8 +161,8 @@ def clean_elq_track():
     elq_track = re.compile(r'((\?|&)elqTrack.*?(?=(#|")))', re.UNICODE)
     if elq_track.findall(code):
         print(
-            f'\n{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] ',
-            f'Cleaned {len(elq_track.findall(code))} elqTracks and saved to Outcomes folder.')
+            f'\n{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}]',
+            f'{Fore.WHITE}Cleaned {len(elq_track.findall(code))} elqTracks and saved to Outcomes folder.')
         code = elq_track.sub('', code)
         with open(file('elqtrack', name=name), 'w', encoding='utf-8') as f:
             f.write(code)
@@ -172,8 +172,8 @@ def clean_elq_track():
         print(f'\t{ERROR}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to clean another code? ',
-          f'({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code?',
+          f'{Fore.WHITE}({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -243,7 +243,8 @@ def swap_utm_track(code='', email_id='', name=''):
     # Asks user if he would like to repeat
     print(
         f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?',
-        f'\n({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Fore.WHITE}nother UTM change in the same code)', end='')
+        f'\n{Fore.WHITE}({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Fore.WHITE}nother',
+        f'{Fore.WHITE}UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

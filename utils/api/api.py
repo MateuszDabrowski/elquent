@@ -110,9 +110,10 @@ def api_request(root, call='get', api='eloqua', params=None, debug=False, data=N
     '''
     Arguments:
         root - root URL of API call
-        call - either GET or POST
+        call - GET/POST/PUT/DELETE
         api - either elouqa or click
-    Returns response from Eloqua API call.
+        also: params, data, files for calls
+    Returns response from API call
 
     If you want to print API connection status codes, set debug to True
     '''
@@ -123,6 +124,8 @@ def api_request(root, call='get', api='eloqua', params=None, debug=False, data=N
     elif api == 'click':
         click_api_key = pickle.load(open(file('click'), 'rb'))
         headers = {'X-Api-Key': click_api_key}
+    if not files:
+        headers['Content-Type'] = 'application/json'
 
     # Assings correct api call
     if call == 'get':
@@ -131,23 +134,18 @@ def api_request(root, call='get', api='eloqua', params=None, debug=False, data=N
             headers=headers,
             params=params)
     elif call == 'post':
-        if not files:
-            headers['Content-Type'] = 'application/json'
         response = requests.post(
             root,
             headers=headers,
             data=data,
             files=files)
     elif call == 'put':
-        if not files:
-            headers['Content-Type'] = 'application/json'
         response = requests.put(
             root,
             headers=headers,
             data=data,
             files=files)
     elif call == 'delete':
-        headers['Content-Type'] = 'application/json'
         response = requests.delete(root, headers=headers)
 
     # Prints status code
@@ -171,8 +169,8 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}] ',
-            f'Write/paste {asset} ID or copy the code and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}]',
+            f'{Fore.WHITE}Write/paste {asset} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
 
         # If there was no input, skips to get code via pyperclip
@@ -197,8 +195,8 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? ',
-                    f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}?',
+                    f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -343,7 +341,8 @@ def get_eloqua_auth(country):
         'Campaign': 'campaign',
         'Program': 'program',
         'Filter': 'contact/filter',
-        'Segment': 'contact/segment'
+        'Segment': 'contact/segment',
+        'Image': 'image'
     }
 
     # Gets data from naming.json
@@ -1328,21 +1327,44 @@ def eloqua_get_images(image_name):
     return image_link
 
 
-def eloqua_post_images():
+def eloqua_post_image(image):
     '''
     Returns url of uploaded image
     '''
-    # File TODO: Allow to take path as argument
-    files = {'file': open(file('image'), 'rb')}
 
-    # Posts image to Eloqua TODO: Change folder id
+    def eloqua_move_image(image_id):
+        '''
+        Moves image to ELQuent image uploads folder
+        '''
+
+        # Gets image data to prepare PUT body
+        image_data = eloqua_asset_get(
+            image_id, asset_type='Image', depth='complete')
+
+        # Gets and swaps folder_id to correct one for ELQuent image uploads
+        folder_id = naming[source_country]['id']['image']
+        image_data['folderId'] = folder_id
+
+        # Updates image folder_id
+        root = f'{eloqua_rest}assets/image/{image_id}'
+        api_request(root, call='put', data=json.dumps(image_data))
+
+        return
+
+    # Posts image to Eloqua
     root = f'{eloqua_rest}assets/image/content'
-    response = api_request(root, call='post', files=files)
+    response = api_request(root, call='post', files=image)
     image_info = response.json()
 
     # Builds image_link
     image_url = image_info['fullImageUrl']
     image_link = naming['image'] + image_url
+
+    # Moves file to correct image folder
+    image_id = image_info['id']
+    eloqua_move_image(image_id)
+
+    print(f'{Fore.GREEN}› {Fore.WHITE}ELQ ', end='', flush=True)
 
     return image_link
 

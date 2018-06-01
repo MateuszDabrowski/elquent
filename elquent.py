@@ -231,7 +231,7 @@ def menu(choice=''):
         'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_track and elqTrack codes in e-mail links'),
         'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'campaign_gen': (campaign.campaign_gen, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
+        'campaign_gen': (campaign.content_campaign, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Exports and saves hard bounceback data'),

@@ -124,7 +124,7 @@ def file(file_path, name='LP'):
 '''
 
 
-def campaign_gen(country):
+def content_campaign(country):
     '''
     Main flow for whole campaign creations
     Saves multiple html codes to outcome folder
@@ -148,8 +148,8 @@ def campaign_gen(country):
     # Gets campaign name from user
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}] ',
-            f'Write or paste name of the Campaign and click [Enter]')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}]',
+            f'{Fore.WHITE}Write or paste name of the Campaign and click [Enter]')
         campaign_name = input(' ')
         campaign_name = campaign_name.split('_')
         if len(campaign_name) != 5:
@@ -216,8 +216,8 @@ def campaign_gen(country):
         product_name = naming[source_country]['product'][local_name[0]]
     else:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}] ',
-            f'Could not recognize product name, please write its name: ', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}]',
+            f'{Fore.WHITE}Could not recognize product name, please write its name: ', end='')
         product_name = input(' ')
     regex_product_name = re.compile(r'PRODUCT_NAME', re.UNICODE)
 

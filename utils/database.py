@@ -98,8 +98,8 @@ def get_contacts():
     '''
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}] ',
-            f'Copy list of e-mails [CTRL+C] and click [Enter]', end='')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}CONTACTS{Fore.WHITE}]',
+            f'{Fore.WHITE}Copy list of e-mails [CTRL+C] and click [Enter]', end='')
         input(' ')
         database = pyperclip.paste()
 
@@ -123,8 +123,8 @@ def get_contacts():
         if len(database) > len(validated_mails):
             print(
                 f'\n{ERROR}Out of {len(database)} records uploaded, {len(validated_mails)} are correct e-mails.',
-                f'\n  {Fore.WHITE}» Show incorrect ones? ',
-                f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\n  {Fore.WHITE}» Show incorrect ones?',
+                f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             print_diff = input(' ')
             if print_diff.lower() == 'y':  # Allows user to see which particular lines are incorrect
                 diff = [mail for mail in database if mail not in validated_mails]
@@ -172,10 +172,10 @@ def upload_to_eloqua(contacts):
         contacts_to_upload = {campaign_name: contacts}
         # Confirms if everything is correct
         print(
-            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to ',
+            f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to',
             f'{Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list?',
-            f'\n{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL} ',
-            f'or {Fore.YELLOW}write{Fore.WHITE} new ending to change list name):', end='')
+            f'\n{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}',
+            f'{Fore.WHITE}or {Fore.YELLOW}write{Fore.WHITE} new ending to change list name):', end='')
         uploading = input(' ')
         if len(uploading) > 1:
             campaign_name = '_'.join(
@@ -243,8 +243,8 @@ def contact_list(country):
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua? ',
-                f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] Do you want to upload that list to Eloqua?',
+                f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
             swapping = input(' ')
         if swapping.lower() == 'y':
             name = upload_to_eloqua(contacts)
@@ -269,8 +269,8 @@ def contact_list(country):
 
     # Asks user if he would like to repeat
     print(
-        f'{Fore.WHITE}» Do you want to prepare another contact upload? ',
-        f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+        f'{Fore.WHITE}» Do you want to prepare another contact upload?',
+        f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

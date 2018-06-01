@@ -95,21 +95,21 @@ def output_method(html_code='', mjml_code=''):
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
     if html_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» ',
-            f'[{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t»',
+            f'{Fore.WHITE}[{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
     if mjml_code:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» ',
-            f'[{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
+            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t»',
+            f'{Fore.WHITE}[{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
     print(
-        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» ',
-        f'[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -225,15 +225,15 @@ def mail_constructor(country):
 
     # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with ',
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with',
         f'{Fore.YELLOW}Images, HTML, MJML{Fore.WHITE} to Incomes folder.',
-        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+        f'\n{Fore.YELLOW}» {Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
     # Lets user choose package to construct
     while True:
         # Gets name and files but image_files with index 3
-        folder_name, html_files, mjml_files = package_chooser()[0:3]
+        folder_name, html_files, mjml_files, image_files = package_chooser()
         if not html_files and not mjml_files:
             print(
                 f'{ERROR}Chosen package got neither HTML nor MJML file!')
@@ -248,53 +248,54 @@ def mail_constructor(country):
     if html_files:
         with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
             html = f.read()
-
-    mjml = ''
-    if mjml_files:
-        with open(file('package_file', file_name=mjml_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
-            mjml = f.read()
-
-    '''
-    =================================================== Image getter
-    '''
-
-    # Asks user to firstly upload images to Eloqua
-    print(
-        f'\n{Fore.YELLOW}»{Fore.WHITE} Please upload {Fore.YELLOW}{folder_name}{Fore.WHITE} images to Eloqua.',
-        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
-    input(' ')
-
-    print(f'\n{Fore.GREEN}Adding image links from Eloqua:', end='')
-    # Gets list of images in package
-    images = re.compile(r'src="(.*?)"', re.UNICODE)
-    if html_files:
-        # Builds list of images that should be swapped
+        # Builds list of to-be-swapped images in html file
+        images = re.compile(r'src="(.*?)"', re.UNICODE)
         linkable_images_html = images.findall(html)
         linkable_images_html = list(set(linkable_images_html))
         linkable_images_html = [
             image for image in linkable_images_html if 'http' not in image]
 
-        print(f'\n{Fore.WHITE}» HTML ', end='')
-        # Gets image link from Eloqua and adds it to the code
-        for image in linkable_images_html:
-            image_link = api.eloqua_get_images(image)
-            html = html.replace(image, image_link)
-            print(f'{Fore.GREEN}|', end='', flush=True)
-
+    mjml = ''
     if mjml_files:
-        # Builds list of images that should be swapped
+        with open(file('package_file', file_name=mjml_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
+            mjml = f.read()
+        # Builds list of to-be-swapped images in mjml file
         linkable_images_mjml = images.findall(mjml)
         linkable_images_mjml = list(set(linkable_images_mjml))
         linkable_images_mjml = [
             image for image in linkable_images_mjml if 'http' not in image]
 
-        print(f'\n{Fore.WHITE}» MJML ', end='')
-        # Gets image link from Eloqua and adds it to the code
-        for image in linkable_images_mjml:
-            image = (image.split('/'))[-1]
-            image_link = api.eloqua_get_images(image)
-            mjml = mjml.replace('../Gfx/' + image, image_link)
-            print(f'{Fore.GREEN}|', end='', flush=True)
+    '''
+    =================================================== Image getter
+    '''
+
+    # Uploads each image and adds swaps relative link to url in code
+    for image_name in image_files:
+        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Adding {image_name} to ', end='')
+        image = {'file': open(file('package_file',
+                                   file_name=image_name,
+                                   folder_name=folder_name), 'rb')
+                 }
+        image_link = api.eloqua_post_image(image)
+
+        if html_files:
+            for relative_link in linkable_images_html:
+                if image_name in relative_link:
+                    html = html.replace(relative_link, image_link)
+                    print(f'{Fore.GREEN}› {Fore.WHITE}HTML',
+                          end='', flush=True)
+                    break
+
+        if mjml_files:
+            for relative_link in linkable_images_mjml:
+                if image_name in relative_link:
+                    relative_link = (relative_link.split('/'))[-1]
+                    mjml = mjml.replace('../Gfx/' + relative_link, image_link)
+                    print(f'{Fore.GREEN}› {Fore.WHITE}MJML',
+                          end='', flush=True)
+                    break
+
+    print(f'\n{SUCCESS}Images uploaded and added to e-mail')
 
     '''
     =================================================== Track URL
@@ -304,7 +305,7 @@ def mail_constructor(country):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new ',
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new',
             f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
         if utm.lower() == 's':
@@ -348,7 +349,7 @@ def mail_constructor(country):
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
         print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired ',
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
             f'{Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
         preheader = input(' ')
 
@@ -375,7 +376,7 @@ def mail_constructor(country):
     output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? ',
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email?',
           f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
@@ -383,4 +384,4 @@ def mail_constructor(country):
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
         mail_constructor(country)
 
-    return
+    return html
