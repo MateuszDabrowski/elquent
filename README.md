@@ -29,6 +29,10 @@ Can help with implementation_
 - Works with both HTML and MJML files
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 
+_ToDo:_
+
+- [ ] _Automated creation of reminder version of e-mail with title/preheader/asset name difference_
+
 ---
 
 ### [ELQuent.page](utils/page.py)
@@ -43,6 +47,7 @@ Can help with implementation_
 _ToDo:_
 
 - [ ] _Change from two (one and two column) LP templates to just one modular template_
+- [ ] _Add optional questions for template filling as in campaign flow_
 
 ---
 
@@ -59,6 +64,7 @@ _ToDo:_
 
 _ToDo:_
 
+- [ ] _Simple campaign builder for mail + reminder sends_
 - [ ] _Update main form with confirmation e-mail ID and thank-you-page urls_
 - [ ] _When not recognized product name, try to find best matches from a list_
 
@@ -87,7 +93,7 @@ _ToDo:_
 
 _ToDo:_
 
-- [ ] _Ability to take .xls or .csv as input_
+- [ ] _Autocleaning encoding errors in last row of data after copying from tables_
 
 ---
 

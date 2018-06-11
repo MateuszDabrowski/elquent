@@ -15,7 +15,7 @@ import os
 import re
 import sys
 import pyperclip
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -173,7 +173,7 @@ def clean_elq_track():
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.WHITE}» Do you want to clean another code?',
-          f'{Fore.WHITE}({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})', end='')
+          f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -243,7 +243,7 @@ def swap_utm_track(code='', email_id='', name=''):
     # Asks user if he would like to repeat
     print(
         f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?',
-        f'\n{Fore.WHITE}({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Fore.WHITE}nother',
+        f'\n{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Style.NORMAL}{Fore.WHITE}nother',
         f'{Fore.WHITE}UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':

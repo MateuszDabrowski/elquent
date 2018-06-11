@@ -271,7 +271,7 @@ def mail_constructor(country):
 
     # Uploads each image and adds swaps relative link to url in code
     for image_name in image_files:
-        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Adding {image_name} to ', end='')
+        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Adding {image_name} to', end='')
         image = {'file': open(file('package_file',
                                    file_name=image_name,
                                    folder_name=folder_name), 'rb')
@@ -282,7 +282,7 @@ def mail_constructor(country):
             for relative_link in linkable_images_html:
                 if image_name in relative_link:
                     html = html.replace(relative_link, image_link)
-                    print(f'{Fore.GREEN}› {Fore.WHITE}HTML',
+                    print(f'{Fore.GREEN} › {Fore.WHITE}HTML',
                           end='', flush=True)
                     break
 
@@ -291,7 +291,7 @@ def mail_constructor(country):
                 if image_name in relative_link:
                     relative_link = (relative_link.split('/'))[-1]
                     mjml = mjml.replace('../Gfx/' + relative_link, image_link)
-                    print(f'{Fore.GREEN}› {Fore.WHITE}MJML',
+                    print(f'{Fore.GREEN} › {Fore.WHITE}MJML',
                           end='', flush=True)
                     break
 
@@ -377,7 +377,8 @@ def mail_constructor(country):
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email?',
-          f'({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+          f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})',
+          end='')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

@@ -20,6 +20,7 @@ from colorama import Fore, init
 # ELQuent imports
 import utils.api.api as api
 import utils.page as page
+import utils.mail as mail
 
 # Initialize colorama
 init(autoreset=True)
@@ -126,8 +127,9 @@ def file(file_path, name='LP'):
 
 def content_campaign(country):
     '''
-    Main flow for whole campaign creations
-    Saves multiple html codes to outcome folder
+    Main flow for content campaign
+    Creates filled up campaign in Eloqua along with assets
+    Saves multiple html codes as backup to outcome folder
     '''
 
     # Create global source_country and load json file with naming convention
@@ -567,3 +569,26 @@ def content_campaign(country):
     input(' ')
 
     return
+
+
+def simple_campaign(country):
+    '''
+    Main flow for simple campaign (mail + reminder)
+    Creates filled up campaign in Eloqua along with assets from package
+    Saves html and mjml codes of e-mails as backup to outcome folder
+    '''
+
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+    mail.country_naming_setter(country)
+
+    # Checks if there are required source files for the source source_country
+    if not os.path.exists(file('validation-element')):
+        print(
+            f'\t{ERROR}No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
+        input(' ')
+        return False
+
+    '''
+    =================================================== Gather necessary informations
+    '''
