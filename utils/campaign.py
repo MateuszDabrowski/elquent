@@ -19,6 +19,7 @@ from colorama import Fore, init
 
 # ELQuent imports
 import utils.api.api as api
+import utils.helper as helper
 import utils.page as page
 import utils.mail as mail
 
@@ -41,6 +42,11 @@ def country_naming_setter(country):
     '''
     global source_country
     source_country = country
+
+    # Prepares globals for imported modules
+    mail.country_naming_setter(source_country)
+    page.country_naming_setter(source_country)
+    helper.country_naming_setter(source_country)
 
     # Loads json file with naming convention
     with open(file('naming'), 'r', encoding='utf-8') as f:
@@ -134,7 +140,6 @@ def content_campaign(country):
 
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
-    page.country_naming_setter(country)
 
     # Checks if there are required source files for the source source_country
     if not os.path.exists(file('validation-element')):
@@ -147,89 +152,21 @@ def content_campaign(country):
     =================================================== Gather necessary informations
     '''
 
-    # Gets campaign name from user
-    while True:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}]',
-            f'{Fore.WHITE}Write or paste name of the Campaign and click [Enter]')
-        campaign_name = input(' ')
-        campaign_name = campaign_name.split('_')
-        if len(campaign_name) != 5:
-            print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
-        elif campaign_name[0][:2] != 'WK':
-            print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
-        elif campaign_name[1] not in naming[source_country]['segment']:
-            print(f'{ERROR}"{campaign_name[1]}" is not existing segment name')
-        elif campaign_name[2] not in naming['campaign']:
-            print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
-        elif campaign_name[4] not in naming['vsp']:
-            print(f'{ERROR}"{campaign_name[4]}" is not existing VSP')
-        else:
-            break
+    campaign_name = helper.campaign_name_getter()
+    lead_or_contact_form = helper.campaign_type_getter()
+    converter_choice, asset_type, asset_name = helper.asset_name_getter()
+    asset_url = helper.asset_link_getter()
+    product_name = helper.product_name_getter(campaign_name)
+    header_text = helper.header_text_getter()
 
-    # Gets information about lead or not lead character of the form
-    print(f'\n{Fore.GREEN}After filling the form user is:',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}] Either lead or not (depending on submission)',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}] Always lead',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead')
-    while True:
-        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
-        lead_or_contact_form = input(' ')
-        if lead_or_contact_form in ['0', '1', '2']:
-            lead_or_contact_form = int(lead_or_contact_form)
-            break
-        else:
-            print(f'{ERROR}Entered value does not belong to any choice!')
+    '''
+    =================================================== Compile regexes
+    '''
 
-    # Gets information about converter that is used in campaign
-    print(f'\n{Fore.GREEN}After filling the form user receives:')
-    converter_values = list(naming[source_country]['converter'].keys())
-    for i, converter in enumerate(converter_values[2:]):
-        print(
-            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
-    while True:
-        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
-        converter_choice = input(' ')
-        if converter_choice in ['0', '1', '2', '3', '4', '5']:
-            converter_choice = converter_values[int(converter_choice) + 2]
-            asset_type = converter_choice.split(' ')[0]
-            print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
-            asset_name = input(' ')
-            regex_asset_name = re.compile(r'ASSET_NAME', re.UNICODE)
-            break
-        else:
-            print(f'{ERROR}Entered value does not belong to any choice!')
-
-    # Gets link to the campaign asset
-    while True:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}URL{Fore.WHITE}] Enter link to the asset or asset page')
-        asset_url = input(' ')
-        if asset_url.startswith('http') or asset_url.startswith('www'):
-            regex_asset_url = re.compile(r'ASSET_URL', re.UNICODE)
-            break
-        else:
-            print(f'{ERROR}Entered value is not valid link!')
-
-    # Gets product name either from campaign name or user
-    local_name = campaign_name[3].split('-')
-    if local_name[0] in naming[source_country]['product']:
-        product_name = naming[source_country]['product'][local_name[0]]
-    else:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}]',
-            f'{Fore.WHITE}Could not recognize product name, please write its name: ', end='')
-        product_name = input(' ')
+    regex_asset_name = re.compile(r'ASSET_NAME', re.UNICODE)
+    regex_asset_url = re.compile(r'ASSET_URL', re.UNICODE)
     regex_product_name = re.compile(r'PRODUCT_NAME', re.UNICODE)
-
-    # Gets optional text for header
-    print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}OPTIONAL{Fore.WHITE}] Text to be displayed on the left side of header bar:')
-    optional_text = input(' ')
-    regex_optional_text = re.compile(r'OPTIONAL_TEXT', re.UNICODE)
-
-    # Regex for GTM tag
+    regex_header_text = re.compile(r'OPTIONAL_TEXT', re.UNICODE)
     regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
 
     # List of created Landing Pages and E-mails:
@@ -249,7 +186,7 @@ def content_campaign(country):
     code = page.swap_form(code, form)
     code = page.javascript(code, required)
     code = regex_product_name.sub(product_name, code)
-    code = regex_optional_text.sub(optional_text, code)
+    code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
@@ -278,7 +215,7 @@ def content_campaign(country):
     with open(file('ty-lp'), 'r', encoding='utf-8') as f:
         code = f.read()
     code = regex_product_name.sub(product_name, code)
-    code = regex_optional_text.sub(optional_text, code)
+    code = regex_header_text.sub(header_text, code)
 
     # Lead submission TY LP
     if lead_or_contact_form == 0 or lead_or_contact_form == 1:
@@ -374,7 +311,7 @@ def content_campaign(country):
     code = page.swap_form(code, blindform_html)
     code = page.javascript(code, required)
     code = regex_product_name.sub(product_name, code)
-    code = regex_optional_text.sub(optional_text, code)
+    code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
@@ -443,7 +380,7 @@ def content_campaign(country):
     with open(file('confirmation-ty-lp'), 'r', encoding='utf-8') as f:
         code = f.read()
     code = regex_product_name.sub(product_name, code)
-    code = regex_optional_text.sub(optional_text, code)
+    code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]

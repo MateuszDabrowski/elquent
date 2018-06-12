@@ -31,6 +31,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
+          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
 
 
 def country_naming_setter(country):
@@ -304,8 +306,7 @@ def create_form():
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism?',
-                f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {YES_NO}:', end=' ')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -334,8 +335,7 @@ def create_form():
         # Asks if information about data administrator should be appended
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Add information about data administrator?',
-                f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                f'\t{Fore.WHITE}Add information about data administrator? {YES_NO}:', end=' ')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -438,8 +438,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required?',
-                    f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? {YES_NO}:', end=' ')
                 required = input(' ')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)

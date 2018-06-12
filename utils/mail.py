@@ -28,6 +28,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
+          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
 
 
 '''
@@ -376,9 +378,7 @@ def mail_constructor(country):
     output_method(html, mjml)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email?',
-          f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})',
-          end='')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? {YES_NO}:', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

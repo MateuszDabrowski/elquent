@@ -119,7 +119,7 @@ _ToDo:_
 
 ### [ELQuent.api](utils/api/api.py)
 
-#### Helper module for Eloqua API__
+#### Helper module for Eloqua API
 
 - Authenticates user
 - Uploads contact database to Eloqua shared lists
@@ -139,6 +139,19 @@ _ToDo:_
 
 ---
 
+### [ELQuent.helper](utils/helper.py)
+
+#### Helper module for Eloqua conventions
+
+- Gets valid campaign name from user (according to predefined naming convention)
+- Gets type of campaign from user
+- Gets converting asset name for the campaign
+- Gets link to the asset
+- Gets promoted product name either from campaign name (via naming convention) or from user
+- Gets optional header text
+
+---
+
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.6.5_]
+[_Version: 1.7.0_]

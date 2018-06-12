@@ -29,6 +29,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
+          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
 
 
 '''
@@ -172,8 +174,7 @@ def clean_elq_track():
         print(f'\t{ERROR}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to clean another code?',
-          f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL})', end='')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code? {YES_NO}:', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -226,9 +227,10 @@ def swap_utm_track(code='', email_id='', name=''):
     # Asks if phone field should be changed to lead mechanism
     swapping = ''
     while swapping.lower() != 'y' and swapping.lower() != 'n':
-        print(f'\n{Fore.WHITE}Change UTM tracking script? ({Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE})',
+        print(f'\n{Fore.WHITE}Change UTM tracking script?',
               f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
-              f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}')
+              f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}',
+              f'\n{YES_NO}:', end=' ')
         swapping = input(' ')
 
     if swapping.lower() == 'y':

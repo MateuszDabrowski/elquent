@@ -39,6 +39,8 @@ init(autoreset=True)
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
+          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
 
 
 '''
@@ -195,8 +197,7 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}?',
-                    f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}{Style.NORMAL}):', end='')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? {YES_NO}:', end=' ')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -1364,7 +1365,7 @@ def eloqua_post_image(image):
     image_id = image_info['id']
     eloqua_move_image(image_id)
 
-    print(f'{Fore.GREEN}› {Fore.WHITE}ELQ ', end='', flush=True)
+    print(f'{Fore.GREEN} › {Fore.WHITE}ELQ', end='', flush=True)
 
     return image_link
 
