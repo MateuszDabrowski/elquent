@@ -30,8 +30,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
-YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
-          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 
 def country_naming_setter(country):
@@ -309,7 +309,7 @@ def email_groups(country):
         f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] List of created assets saved to Outcomes folder')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {YES_NO}:', end=' ')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         email_groups(country)

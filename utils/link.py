@@ -29,8 +29,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
-YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
-          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 
 '''
@@ -174,7 +174,7 @@ def clean_elq_track():
         print(f'\t{ERROR}elqTrack not found')
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.WHITE}» Do you want to clean another code? {YES_NO}:', end=' ')
+    print(f'\n{Fore.WHITE}» Do you want to clean another code? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         print(
@@ -230,7 +230,7 @@ def swap_utm_track(code='', email_id='', name=''):
         print(f'\n{Fore.WHITE}Change UTM tracking script?',
               f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
               f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}',
-              f'\n{YES_NO}:', end=' ')
+              f'\n{Fore.WHITE}({YES}/{NO}):', end=' ')
         swapping = input(' ')
 
     if swapping.lower() == 'y':
@@ -245,7 +245,7 @@ def swap_utm_track(code='', email_id='', name=''):
     # Asks user if he would like to repeat
     print(
         f'\n{Fore.WHITE}» Do you want to swap another UTM tracking?',
-        f'\n{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}/{Fore.RED}n{Fore.WHITE}/{Fore.YELLOW}a{Style.NORMAL}{Fore.WHITE}nother',
+        f'\n{Fore.WHITE}({YES}/{NO}/{Fore.YELLOW}a{Style.NORMAL}{Fore.WHITE}nother',
         f'{Fore.WHITE}UTM change in the same code)', end='')
     choice = input(' ')
     if choice.lower() == 'y':

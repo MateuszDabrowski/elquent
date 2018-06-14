@@ -31,8 +31,8 @@ source_country = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
-YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
-          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 
 def country_naming_setter(country):
@@ -47,6 +47,7 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
+        naming = naming[source_country]
 
 
 '''
@@ -306,7 +307,7 @@ def create_form():
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {YES_NO}:', end=' ')
+                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {Fore.WHITE}({YES}/{NO}):', end=' ')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -335,7 +336,7 @@ def create_form():
         # Asks if information about data administrator should be appended
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\t{Fore.WHITE}Add information about data administrator? {YES_NO}:', end=' ')
+                f'\t{Fore.WHITE}Add information about data administrator? {Fore.WHITE}({YES}/{NO}):', end=' ')
             swapping = input(' ')
 
         if swapping.lower() == 'y':
@@ -371,8 +372,8 @@ def create_form():
         '''
         optins = {}
         # Iterates over possible HTML names of opt-in form fields to save existing optins
-        for optin_type in naming[source_country]['optins']:
-            for optin_name in naming[source_country]['optins'][optin_type]:
+        for optin_type in naming['optins']:
+            for optin_name in naming['optins'][optin_type]:
                 optin_search = re.compile(rf'name="{optin_name}"', re.UNICODE)
                 if optin_search.findall(form):
                     optins[f'{optin_type}'] = f'{optin_name}'
@@ -392,9 +393,9 @@ def create_form():
 
         # Creates dict of {(optin_type, optin_path): 'in_form_optin_name'}
         form_optins = {}
-        for optin in naming[source_country]['optins']:
+        for optin in naming['optins']:
             for name in optins.values():
-                if name in naming[source_country]['optins'][optin]:
+                if name in naming['optins'][optin]:
                     form_optins[optin] = name
 
         if len(form_optins) != len(optins):
@@ -438,7 +439,7 @@ def create_form():
             required = ''
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? {YES_NO}:', end=' ')
+                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? {Fore.WHITE}({YES}/{NO}):', end=' ')
                 required = input(' ')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)

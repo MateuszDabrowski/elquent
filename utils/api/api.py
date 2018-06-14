@@ -39,9 +39,8 @@ init(autoreset=True)
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
-YES_NO = f'{Fore.WHITE}({Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}\
-          /{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL})'
-
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 '''
 =================================================================================
@@ -197,7 +196,7 @@ def get_asset_id(asset):
             choice = ''
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
-                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? {YES_NO}:', end=' ')
+                    f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? {Fore.WHITE}({YES}/{NO}):', end=' ')
                 choice = input(' ')
             if choice.lower() == 'y':
                 return asset_id
@@ -250,7 +249,7 @@ def eloqua_asset_html_name(name):
     local_name = name.split('_')[-2]  # Gets local name from asset name
     for part in local_name.split('-'):
         # Skip if part belongs to PSP
-        if part.startswith(tuple(naming[source_country]['psp'])):
+        if part.startswith(tuple(naming['psp'])):
             continue
         # Skip if part is a date
         elif date_element.search(part):
@@ -276,7 +275,7 @@ def eloqua_asset_name():
         elif name_check[0][:2] != 'WK':
             print(
                 f'{ERROR}"{name_check[0]}" is not existing country code')
-        elif name_check[1] not in naming[source_country]['segment']:
+        elif name_check[1] not in naming['segment']:
             print(
                 f'{ERROR}"{name_check[1]}" is not existing segment name')
         elif name_check[2] not in naming['campaign']:
@@ -350,6 +349,7 @@ def get_eloqua_auth(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
+        naming = naming[source_country]
 
     def get_eloqua_root():
         '''
@@ -680,14 +680,14 @@ def eloqua_create_landingpage(name, code):
 
     # Chosses correct folder ID for upload
     segment = name.split('_')[1]
-    folder_id = naming[source_country]['id']['landingpage'].get(segment)
+    folder_id = naming['id']['landingpage'].get(segment)
 
     # Creates correct html_name
     html_name = eloqua_asset_html_name(name)
 
     # Gets id and url of microsite
-    microsite_id = naming[source_country]['id']['microsite'][0]
-    microsite_link = naming[source_country]['id']['microsite'][1]
+    microsite_id = naming['id']['microsite'][0]
+    microsite_link = naming['id']['microsite'][1]
 
     while True:
         # Creating a post call to Eloqua API
@@ -910,12 +910,12 @@ def eloqua_fill_mail_params(name):
         '''
         try:
             check_name = '_'.join(name[-2:])
-            gatherer[0].append(naming[source_country]
+            gatherer[0].append(naming
                                ['mail']['by_name'][check_name][gatherer[1]])
             return True
         except KeyError:
             try:
-                gatherer[0].append(naming[source_country]
+                gatherer[0].append(naming
                                    ['mail']['by_type'][(name[-3])][gatherer[1]])
                 return True
             except KeyError:
@@ -973,8 +973,8 @@ def eloqua_fill_mail_params(name):
     data = {}
     data['name'] = name
     data['description'] = 'ELQuent API Upload'
-    data['bounceBackEmail'] = naming[source_country]['mail']['bounceback']
-    data['replyToName'] = naming[source_country]['mail']['reply_name']
+    data['bounceBackEmail'] = naming['mail']['bounceback']
+    data['replyToName'] = naming['mail']['reply_name']
     data['isTracked'] = 'true'
 
     # Builds gatherers for data various sources
@@ -1081,7 +1081,7 @@ def eloqua_fill_mail_params(name):
     # Fill sender/reply e-mail address based on user choice
     if not data.get('senderEmail', False):
         if not sender_mail:
-            sender_mail = naming[source_country]['mail']['senders']
+            sender_mail = naming['mail']['senders']
         print(f'\n{Fore.GREEN}Choose sender and reply e-mail address:')
         for i, sender in enumerate(sender_mail):
             print(
@@ -1120,7 +1120,7 @@ def eloqua_fill_mail_params(name):
     # If there is no chosen e-mail group
     if not data.get('emailGroupId', False):
         print(f'\n{Fore.GREEN}Choose e-mail group:')
-        for group in naming[source_country]['mail']['by_group'].items():
+        for group in naming['mail']['by_group'].items():
             print(
                 f'{Fore.WHITE}[{Fore.YELLOW}{group[0]}{Fore.WHITE}]\t» {group[1]["group_name"]}')
         print(
@@ -1134,7 +1134,7 @@ def eloqua_fill_mail_params(name):
                     f'\n{WARNING}Remember to fill e-mail group in Eloqua')
                 break
             try:
-                naming[source_country]['mail']['by_group'][choice]['group_name']
+                naming['mail']['by_group'][choice]['group_name']
             except KeyError:
                 print(f'{ERROR}Entered value does not belong to any e-mail group!')
             else:
@@ -1146,7 +1146,7 @@ def eloqua_fill_mail_params(name):
         group_id = data.get('emailGroupId', False)
         if group_id:
             try:
-                data['emailFooterId'] = naming[source_country]['mail']['by_group'][group_id]['emailFooterId']
+                data['emailFooterId'] = naming['mail']['by_group'][group_id]['emailFooterId']
             except KeyError:
                 print(
                     f'\n{WARNING}Remember to pick e-mail footer in Eloqua')
@@ -1343,7 +1343,7 @@ def eloqua_post_image(image):
             image_id, asset_type='Image', depth='complete')
 
         # Gets and swaps folder_id to correct one for ELQuent image uploads
-        folder_id = naming[source_country]['id']['image']
+        folder_id = naming['id']['image']
         image_data['folderId'] = folder_id
 
         # Updates image folder_id
@@ -1385,7 +1385,7 @@ def upload_contacts(contacts, list_type, choice=''):
 
     # Creates global shared_list information from json
     global shared_list
-    shared_list = naming[source_country]['id']['sharedlist'][list_type]
+    shared_list = naming['id']['sharedlist'][list_type]
 
     # Uploads database to eloqua shared list
     eloqua_create_sharedlist(contacts, choice)

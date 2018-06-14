@@ -40,6 +40,7 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
+        naming = naming[source_country]
 
 
 '''
@@ -99,7 +100,7 @@ def campaign_name_getter():
             print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
         elif campaign_name[0][:2] != 'WK':
             print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
-        elif campaign_name[1] not in naming[source_country]['segment']:
+        elif campaign_name[1] not in naming['segment']:
             print(f'{ERROR}"{campaign_name[1]}" is not existing segment name')
         elif campaign_name[2] not in naming['campaign']:
             print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
@@ -140,7 +141,7 @@ def asset_name_getter():
     '''
     # Gets information about converter that is used in campaign
     print(f'\n{Fore.GREEN}After filling the form user receives:')
-    converter_values = list(naming[source_country]['converter'].keys())
+    converter_values = list(naming['converter'].keys())
     for i, converter in enumerate(converter_values[2:]):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
@@ -182,8 +183,8 @@ def product_name_getter(campaign_name=''):
     '''
     # Gets product name either from campaign name or user
     local_name = campaign_name[3].split('-')
-    if local_name[0] in naming[source_country]['product']:
-        product_name = naming[source_country]['product'][local_name[0]]
+    if local_name[0] in naming['product']:
+        product_name = naming['product'][local_name[0]]
     else:
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}]',
