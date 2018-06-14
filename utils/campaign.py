@@ -29,6 +29,15 @@ init(autoreset=True)
 # Globals
 naming = None
 source_country = None
+campaign_name = None
+converter_choice = None
+product_name = None
+header_text = None
+regex_asset_name = None
+regex_asset_url = None
+regex_product_name = None
+regex_header_text = None
+regex_gtm = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -44,7 +53,6 @@ def country_naming_setter(country):
     source_country = country
 
     # Prepares globals for imported modules
-    mail.country_naming_setter(source_country)
     page.country_naming_setter(source_country)
     helper.country_naming_setter(source_country)
 
@@ -126,59 +134,36 @@ def file(file_path, name='LP'):
 
 '''
 =================================================================================
-                                WHOLE CAMPAIGN FLOW
+                    CAMPAING GENERATION HELPER FUNCTIONS
 =================================================================================
 '''
 
 
-def content_campaign(country):
+def campaign_compile_regex():
     '''
-    Main flow for content campaign
-    Creates filled up campaign in Eloqua along with assets
-    Saves multiple html codes as backup to outcome folder
+    Creates global regex compiles for campaign flows
     '''
-
-    # Create global source_country and load json file with naming convention
-    country_naming_setter(country)
-
-    # Checks if there are required source files for the source source_country
-    if not os.path.exists(file('validation-element')):
-        print(
-            f'\t{ERROR}No template found for WK{source_country}.\n{Fore.WHITE}[Enter] to continue.', end='')
-        input(' ')
-        return False
-
-    '''
-    =================================================== Gather necessary informations
-    '''
-
-    campaign_name = helper.campaign_name_getter()
-    lead_or_contact_form = helper.campaign_type_getter()
-    converter_choice, asset_type, asset_name = helper.asset_name_getter()
-    asset_url = helper.asset_link_getter()
-    product_name = helper.product_name_getter(campaign_name)
-    header_text = helper.header_text_getter()
-
-    '''
-    =================================================== Compile regexes
-    '''
-
+    global regex_asset_name
+    global regex_asset_url
+    global regex_product_name
+    global regex_header_text
+    global regex_gtm
     regex_asset_name = re.compile(r'ASSET_NAME', re.UNICODE)
     regex_asset_url = re.compile(r'ASSET_URL', re.UNICODE)
     regex_product_name = re.compile(r'PRODUCT_NAME', re.UNICODE)
     regex_header_text = re.compile(r'OPTIONAL_TEXT', re.UNICODE)
     regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
 
-    # List of created Landing Pages and E-mails:
-    lp_list = []
-    eml_list = []
+    return
 
+
+def campaign_main_page():
     '''
-    =================================================== Builds main page
+    Returns main LP ID and main Form ID
     '''
 
     print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}CODE REQUIRED{Fore.WHITE}] Form on main Landing Page', end='')
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}REQUIRED{Fore.WHITE}] Form for main LP', end='')
     file_name = (('_').join(campaign_name[1:4]) + '_LP')
     with open(file('two-column-lp'), 'r', encoding='utf-8') as f:
         code = f.read()
@@ -193,23 +178,67 @@ def content_campaign(country):
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
+
     # Saves to Outcomes file
     print(
         f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
         f.write(code)
+
     # Saves to Eloqua
     main_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
-    # Saves to list of created LPs
-    lp_list.append([f'WK{source_country}_{file_name}', code])
 
     # Gets main form id for future campaign canvas API calls
     form_id_regex = re.compile(r'id="form(\d+?)"', re.UNICODE)
-    form_id = form_id_regex.findall(form)[0]
+    main_form_id = form_id_regex.findall(form)[0]
 
+    return (main_lp_id, main_form_id)
+
+
+def campaign_ty_page(lead_or_contact_form):
     '''
-    =================================================== Builds TY-LP
+    Builds one or two thank you pages after filling main form
     '''
+
+    def create_ty_page(lp_type=''):
+        '''
+        Modifies code of selected type of thank you page
+        '''
+
+        if lp_type == 'lead':
+            file_name = (('_').join(campaign_name[1:4]) + '_lead-TY-LP')
+            with open(file('conversion-lead'), 'r', encoding='utf-8') as f:
+                conversion_script = f.read()
+        if lp_type == 'contact':
+            file_name = (('_').join(campaign_name[1:4]) + '_contact-TY-LP')
+            with open(file('conversion-contact'), 'r', encoding='utf-8') as f:
+                conversion_script = f.read()
+
+        # Modify TY LP code
+        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
+        ty_lp = regex_conversion_script.sub(conversion_script, code)
+        ty_lp = regex_gtm.sub(f'WK{source_country}_{file_name}', ty_lp)
+        for i in range(len(naming[source_country]['converter']['Placeholders'])):
+            placeholder = naming[source_country]['converter']['Placeholders'][i]
+            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+            converter_value = naming[source_country]['converter'][converter_choice][i]
+            lead_ty_lp = regex_converter.sub(rf'{converter_value}', ty_lp)
+
+        # Adds information about presentation for lead TY Page
+        if lp_type == 'lead':
+            lead_ty_lp = lead_ty_lp.replace(
+                '<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
+
+        # Saves to Outcomes file
+        print(
+            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
+        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+            f.write(ty_lp)
+
+        # Saves to Eloqua
+        api.eloqua_create_landingpage(file_name, ty_lp)
+
+        return
 
     # Gets and prepares general TY LP structure
     with open(file('ty-lp'), 'r', encoding='utf-8') as f:
@@ -217,56 +246,56 @@ def content_campaign(country):
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
 
-    # Lead submission TY LP
     if lead_or_contact_form == 0 or lead_or_contact_form == 1:
-        file_name = (('_').join(campaign_name[1:4]) + '_lead-TY-LP')
-        with open(file('conversion-lead'), 'r', encoding='utf-8') as f:
-            conversion_script = f.read()
-        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
-        lead_ty_lp = regex_conversion_script.sub(conversion_script, code)
-        lead_ty_lp = regex_gtm.sub(
-            f'WK{source_country}_{file_name}', lead_ty_lp)
-        for i in range(len(naming[source_country]['converter']['Placeholders'])):
-            placeholder = naming[source_country]['converter']['Placeholders'][i]
-            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming[source_country]['converter'][converter_choice][i]
-            lead_ty_lp = regex_converter.sub(rf'{converter_value}', lead_ty_lp)
-        lead_ty_lp = lead_ty_lp\
-            .replace('<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
-        # Saves to Outcomes file
-        print(
-            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
-        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-            f.write(lead_ty_lp)
-        # Saves to Eloqua
-        api.eloqua_create_landingpage(file_name, lead_ty_lp)
-        # Saves to list of created LPs
-        lp_list.append([f'WK{source_country}_{file_name}', lead_ty_lp])
-
-    # Not lead submission TY LP
+        create_ty_page(lp_type='lead')
     if lead_or_contact_form == 0 or lead_or_contact_form == 2:
-        file_name = (('_').join(campaign_name[1:4]) + '_contact-TY-LP')
-        with open(file('conversion-contact'), 'r', encoding='utf-8') as f:
-            conversion_script = f.read()
-        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
-        contact_ty_lp = regex_conversion_script.sub(conversion_script, code)
-        contact_ty_lp = regex_gtm.sub(
-            f'WK{source_country}_{file_name}', contact_ty_lp)
-        for i in range(len(naming[source_country]['converter']['Placeholders'])):
-            placeholder = naming[source_country]['converter']['Placeholders'][i]
-            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming[source_country]['converter'][converter_choice][i]
-            contact_ty_lp = regex_converter.sub(
-                rf'{converter_value}', contact_ty_lp)
-        # Saves to Outcomes file
-        print(
-            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
-        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-            f.write(contact_ty_lp)
-        # Saves to Eloqua
-        api.eloqua_create_landingpage(file_name, contact_ty_lp)
-        # Saves to list of created LPs
-        lp_list.append([f'WK{source_country}_{file_name}', contact_ty_lp])
+        create_ty_page(lp_type='contact')
+
+    return
+
+
+'''
+=================================================================================
+                                ASSET CAMPAIGN FLOW
+=================================================================================
+'''
+
+
+def content_campaign(country):
+    '''
+    Main flow for content campaign
+    Creates filled up campaign in Eloqua along with assets
+    Saves multiple html codes as backup to outcome folder
+    '''
+
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+
+    # Compile necessary regex definitions
+    campaign_compile_regex()
+
+    '''
+    =================================================== Gather necessary informations
+    '''
+    global campaign_name
+    global converter_choice
+    global product_name
+    global header_text
+    campaign_name = helper.campaign_name_getter()
+    lead_or_contact_form = helper.campaign_type_getter()
+    converter_choice, asset_type, asset_name = helper.asset_name_getter()
+    asset_url = helper.asset_link_getter()
+    product_name = helper.product_name_getter(campaign_name)
+    header_text = helper.header_text_getter()
+
+    '''
+    =================================================== Builds campaign assets
+    '''
+    # Create main page with selected form
+    main_lp_id, main_form_id = campaign_main_page()
+
+    # Create one or two thank you pages depending on previous user input
+    campaign_ty_page(lead_or_contact_form)
 
     '''
     =================================================== Build BlindForm
@@ -325,8 +354,6 @@ def content_campaign(country):
         f.write(code)
     # Saves to Eloqua
     api.eloqua_create_landingpage(file_name, code)
-    # Saves to list of created LPs
-    lp_list.append([f'WK{source_country}_{file_name}', code])
 
     '''
     =================================================== Builds Confirmation E-mail
@@ -353,8 +380,6 @@ def content_campaign(country):
     # Saves to Eloqua
     api.eloqua_create_email(
         f'WK{source_country}_{file_name}', confirmation_code)
-    # Saves to list of created EMLs
-    eml_list.append([f'WK{source_country}_{file_name}', confirmation_code])
 
     '''
     =================================================== Builds Confirmation Reminder E-mail
@@ -369,8 +394,6 @@ def content_campaign(country):
     # Saves to Eloqua
     confirmation_reminder_eml_id = api.eloqua_create_email(
         f'WK{source_country}_{file_name}', confirmation_code)
-    # Saves to list of created EMLs
-    eml_list.append([f'WK{source_country}_{file_name}', confirmation_code])
 
     '''
     =================================================== Builds Confirmation-TY-LP
@@ -394,9 +417,6 @@ def content_campaign(country):
         f.write(code)
     # Saves to Eloqua
     confirmation_ty_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
-
-    # Saves to list of created LPs
-    lp_list.append([f'WK{source_country}_{file_name}', code])
 
     '''
     =================================================== Builds Asset E-mail
@@ -422,8 +442,6 @@ def content_campaign(country):
     # Saves to Eloqua
     asset_email_id = api.eloqua_create_email(
         f'WK{source_country}_{file_name}', asset_code)
-    # Saves to list of created EMLs
-    eml_list.append([f'WK{source_country}_{file_name}', asset_code])
 
     '''
     =================================================== Update BlindForm
@@ -482,7 +500,7 @@ def content_campaign(country):
             .replace('ASSET_TYPE', asset_type)\
             .replace('ASSET_EMAIL', asset_email_id)\
             .replace('CONFIRMATION_EMAIL', confirmation_reminder_eml_id)\
-            .replace('FORM_ID', form_id)\
+            .replace('FORM_ID', main_form_id)\
             .replace('LP_ID', main_lp_id)
         # Change back to json for API call
         campaign_json = json.loads(campaign_string)
