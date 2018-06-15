@@ -294,3 +294,5 @@ def link_module(country):
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
             choice = ''
+
+    return

@@ -61,7 +61,6 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
-        naming = naming[source_country]
 
 
 '''
@@ -175,10 +174,10 @@ def campaign_main_page():
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
-    for i in range(len(naming['converter']['Placeholders'])):
-        placeholder = naming['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
 
     # Saves to Outcomes file
@@ -218,16 +217,16 @@ def campaign_ty_page(lead_or_contact_form):
         regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
         ty_lp = regex_conversion_script.sub(conversion_script, code)
         ty_lp = regex_gtm.sub(f'WK{source_country}_{file_name}', ty_lp)
-        for i in range(len(naming['converter']['Placeholders'])):
-            placeholder = naming['converter']['Placeholders'][i]
+        for i in range(len(naming[source_country]['converter']['Placeholders'])):
+            placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming['converter'][converter_choice][i]
+            converter_value = naming[source_country]['converter'][converter_choice][i]
             lead_ty_lp = regex_converter.sub(rf'{converter_value}', ty_lp)
 
         # Adds information about presentation for lead TY Page
         if lp_type == 'lead':
             lead_ty_lp = lead_ty_lp.replace(
-                '<!-- PRESENTATION -->', naming['converter']['Presentation'])
+                '<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
 
         # Saves to Outcomes file
         print(
@@ -259,7 +258,7 @@ def campaign_create_blindform():
     Creates blindform in Eloqua
     Returns code, id, html name and json file of that blindform
     '''
-    blindform_folder_id = naming['id']['form'].get(
+    blindform_folder_id = naming[source_country]['id']['form'].get(
         campaign_name[1])
 
     blindform_name = (('_').join(
@@ -300,10 +299,10 @@ def campaign_confirmation_page(blindform_html):
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
-    for i in range(len(naming['converter']['Placeholders'])):
-        placeholder = naming['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
 
     # Saves to Outcomes file
@@ -330,10 +329,10 @@ def campaign_confirmation_mail(blindform_html_name, asset_name):
     confirmation_code = regex_asset_name.sub(asset_name, confirmation_code)
     confirmation_code = regex_blindform_html_name.sub(
         blindform_html_name, confirmation_code)
-    for i in range(len(naming['converter']['Placeholders'])):
-        placeholder = naming['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         confirmation_code = regex_converter.sub(
             rf'{converter_value}', confirmation_code)
 
@@ -365,10 +364,10 @@ def confirmation_ty_page():
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
-    for i in range(len(naming['converter']['Placeholders'])):
-        placeholder = naming['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         code = regex_converter.sub(rf'{converter_value}', code)
     # Saves to Outcomes file
     print(
@@ -392,10 +391,10 @@ def campaign_asset_mail(asset_name, asset_url):
     asset_code = regex_product_name.sub(product_name, asset_code)
     asset_code = regex_asset_name.sub(asset_name, asset_code)
     asset_code = regex_asset_url.sub(asset_url, asset_code)
-    for i in range(len(naming['converter']['Placeholders'])):
-        placeholder = naming['converter']['Placeholders'][i]
+    for i in range(len(naming[source_country]['converter']['Placeholders'])):
+        placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming['converter'][converter_choice][i]
+        converter_value = naming[source_country]['converter'][converter_choice][i]
         asset_code = regex_converter.sub(rf'{converter_value}', asset_code)
 
     # Saves to Outcomes file
@@ -450,31 +449,59 @@ def campaign_update_blindform(blindform_html, blindform_id, blindform_json, asse
 
 '''
 =================================================================================
+                                SIMPLE CAMPAIGN FLOW
+=================================================================================
+'''
+
+
+def simple_campaign():
+    '''
+    Main flow for simple campaign (mail + reminder)
+    Creates filled up campaign in Eloqua along with assets from package
+    Saves html and mjml codes of e-mail as backup to outcome folder
+    '''
+    # Creates first mail from package
+    mail_html = mail.mail_constructor(source_country, campaign=True)
+
+    # Changes pre-header for reminder-EML
+    regex_mail_preheader = re.compile(
+        r'<!--pre-start.*?pre-end-->', re.UNICODE)
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
+          f'{Fore.YELLOW}pre-header{Fore.WHITE} text for reminder e-mail and click [Enter]')
+    reminder_preheader = input(' ')
+    reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
+    reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
+
+    # Create e-mail
+    mail_name = (('_').join(campaign_name[1:4]) + '_EML')
+    mail_id = api.eloqua_create_email(mail_name, mail_html)
+
+    # Create e-mail reminder
+    reminder_name = (('_').join(campaign_name[1:4]) + '_reminder-EML')
+    reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
+
+    # TODO Campaign creation
+
+    return
+
+
+'''
+=================================================================================
                                 ASSET CAMPAIGN FLOW
 =================================================================================
 '''
 
 
-def content_campaign(country):
+def content_campaign():
     '''
     Main flow for content campaign
     Creates filled up campaign in Eloqua along with assets
     Saves multiple html codes as backup to outcome folder
     '''
-    # Create global source_country and load json file with naming convention
-    country_naming_setter(country)
 
-    # Compile necessary regex definitions
-    campaign_compile_regex()
-
-    '''
-    =================================================== Gather necessary informations
-    '''
-    global campaign_name
     global converter_choice
     global product_name
     global header_text
-    campaign_name = helper.campaign_name_getter()
     lead_or_contact_form = helper.campaign_type_getter()
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
     asset_url = helper.asset_link_getter()
@@ -521,12 +548,12 @@ def content_campaign(country):
     '''
 
     # Chosses correct folder ID for campaign
-    folder_id = naming['id']['campaign'].get(campaign_name[1])
+    folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
 
     # Gets campaign code out of the campaign name
     campaign_code = []
     for part in campaign_name[3].split('-'):
-        if part.startswith(tuple(naming['psp'])):
+        if part.startswith(tuple(naming[source_country]['psp'])):
             campaign_code.append(part)
     campaign_code = '-'.join(campaign_code)
 
@@ -557,19 +584,23 @@ def content_campaign(country):
     =================================================== Finished :)
     '''
 
-    print(
-        f'\n{SUCCESS}Campaign prepared!',
-        f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    print(f'\n{SUCCESS}Campaign prepared!',
+          f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
     return
 
 
-def simple_campaign(country):
+'''
+=================================================================================
+                                Link module menu
+=================================================================================
+'''
+
+
+def campaign_module(country):
     '''
-    Main flow for simple campaign (mail + reminder)
-    Creates filled up campaign in Eloqua along with assets from package
-    Saves html and mjml codes of e-mails as backup to outcome folder
+    Lets user choose which link module utility he wants to use
     '''
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
@@ -577,10 +608,30 @@ def simple_campaign(country):
     # Compile necessary regex definitions
     campaign_compile_regex()
 
-    '''
-    =================================================== Gather necessary informations
-    '''
+    # Gets campaign name
     global campaign_name
     campaign_name = helper.campaign_name_getter()
 
-    # TODO
+    # Campaign type chooser
+    print(
+        f'\n{Fore.GREEN}ELQuent.campaign Utilites:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Campaign with just e-mail and reminder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Content{Fore.WHITE}] Campaign with e-book/webinar/code/etc'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+    )
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            simple_campaign()
+            break
+        elif choice == '2':
+            content_campaign()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
+
+    return

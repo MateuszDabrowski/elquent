@@ -93,6 +93,7 @@ def file(file_path, file_name='', folder_name=''):
 def output_method(html_code='', mjml_code=''):
     '''
     Allows user choose how the program should output the results
+    Returns email_id if creation/update in Eloqua was selected
     '''
     print(
         f'\n{Fore.GREEN}New code should be:',
@@ -111,6 +112,7 @@ def output_method(html_code='', mjml_code=''):
         f'{Fore.WHITE}[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
         f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t»',
         f'{Fore.WHITE}[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
+    email_id = ''
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
@@ -141,6 +143,8 @@ def output_method(html_code='', mjml_code=''):
         else:
             print(f'{ERROR}Entered value does not belong to any utility!')
             choice = ''
+
+        return
 
 
 '''
@@ -174,7 +178,7 @@ def package_chooser():
               f'\n{Fore.WHITE}    Files: [{Fore.YELLOW}MJML: {len(mjml)}{Fore.WHITE}]',
               f'{Fore.WHITE}[{Fore.YELLOW}HTML: {len(html)}{Fore.WHITE}]',
               f'{Fore.WHITE}[{Fore.YELLOW}IMG: {len(img)}{Fore.WHITE}]')
-    print(f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}] {Fore.WHITE}Quit')
+    print(f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}] Quit to main menu')
     print(f'{Fore.YELLOW}Enter number associated with chosen package:', end='')
     choice = input(' ')
 
@@ -185,8 +189,7 @@ def package_chooser():
                 f'{Fore.YELLOW}Enter number associated with chosen package:', end='')
             choice = input(' ')
         if choice.lower() == 'q':
-            print(f'\n{Fore.GREEN}Ahoj!')
-            raise SystemExit
+            return False, False, False, False
         try:
             choice = int(choice)
         except (TypeError, ValueError):
@@ -215,7 +218,7 @@ def package_chooser():
 '''
 
 
-def mail_constructor(country):
+def mail_constructor(country, campaign=False):
     '''
     Builds .mjml and .html files with eloqua-linked images, correct tracking scripts and pre-header
     Returns html code
@@ -235,6 +238,8 @@ def mail_constructor(country):
     while True:
         # Gets name and files but image_files with index 3
         folder_name, html_files, mjml_files, image_files = package_chooser()
+        if not folder_name:
+            return False
         if not html_files and not mjml_files:
             print(
                 f'{ERROR}Chosen package got neither HTML nor MJML file!')
@@ -275,8 +280,7 @@ def mail_constructor(country):
         print(f'\n{Fore.YELLOW}» {Fore.WHITE}Adding {image_name} to', end='')
         image = {'file': open(file('package_file',
                                    file_name=image_name,
-                                   folder_name=folder_name), 'rb')
-                 }
+                                   folder_name=folder_name), 'rb')}
         image_link = api.eloqua_post_image(image)
 
         if html_files:
@@ -353,6 +357,7 @@ def mail_constructor(country):
             f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
             f'{Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
         preheader = input(' ')
+        preheader = '<!--pre-start-->' + preheader + '<!--pre-end-->'
 
         if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
             html = html.replace('Pre-header', preheader)
@@ -374,7 +379,23 @@ def mail_constructor(country):
 
     print(f'\n{SUCCESS}Code saved to Outcomes folder')
 
+    if campaign:
+        return html
+
     output_method(html, mjml)
+
+    # Asks user about reminder e-mail creation
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create reminder Email? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        regex_mail_preheader = re.compile(
+            r'<!--pre-start.*?pre-end-->', re.UNICODE)
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
+              f'{Fore.YELLOW}pre-header{Fore.WHITE} text for reminder e-mail and click [Enter]')
+        reminder_preheader = input(' ')
+        reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
+        reminder_html = regex_mail_preheader.sub(reminder_preheader, html)
+        output_method(reminder_html)
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? {Fore.WHITE}({YES}/{NO}):', end=' ')

@@ -48,7 +48,6 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
-        naming = naming[source_country]
 
 
 '''
@@ -241,12 +240,12 @@ def contact_list(country):
 
     # Asks if user want to upload contacts to Eloqua
     name = ''
-    if naming['api']['bulk'] == 'enabled':
+    if naming[source_country]['api']['bulk'] == 'enabled':
         swapping = ''
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}] ?',
-                f'Do you want to upload that list to Eloqua {Fore.WHITE}({YES}/{NO}):', end=' ')
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}]',
+                f'{Fore.YELLOW}Do you want to upload that list to Eloqua {Fore.WHITE}({YES}/{NO}):', end=' ')
             swapping = input(' ')
         if swapping.lower() == 'y':
             name = upload_to_eloqua(contacts)

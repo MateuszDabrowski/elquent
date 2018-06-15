@@ -31,7 +31,7 @@ Can help with implementation_
 
 _ToDo:_
 
-- [ ] _Automated creation of reminder version of e-mail with title/preheader/asset name difference_
+- [ ] _Ability to insert subject during e-mail creation_
 
 ---
 
@@ -154,4 +154,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.1_]
+[_Version: 1.7.2_]

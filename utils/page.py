@@ -47,7 +47,6 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
-        naming = naming[source_country]
 
 
 '''
@@ -372,8 +371,8 @@ def create_form():
         '''
         optins = {}
         # Iterates over possible HTML names of opt-in form fields to save existing optins
-        for optin_type in naming['optins']:
-            for optin_name in naming['optins'][optin_type]:
+        for optin_type in naming[source_country]['optins']:
+            for optin_name in naming[source_country]['optins'][optin_type]:
                 optin_search = re.compile(rf'name="{optin_name}"', re.UNICODE)
                 if optin_search.findall(form):
                     optins[f'{optin_type}'] = f'{optin_name}'
@@ -393,9 +392,9 @@ def create_form():
 
         # Creates dict of {(optin_type, optin_path): 'in_form_optin_name'}
         form_optins = {}
-        for optin in naming['optins']:
+        for optin in naming[source_country]['optins']:
             for name in optins.values():
-                if name in naming['optins'][optin]:
+                if name in naming[source_country]['optins'][optin]:
                     form_optins[optin] = name
 
         if len(form_optins) != len(optins):

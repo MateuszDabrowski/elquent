@@ -16,6 +16,7 @@ import os
 import re
 import sys
 import json
+import shutil
 import pickle
 import requests
 from colorama import Fore, init
@@ -160,6 +161,8 @@ def clean_outcomes():
         file_path = os.path.join(file('outcomes'), files)
         if os.path.isfile(file_path):
             os.unlink(file_path)
+        else:
+            shutil.rmtree(file_path, ignore_errors=False, onerror=None)
     print(f'\n{Fore.GREEN}» Outcomes folder cleaned.')
 
     return
@@ -173,6 +176,8 @@ def clean_incomes():
         file_path = os.path.join(file('incomes'), files)
         if os.path.isfile(file_path):
             os.unlink(file_path)
+        else:
+            shutil.rmtree(file_path, ignore_errors=False, onerror=None)
     print(f'\n{Fore.GREEN}» Incomes folder cleaned.')
 
     return
@@ -227,15 +232,15 @@ def menu(choice=''):
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
     utils = {
-        'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Cleans files in Income/Outcome folders'),
-        'change_links': (link.link_module, f'Link{Fore.WHITE}] Changes utm_track and elqTrack codes in e-mail links'),
+        'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Clean files in Income/Outcome folders'),
+        'change_links': (link.link_module, f'Link{Fore.WHITE}] Change utm_track and elqTrack codes in e-mail links'),
         'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
-        'campaign_gen': (campaign.content_campaign, f'Campaign{Fore.WHITE}] Prepares Eloqua Campaign assets'),
+        'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
-        'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Exports and saves hard bounceback data'),
-        'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Helper for GDPR Email Group Program')
+        'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Export and save hard bounceback data'),
+        'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
     }
 
     # Access to all utils for admin
@@ -319,7 +324,7 @@ elif sys.argv[1] == 'mail':
 elif sys.argv[1] == 'page':
     page.page_gen(SOURCE_COUNTRY)
 elif sys.argv[1] == 'campaign':
-    campaign.campaign_gen(SOURCE_COUNTRY)
+    campaign.campaign_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
     webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':

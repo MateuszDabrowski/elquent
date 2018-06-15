@@ -48,7 +48,6 @@ def country_naming_setter(country):
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
         naming = json.load(f)
-        naming = naming[source_country]
 
 
 '''
@@ -155,7 +154,7 @@ def click_export_rooms(export_time_range):
 
 # <Company specific code> =========================================================================
     # Filter out internal webinars from export
-    internal_webinars = naming['webinar']['filters']
+    internal_webinars = naming[source_country]['webinar']['filters']
     for filtering in internal_webinars:
         active_rooms = [(id, name) for (id, name)
                         in active_rooms if f'{filtering}' not in name.lower()]
@@ -235,12 +234,12 @@ def click_export_registered(active_rooms):
                 room_name = room_name[:26] + '-' if len(room_name) > 26 \
                     else room_name + '-'
                 if 'Progman' in room_name:
-                    psp_name = naming['webinar']['progman_psp']
+                    psp_name = naming[source_country]['webinar']['progman_psp']
                 else:
-                    psp_name = naming['webinar']['webinar_psp']
+                    psp_name = naming[source_country]['webinar']['webinar_psp']
 
                 # Naming convention for shared list of uploaded registered users
-                shared_list_name = naming['webinar']['name'] + \
+                shared_list_name = naming[source_country]['webinar']['name'] + \
                     room_name + psp_name + '_zarejestrowani'
                 while '--' in shared_list_name:
                     shared_list_name = shared_list_name.replace('--', '-')
@@ -314,12 +313,12 @@ def click_export_attendees(click_sessions, export_time_range):
                 else room_name + '-'
             session_date = f'{session_date[8:10]}-{session_date[5:7]}-{session_date[2:4]}-'
             if 'Progman' in room_name:
-                psp_name = naming['webinar']['progman_psp']
+                psp_name = naming[source_country]['webinar']['progman_psp']
             else:
-                psp_name = naming['webinar']['webinar_psp']
+                psp_name = naming[source_country]['webinar']['webinar_psp']
 
             # Naming convention for shared list of uploaded attendees
-            shared_list_name = naming['webinar']['name'] + str(session_id) + '-' + room_name + \
+            shared_list_name = naming[source_country]['webinar']['name'] + str(session_id) + '-' + room_name + \
                 session_date + psp_name + '_uczestnicy'
             while '--' in shared_list_name:
                 shared_list_name = shared_list_name.replace('--', '-')
