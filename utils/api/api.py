@@ -1010,7 +1010,7 @@ def eloqua_fill_mail_params(name):
                 and data['emailFooterId']\
                 and data['emailHeaderId']\
                 and data['emailGroupId']:
-            print(f'\n  {SUCCESS}E-mail data ready for upload')
+            print(f'\n{Fore.WHITE}» {SUCCESS}E-mail data ready for upload')
             for value in data.items():
                 print(
                     f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
@@ -1065,7 +1065,7 @@ def eloqua_fill_mail_params(name):
                 and data['emailFooterId']\
                 and data['emailHeaderId']\
                 and data['emailGroupId']:
-            print(f'\n  {SUCCESS}E-mail data ready for upload:')
+            print(f'\n{Fore.WHITE}» {SUCCESS}E-mail data ready for upload:')
             for value in data.items():
                 print(
                     f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
@@ -1150,7 +1150,7 @@ def eloqua_fill_mail_params(name):
                 print(
                     f'\n{WARNING}Remember to pick e-mail footer in Eloqua')
 
-    print(f'\n  {SUCCESS}E-mail data ready for upload:')
+    print(f'\n{Fore.WHITE}» {SUCCESS}E-mail data ready for upload:')
     for value in data.items():
         print(
             f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
@@ -1167,6 +1167,13 @@ def eloqua_create_email(name, code):
     # Checks if there already is E-mail with that name
     eloqua_asset_exist(name, asset='Mail')
 
+    # Adds tracking to e-mail links
+    mail_hrefs = re.findall(r'href="(.*?)"', code)
+    for href in set(mail_hrefs):
+        if not href or 'googleapis' in href or 'mailto' in href or '~' in href:
+            continue
+        code = code.replace(href, href + '?elqTrack=True')
+
     # Gets required data for the API call
     data = eloqua_fill_mail_params(name)
     data['isTracked'] = 'true'
@@ -1175,10 +1182,17 @@ def eloqua_create_email(name, code):
         'html': code
     }
 
+    # Gets subject line for the e-mail
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste',
+          f'{Fore.YELLOW}e-mail subject{Fore.WHITE} and click [Enter] or [S]kip')
+    subject = input(' ')
+    if subject.lower() != 's':
+        data['subject'] = subject
+
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/email'
     response = api_request(
-        root, call='post', data=json.dumps(data))
+        root, call='post', data=json.dumps(data, ensure_ascii=False).encode('utf-8'))
     email = response.json()
 
     # Open in new tab

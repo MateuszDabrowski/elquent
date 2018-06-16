@@ -105,6 +105,7 @@ def file(file_path, name='LP'):
         'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
         'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
         'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
+        'simple-campaign': find_data_file(f'WK{source_country}_simple-campaign.json'),
         'content-campaign': find_data_file(f'WK{source_country}_content-campaign.json'),
         'asset-eml': find_data_file(f'WK{source_country}_asset-eml.txt'),
         'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
@@ -156,6 +157,36 @@ def campaign_compile_regex():
     regex_gtm = re.compile(r'<SITE_NAME>', re.UNICODE)
 
     return
+
+
+def campaign_first_mail():
+    '''
+    Creates first mail and its reminder
+    Returns eloqua id of both
+    '''
+    # Creates first mail from package
+    mail_html = mail.mail_constructor(source_country, campaign=True)
+
+    regex_mail_preheader = re.compile(
+        r'<!--pre-start.*?pre-end-->', re.UNICODE)
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
+          f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
+          f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
+    reminder_preheader = input(' ')
+    if reminder_preheader.lower() != 's':
+        reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
+        reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
+
+    # Create e-mail
+    mail_name = (('_').join(campaign_name[0:4]) + '_EML')
+    print(mail_name)
+    mail_id = api.eloqua_create_email(mail_name, mail_html)
+
+    # Create e-mail reminder
+    reminder_name = (('_').join(campaign_name[0:4]) + '_reminder-EML')
+    reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
+
+    return (mail_id, reminder_id)
 
 
 def campaign_main_page():
@@ -460,27 +491,51 @@ def simple_campaign():
     Creates filled up campaign in Eloqua along with assets from package
     Saves html and mjml codes of e-mail as backup to outcome folder
     '''
-    # Creates first mail from package
-    mail_html = mail.mail_constructor(source_country, campaign=True)
 
-    # Changes pre-header for reminder-EML
-    regex_mail_preheader = re.compile(
-        r'<!--pre-start.*?pre-end-->', re.UNICODE)
-    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
-          f'{Fore.YELLOW}pre-header{Fore.WHITE} text for reminder e-mail and click [Enter]')
-    reminder_preheader = input(' ')
-    reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
-    reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
+    # Creates main e-mail and reminder
+    mail_id, reminder_id = campaign_first_mail()
 
-    # Create e-mail
-    mail_name = (('_').join(campaign_name[1:4]) + '_EML')
-    mail_id = api.eloqua_create_email(mail_name, mail_html)
+    '''
+    =================================================== Create Campaign
+    '''
 
-    # Create e-mail reminder
-    reminder_name = (('_').join(campaign_name[1:4]) + '_reminder-EML')
-    reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
+    # Chosses correct folder ID for campaign
+    folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
 
-    # TODO Campaign creation
+    # Gets campaign code out of the campaign name
+    campaign_code = []
+    for part in campaign_name[3].split('-'):
+        if part.startswith(tuple(naming[source_country]['psp'])):
+            campaign_code.append(part)
+    campaign_code = '-'.join(campaign_code)
+
+    # Loads json data for campaign canvas creation and fills it with data
+    with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
+        campaign_json = json.load(f)
+        # Change to string for easy replacing
+        campaign_string = json.dumps(campaign_json)
+        campaign_string = campaign_string\
+            .replace('MAIL_ID', mail_id)\
+            .replace('REMINDER_ID', reminder_id)
+        # Change back to json for API call
+        campaign_json = json.loads(campaign_string)
+        campaign_json['name'] = '_'.join(campaign_name)
+        campaign_json['folderId'] = folder_id
+        campaign_json['region'] = campaign_name[0]
+        campaign_json['campaignType'] = campaign_name[2]
+        campaign_json['product'] = campaign_name[-1]
+        campaign_json['fieldValues'][0]['value'] = campaign_code
+
+    # Creates campaign with given data
+    api.eloqua_create_campaign(campaign_name, campaign_json)
+
+    '''
+    =================================================== Finished :)
+    '''
+
+    print(f'\n{SUCCESS}Campaign prepared!',
+          f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
 
     return
 
@@ -604,13 +659,10 @@ def campaign_module(country):
     '''
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
+    global campaign_name
 
     # Compile necessary regex definitions
     campaign_compile_regex()
-
-    # Gets campaign name
-    global campaign_name
-    campaign_name = helper.campaign_name_getter()
 
     # Campaign type chooser
     print(
@@ -625,9 +677,11 @@ def campaign_module(country):
         if choice.lower() == 'q':
             break
         elif choice == '1':
+            campaign_name = helper.campaign_name_getter()
             simple_campaign()
             break
         elif choice == '2':
+            campaign_name = helper.campaign_name_getter()
             content_campaign()
             break
         else:

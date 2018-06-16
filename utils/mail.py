@@ -231,7 +231,7 @@ def mail_constructor(country, campaign=False):
     print(
         f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with',
         f'{Fore.YELLOW}Images, HTML, MJML{Fore.WHITE} to Incomes folder.',
-        f'\n{Fore.YELLOW}» {Fore.WHITE}[Enter] to continue when finished.', end='')
+        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
     # Lets user choose package to construct
@@ -277,7 +277,7 @@ def mail_constructor(country, campaign=False):
 
     # Uploads each image and adds swaps relative link to url in code
     for image_name in image_files:
-        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Adding {image_name} to', end='')
+        print(f'\n   {Fore.YELLOW}› {Fore.WHITE}Adding {image_name} to', end='')
         image = {'file': open(file('package_file',
                                    file_name=image_name,
                                    folder_name=folder_name), 'rb')}
@@ -300,7 +300,7 @@ def mail_constructor(country, campaign=False):
                           end='', flush=True)
                     break
 
-    print(f'\n{SUCCESS}Images uploaded and added to e-mail')
+    print(f'\n{Fore.WHITE}» {SUCCESS}Images uploaded and added to e-mail')
 
     '''
     =================================================== Track URL
@@ -385,20 +385,24 @@ def mail_constructor(country, campaign=False):
     output_method(html, mjml)
 
     # Asks user about reminder e-mail creation
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create reminder Email? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to {Fore.YELLOW}create reminder{Fore.WHITE} Email?',
+          f'{Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         regex_mail_preheader = re.compile(
             r'<!--pre-start.*?pre-end-->', re.UNICODE)
-        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
-              f'{Fore.YELLOW}pre-header{Fore.WHITE} text for reminder e-mail and click [Enter]')
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
+              f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
+              f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
         reminder_preheader = input(' ')
-        reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
-        reminder_html = regex_mail_preheader.sub(reminder_preheader, html)
+        if reminder_preheader.lower() != 's':
+            reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
+            reminder_html = regex_mail_preheader.sub(reminder_preheader, html)
         output_method(reminder_html)
 
     # Asks user if he would like to repeat
-    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to construct another Email? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to {Fore.YELLOW}construct another Email{Fore.WHITE}?',
+          f'{Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
         print(

@@ -29,10 +29,6 @@ Can help with implementation_
 - Works with both HTML and MJML files
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 
-_ToDo:_
-
-- [ ] _Ability to insert subject during e-mail creation_
-
 ---
 
 ### [ELQuent.page](utils/page.py)
@@ -53,7 +49,7 @@ _ToDo:_
 
 ### [ELQuent.campaign](utils/campaign.py)
 
-#### Builds Eloqua Campaign
+#### Builds Eloqua Campaigns
 
 - Built-in wizard creating all Landing Pages required for campaign
 - Creates blindform for confirmation-ty-lp and automatically impelements it
@@ -61,10 +57,11 @@ _ToDo:_
 - Creates asset name with link to the chosen asset
 - Updates confirmation form with asset e-mail and asset link
 - Creates campaign canvas filled with created content
+- Simple campaign flow for mail+reminder sends
 
 _ToDo:_
 
-- [ ] _Simple campaign builder for mail + reminder sends_
+- [ ] _Randomized subject & pre-header generator for technical e-mail_
 - [ ] _Update main form with confirmation e-mail ID and thank-you-page urls_
 - [ ] _When not recognized product name, try to find best matches from a list_
 
@@ -129,6 +126,7 @@ _ToDo:_
 - Gets all necessary data to upload an e-mail
 - Uploads e-mail to json specified folder
 - Updates e-mail with new code
+- Adds Eloqua tracking to e-mail links
 - Uploads form to json specified folder
 - Updates form with html, css and processing steps
 - Gets form fields and form fills data
@@ -154,4 +152,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.2_]
+[_Version: 1.7.3_]
