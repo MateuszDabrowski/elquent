@@ -71,7 +71,8 @@ def file(file_path):
         'utils': find_data_file('utils.json'),
         'readme': find_data_file('readme.md'),
         'country': find_data_file('country.p', directory='api'),
-        'eloqua': find_data_file('eloqua.p', directory='api')
+        'eloqua': find_data_file('eloqua.p', directory='api'),
+        'naming': find_data_file('naming.json', directory='api')
     }
 
     return file_paths.get(file_path)
@@ -231,6 +232,11 @@ def menu(choice=''):
     '''
     print(f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
 
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as naming_file:
+        naming = json.load(naming_file)
+
+    # Builds matrix with available utils
     utils = {
         'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Clean files in Income/Outcome folders'),
         'change_links': (link.link_module, f'Link{Fore.WHITE}] Change utm_track and elqTrack codes in e-mail links'),
@@ -244,14 +250,17 @@ def menu(choice=''):
     }
 
     # Access to all utils for admin
-    if ELOQUA_USER == 'Mateusz.Dabrowski':
+    if ELOQUA_USER.lower() == 'mateusz.dabrowski':
         available_utils = utils
     # Gets dict of utils available for users source country
     else:
-        available_utils = {k: v for (k, v) in utils.items()
-                           if k in COUNTRY_UTILS[SOURCE_COUNTRY]}
+        utils_list = COUNTRY_UTILS[SOURCE_COUNTRY]
+        if ELOQUA_USER.lower() in naming[SOURCE_COUNTRY]['advanced_users']:
+            utils_list.extend(COUNTRY_UTILS['ADVANCED'])
+        available_utils = {k: v for (k, v) in utils.items() if k in utils_list}
     util_names = list(available_utils.keys())
 
+    # Lists utils available to chosen user
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
     for i, function in enumerate(available_utils.values()):
         print(
@@ -259,6 +268,7 @@ def menu(choice=''):
     print(
         f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
 
+    # Asks user to choose utility
     while True:
         if not choice:
             print(
