@@ -310,15 +310,14 @@ def mail_constructor(country, campaign=False):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste new',
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste',
             f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
         if utm.lower() == 's':
             break
         if utm_track.findall(utm + '"'):
             break
-        print(
-            f'{ERROR}Copied code is not correct UTM tracking script')
+        print(f'{ERROR}Copied code is not correct UTM tracking script')
 
     # Gathers all links in HTML
     links = re.compile(r'href=(".*?")', re.UNICODE)
@@ -333,19 +332,35 @@ def mail_constructor(country, campaign=False):
         if 'googleapis' in link or 'emailfield' in link:
             trackable_links.remove(link)
 
-    # Appending UTM to all trackable_links in HTML
-    if html_files and utm.lower() != 's':
+    # Appending PURL & UTM to all trackable_links in HTML
+    if html_files:
         for link in trackable_links:
-            if '?' in link:
-                html = html.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
-            else:
-                html = html.replace(link, (link[:-1] + utm + '"'))
-    if mjml_files and utm.lower() != 's':
+            if 'info.wolterskluwer' in link and link[-1] == '/':
+                html = html.replace(
+                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + '"'))
+            elif 'info.wolterskluwer' in link and link[-1] != '/':
+                html = html.replace(
+                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + '"'))
+            if utm.lower() != 's':
+                if '?' in link:
+                    html = html.replace(
+                        link, (link[:-1] + '&' + utm[1:] + '"'))
+                else:
+                    html = html.replace(link, (link[:-1] + utm + '"'))
+    if mjml_files:
         for link in trackable_links:
-            if '?' in link:
-                mjml = mjml.replace(link, (link[:-1] + '&' + utm[1:] + '"'))
-            else:
-                mjml = mjml.replace(link, (link[:-1] + utm + '"'))
+            if 'info.wolterskluwer' in link and link[-1] == '/':
+                mjml = mjml.replace(
+                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + '"'))
+            elif 'info.wolterskluwer' in link and link[-1] != '/':
+                mjml = mjml.replace(
+                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + '"'))
+            if utm.lower() != 's':
+                if '?' in link:
+                    mjml = mjml.replace(
+                        link, (link[:-1] + '&' + utm[1:] + '"'))
+                else:
+                    mjml = mjml.replace(link, (link[:-1] + utm + '"'))
 
     '''
     =================================================== Swap pre-header
@@ -398,6 +413,8 @@ def mail_constructor(country, campaign=False):
         if reminder_preheader.lower() != 's':
             reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
             reminder_html = regex_mail_preheader.sub(reminder_preheader, html)
+        else:
+            reminder_html = html
         output_method(reminder_html)
 
     # Asks user if he would like to repeat

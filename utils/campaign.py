@@ -176,6 +176,8 @@ def campaign_first_mail():
     if reminder_preheader.lower() != 's':
         reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
         reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
+    else:
+        reminder_html = html
 
     # Create e-mail
     mail_name = (('_').join(campaign_name[0:4]) + '_EML')

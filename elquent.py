@@ -143,6 +143,14 @@ def new_version():
         r'\[<em>Version: (.*?)</em>\]', re.UNICODE)
     available_version = check_available_version.findall(github.text)
 
+    current_main_version = ('').join(current_version[0].split('.')[:2])
+    available_main_version = ('').join(available_version[0].split('.')[:2])
+    if current_main_version < available_main_version:
+        print(
+            f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}Update ELQuent to newer version')
+        input('')
+        raise SystemExit
+
     # Compares versions
     return bool(current_version != available_version)
 

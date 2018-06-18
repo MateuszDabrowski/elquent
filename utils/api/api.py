@@ -1167,13 +1167,6 @@ def eloqua_create_email(name, code):
     # Checks if there already is E-mail with that name
     eloqua_asset_exist(name, asset='Mail')
 
-    # Adds tracking to e-mail links
-    mail_hrefs = re.findall(r'href="(.*?)"', code)
-    for href in set(mail_hrefs):
-        if not href or 'googleapis' in href or 'mailto' in href or '~' in href:
-            continue
-        code = code.replace(href, href + '?elqTrack=True')
-
     # Gets required data for the API call
     data = eloqua_fill_mail_params(name)
     data['isTracked'] = 'true'

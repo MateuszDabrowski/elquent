@@ -28,6 +28,7 @@ Can help with implementation_
 - Automatically uploads images and adds image links, tracking scripts and pre-header to package
 - Works with both HTML and MJML files
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
+- Uses PURL to ensure field merges on linked sites will be working
 
 ---
 
@@ -61,6 +62,7 @@ _ToDo:_
 
 _ToDo:_
 
+- [ ] _Update content campaign confirmation reminder to redirect on confirmation page_
 - [ ] _Randomized subject & pre-header generator for technical e-mail_
 - [ ] _Update main form with confirmation e-mail ID and thank-you-page urls_
 - [ ] _When not recognized product name, try to find best matches from a list_
