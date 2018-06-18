@@ -198,7 +198,7 @@ def header_text_getter():
     Returns optional text for header
     '''
     print(f'\n{Fore.WHITE}» [{Fore.YELLOW}OPTIONAL{Fore.WHITE}]',
-          'Text to be displayed on the left side of header bar:')
+          f'{Fore.WHITE}Text to be displayed on the left side of header bar:')
     header_text = input(' ')
 
     return header_text

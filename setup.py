@@ -7,7 +7,6 @@ github.com/MateuszDabrowski
 linkedin.com/in/mateusz-dabrowski-marketing/
 '''
 
-import os
 from cx_Freeze import setup, Executable
 
 buildOptions = dict(

@@ -177,7 +177,7 @@ def campaign_first_mail():
         reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
         reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
     else:
-        reminder_html = html
+        reminder_html = mail_html
 
     # Create e-mail
     mail_name = (('_').join(campaign_name[0:4]) + '_EML')
@@ -254,11 +254,11 @@ def campaign_ty_page(lead_or_contact_form):
             placeholder = naming[source_country]['converter']['Placeholders'][i]
             regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
             converter_value = naming[source_country]['converter'][converter_choice][i]
-            lead_ty_lp = regex_converter.sub(rf'{converter_value}', ty_lp)
+            ty_lp = regex_converter.sub(rf'{converter_value}', ty_lp)
 
         # Adds information about presentation for lead TY Page
         if lp_type == 'lead':
-            lead_ty_lp = lead_ty_lp.replace(
+            ty_lp = ty_lp.replace(
                 '<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
 
         # Saves to Outcomes file
@@ -345,12 +345,12 @@ def campaign_confirmation_page(blindform_html):
         f.write(code)
 
     # Saves to Eloqua
-    api.eloqua_create_landingpage(file_name, code)
+    confirmation_lp_url = api.eloqua_create_landingpage(file_name, code)[2]
 
-    return
+    return confirmation_lp_url
 
 
-def campaign_confirmation_mail(blindform_html_name, asset_name):
+def campaign_confirmation_mail(blindform_html_name, asset_name, confirmation_lp_url):
     '''
     Creates set of conifrmation mails in Eloqua
     Returns confirmation reminder email id
@@ -372,6 +372,13 @@ def campaign_confirmation_mail(blindform_html_name, asset_name):
     # Saves standard + reminder
     for mail_name in ['_confirmation-EML', '_confirmation-reminder-EML']:
         file_name = (('_').join(campaign_name[1:4]) + mail_name)
+
+        if mail_name == '_confirmation-reminder-EML':
+            links = re.findall(r'href="(.*?)"', confirmation_code)
+            for code in set(links):
+                if blindform_html_name in code:
+                    confirmation_code = confirmation_code.replace(
+                        code, confirmation_lp_url)
 
         # Saves to Outcomes file
         print(
@@ -584,11 +591,11 @@ def content_campaign():
     blindform_html, blindform_id, blindform_json, blindform_html_name = campaign_create_blindform()
 
     # Create confirmation landing page
-    campaign_confirmation_page(blindform_html)
+    confirmation_lp_url = campaign_confirmation_page(blindform_html)
 
     # Create set of confirmation mails
     confirmation_reminder_mail_id = campaign_confirmation_mail(
-        blindform_html_name, asset_name)
+        blindform_html_name, asset_name, confirmation_lp_url)
 
     # Create confirmation thank you page
     confirmation_ty_lp_id = confirmation_ty_page()

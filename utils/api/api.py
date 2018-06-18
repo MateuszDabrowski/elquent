@@ -727,7 +727,7 @@ def eloqua_create_landingpage(name, code):
 
     # Open in new tab
     lp_id = landing_page['id']
-    asset_url = naming['root'] + '#landing_paelqges&id=' + lp_id
+    asset_url = naming['root'] + '#landing_pages&id=' + lp_id
     direct_url = microsite_link + landing_page['relativePath']
     print(f'{Fore.WHITE}» {SUCCESS}Created Eloqua Landing Page ID: {lp_id}')
     webbrowser.open(asset_url, new=2, autoraise=False)
