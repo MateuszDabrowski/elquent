@@ -347,6 +347,8 @@ def mail_constructor(country, campaign=False):
                         link, (link[:-1] + '&' + utm[1:] + '"'))
                 else:
                     html = html.replace(link, (link[:-1] + utm + '"'))
+
+    # Appending PURL & UTM to all trackable_links in MJML
     if mjml_files:
         for link in trackable_links:
             if 'info.wolterskluwer' in link and link[-1] == '/':

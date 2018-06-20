@@ -147,7 +147,9 @@ def create_landing_page():
                     if is_html.findall(lp_code):
                         print(f'  {SUCCESS}Code copied from clipboard')
                         break
-                    print(f'  {ERROR}Copied code is not correct HTML')
+                    print(
+                        f'  {ERROR}Invalid HTML. Copy valid code and click [Enter]', end='')
+                    input(' ')
 
             # Modifies landing page code
             lp_code = clean_custom_css(lp_code)

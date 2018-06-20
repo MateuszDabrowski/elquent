@@ -15,7 +15,7 @@ import os
 import re
 import sys
 import json
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -43,6 +43,8 @@ regex_gtm = None
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 
 def country_naming_setter(country):
@@ -378,7 +380,7 @@ def campaign_confirmation_mail(blindform_html_name, asset_name, confirmation_lp_
             for code in set(links):
                 if blindform_html_name in code:
                     confirmation_code = confirmation_code.replace(
-                        code, confirmation_lp_url)
+                        code, confirmation_lp_url + '/<span class=eloquaemail >PURL_NAME1</span>')
 
         # Saves to Outcomes file
         print(
@@ -581,6 +583,13 @@ def content_campaign():
     '''
     =================================================== Builds campaign assets
     '''
+    # Creates main e-mail and reminder
+    mail_id, reminder_id = '', ''
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Start with e-mail package? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        mail_id, reminder_id = campaign_first_mail()
+
     # Create main page with selected form
     main_lp_id, main_form_id = campaign_main_page()
 
@@ -627,6 +636,8 @@ def content_campaign():
         # Change to string for easy replacing
         campaign_string = json.dumps(campaign_json)
         campaign_string = campaign_string\
+            .replace('FIRST_EMAIL', mail_id)\
+            .replace('REMINDER_EMAIL', reminder_id)\
             .replace('ASSET_TYPE', asset_type)\
             .replace('ASSET_EMAIL', asset_mail_id)\
             .replace('CONFIRMATION_EMAIL', confirmation_reminder_mail_id)\
