@@ -161,13 +161,20 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail():
+def campaign_first_mail(main_lp_url=''):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
     '''
     # Creates first mail from package
     mail_html = mail.mail_constructor(source_country, campaign=True)
+    if main_lp_url:
+        mail_html = mail_html.replace(
+            'http://wolterskluwer.pl', main_lp_url + '/<span class=eloquaemail >PURL_NAME1</span>')
+
+    # Create e-mail
+    mail_name = (('_').join(campaign_name[0:4]) + '_EML')
+    mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     regex_mail_preheader = re.compile(
         r'<!--pre-start.*?pre-end-->', re.UNICODE)
@@ -180,11 +187,6 @@ def campaign_first_mail():
         reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
     else:
         reminder_html = mail_html
-
-    # Create e-mail
-    mail_name = (('_').join(campaign_name[0:4]) + '_EML')
-    print(mail_name)
-    mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     # Create e-mail reminder
     reminder_name = (('_').join(campaign_name[0:4]) + '_reminder-EML')
@@ -222,13 +224,13 @@ def campaign_main_page():
         f.write(code)
 
     # Saves to Eloqua
-    main_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
+    main_lp_id, _, main_lp_url = api.eloqua_create_landingpage(file_name, code)
 
     # Gets main form id for future campaign canvas API calls
     form_id_regex = re.compile(r'id="form(\d+?)"', re.UNICODE)
     main_form_id = form_id_regex.findall(form)[0]
 
-    return (main_lp_id, main_form_id)
+    return (main_lp_id, main_lp_url, main_form_id)
 
 
 def campaign_ty_page(lead_or_contact_form):
@@ -583,15 +585,16 @@ def content_campaign():
     '''
     =================================================== Builds campaign assets
     '''
+
+    # Create main page with selected form
+    main_lp_id, main_lp_url, main_form_id = campaign_main_page()
+
     # Creates main e-mail and reminder
     mail_id, reminder_id = '', ''
     print(f'\n{Fore.YELLOW}»{Fore.WHITE} Start with e-mail package? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
-        mail_id, reminder_id = campaign_first_mail()
-
-    # Create main page with selected form
-    main_lp_id, main_form_id = campaign_main_page()
+        mail_id, reminder_id = campaign_first_mail(main_lp_url)
 
     # Create one or two thank you pages depending on previous user input
     campaign_ty_page(lead_or_contact_form)

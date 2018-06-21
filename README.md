@@ -62,7 +62,6 @@ _ToDo:_
 
 _ToDo:_
 
-- [ ] _Optional start from e-mail package for content  campaign_
 - [ ] _Randomized subject & pre-header generator for technical e-mail_
 - [ ] _Update main form with confirmation e-mail ID and thank-you-page urls_
 - [ ] _When not recognized product name, try to find best matches from a list_
@@ -154,4 +153,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.5_]
+[_Version: 1.7.6_]
