@@ -295,7 +295,11 @@ def mail_constructor(country, campaign=False):
             for relative_link in linkable_images_mjml:
                 if image_name in relative_link:
                     relative_link = (relative_link.split('/'))[-1]
-                    mjml = mjml.replace('../Gfx/' + relative_link, image_link)
+                    if '../Gfx/' in mjml:
+                        mjml = mjml.replace(
+                            '../Gfx/' + relative_link, image_link)
+                    else:
+                        mjml = mjml.replace(relative_link, image_link)
                     print(f'{Fore.GREEN} › {Fore.WHITE}MJML',
                           end='', flush=True)
                     break
@@ -329,7 +333,7 @@ def mail_constructor(country, campaign=False):
 
     # Removes untrackable links
     for link in trackable_links[:]:
-        if 'googleapis' in link or 'emailfield' in link:
+        if not link or 'googleapis' in link or 'emailfield' in link:
             trackable_links.remove(link)
 
     # Appending PURL & UTM to all trackable_links in HTML

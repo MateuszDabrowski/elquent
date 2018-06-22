@@ -108,6 +108,7 @@ def file(file_path, name='LP'):
         'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
         'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
         'simple-campaign': find_data_file(f'WK{source_country}_simple-campaign.json'),
+        'basic-campaign': find_data_file(f'WK{source_country}_basic-campaign.json'),
         'content-campaign': find_data_file(f'WK{source_country}_content-campaign.json'),
         'asset-eml': find_data_file(f'WK{source_country}_asset-eml.txt'),
         'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
@@ -161,7 +162,7 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail(main_lp_url=''):
+def campaign_first_mail(main_lp_url='', reminder=True):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
@@ -175,6 +176,9 @@ def campaign_first_mail(main_lp_url=''):
     # Create e-mail
     mail_name = (('_').join(campaign_name[0:4]) + '_EML')
     mail_id = api.eloqua_create_email(mail_name, mail_html)
+
+    if not reminder:
+        return mail_id
 
     regex_mail_preheader = re.compile(
         r'<!--pre-start.*?pre-end-->', re.UNICODE)
@@ -493,14 +497,74 @@ def campaign_update_blindform(blindform_html, blindform_id, blindform_json, asse
 
 '''
 =================================================================================
-                                SIMPLE CAMPAIGN FLOW
+                                SIMPLE EMAIL CAMPAIGN FLOW
 =================================================================================
 '''
 
 
 def simple_campaign():
     '''
-    Main flow for simple campaign (mail + reminder)
+    Main flow for simple email campaign (no canvas)
+    Creates filled up simple campaign from package
+    Saves html and mjml codes of e-mail as backup to outcome folder
+    '''
+
+    # Creates main e-mail and reminder
+    mail_id = campaign_first_mail(reminder=False)
+
+    '''
+    =================================================== Create Campaign
+    '''
+
+    # Chosses correct folder ID for campaign
+    folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
+
+    # Gets campaign code out of the campaign name
+    campaign_code = []
+    for part in campaign_name[3].split('-'):
+        if part.startswith(tuple(naming[source_country]['psp'])):
+            campaign_code.append(part)
+    campaign_code = '-'.join(campaign_code)
+
+    # Loads json data for campaign canvas creation and fills it with data
+    with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
+        campaign_json = json.load(f)
+        # Change to string for easy replacing
+        campaign_string = json.dumps(campaign_json)
+        campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+        # Change back to json for API call
+        campaign_json = json.loads(campaign_string)
+        campaign_json['name'] = '_'.join(campaign_name)
+        campaign_json['folderId'] = folder_id
+        campaign_json['region'] = campaign_name[0]
+        campaign_json['campaignType'] = campaign_name[2]
+        campaign_json['product'] = campaign_name[-1]
+        campaign_json['fieldValues'][0]['value'] = campaign_code
+
+    # Creates campaign with given data
+    api.eloqua_create_campaign(campaign_name, campaign_json)
+
+    '''
+    =================================================== Finished :)
+    '''
+
+    print(f'\n{SUCCESS}Campaign prepared!',
+          f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
+
+    return
+
+
+'''
+=================================================================================
+                                BASIC CANVAS CAMPAIGN FLOW
+=================================================================================
+'''
+
+
+def basic_campaign():
+    '''
+    Main flow for basic canvas campaign (mail + reminder)
     Creates filled up campaign in Eloqua along with assets from package
     Saves html and mjml codes of e-mail as backup to outcome folder
     '''
@@ -523,7 +587,7 @@ def simple_campaign():
     campaign_code = '-'.join(campaign_code)
 
     # Loads json data for campaign canvas creation and fills it with data
-    with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
+    with open(file('basic-campaign'), 'r', encoding='utf-8') as f:
         campaign_json = json.load(f)
         # Change to string for easy replacing
         campaign_string = json.dumps(campaign_json)
@@ -690,8 +754,9 @@ def campaign_module(country):
     # Campaign type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.campaign Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Campaign with just e-mail and reminder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Content{Fore.WHITE}] Campaign with e-book/webinar/code/etc'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Email Campagin without canvas'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic{Fore.WHITE}] Campaign canvas with just e-mail and reminder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content{Fore.WHITE}] Campaign canvas with e-book/webinar/code/etc'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -704,6 +769,10 @@ def campaign_module(country):
             simple_campaign()
             break
         elif choice == '2':
+            campaign_name = helper.campaign_name_getter()
+            basic_campaign()
+            break
+        elif choice == '3':
             campaign_name = helper.campaign_name_getter()
             content_campaign()
             break

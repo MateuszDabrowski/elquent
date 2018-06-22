@@ -58,7 +58,8 @@ _ToDo:_
 - Creates asset name with link to the chosen asset
 - Updates confirmation form with asset e-mail and asset link
 - Creates campaign canvas filled with created content
-- Simple campaign flow for mail+reminder sends
+- Basic campaign canvas flow for mail+reminder sends
+- Simple Email Campaign without canvas flow
 
 _ToDo:_
 
@@ -153,4 +154,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.6_]
+[_Version: 1.7.7_]
