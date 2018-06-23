@@ -112,14 +112,26 @@ def get_contacts():
         database = database.split('\n')
 
         # Checks sample of import to validate data
-        validate_database = ';'.join(database) + ';'
         valid_mail = re.compile(
-            r'([\w\.\-\+]+?@[\w\.\-\+]+?\.[\w\.\-\+]+?);', re.UNICODE)
+            r'([\w\.\_\-\+]+?@[\w\.\_\-\+]+?\.[\w\.\-\+]+?);', re.UNICODE)
+        validate_database = ';'.join(database) + ';'
         validated_mails = valid_mail.findall(validate_database)
 
         # Takes care of empty line at the end of input
         if database[-1] == '':
             database.pop()
+
+        # Tries to fix encoding error if there is just one invalid e-mail
+        if len(validated_mails) == len(database) - 1 and not valid_mail.findall(database[-1]):
+            invalid_mail = database.pop()
+            valid_invalid = re.split(
+                r'[^\w\.\_\+\-\@]', invalid_mail)
+            if valid_mail.findall(valid_invalid[0] + ';'):
+                database.append(valid_invalid[0])
+
+        # Revalidates database
+        validate_database = ';'.join(database) + ';'
+        validated_mails = valid_mail.findall(validate_database)
 
         # Informs user about invalid upload
         if len(database) > len(validated_mails):

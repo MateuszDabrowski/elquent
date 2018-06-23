@@ -90,10 +90,6 @@ _ToDo:_
 - Uploads contacts to Eloqua shared list via ELQuent.api module
 - Cleans data import dependency after succesful upload
 
-_ToDo:_
-
-- [ ] _Autocleaning encoding errors in last row of data after copying from tables_
-
 ---
 
 ### [ELQuent.export](utils/export.py)
@@ -154,4 +150,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.7_]
+[_Version: 1.7.8_]
