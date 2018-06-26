@@ -138,7 +138,7 @@ def get_contacts():
             print(
                 f'\n{ERROR}Out of {len(database)} records uploaded, {len(validated_mails)} are correct e-mails.',
                 f'\n  {Fore.WHITE}» Show incorrect ones? {Fore.WHITE}({YES}/{NO}):', end=' ')
-            print_diff = input(' ')
+            print_diff = input('')
             if print_diff.lower() == 'y':  # Allows user to see which particular lines are incorrect
                 diff = [mail for mail in database if mail not in validated_mails]
                 print(diff)
@@ -173,7 +173,7 @@ def upload_to_eloqua(contacts):
 
     # Gets campaign name from user
     print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or paste name for the shared list and click [Enter]')
+        f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or copypaste name for the shared list and click [Enter]')
     campaign_name = api.eloqua_asset_name()
 
     # Cleans contact list from non-email elements
@@ -258,7 +258,7 @@ def contact_list(country):
             print(
                 f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}]',
                 f'{Fore.YELLOW}Do you want to upload that list to Eloqua {Fore.WHITE}({YES}/{NO}):', end=' ')
-            swapping = input(' ')
+            swapping = input('')
         if swapping.lower() == 'y':
             name = upload_to_eloqua(contacts)
     name = f'WK{source_country}_Contact-Upload' if not name else name
@@ -283,7 +283,7 @@ def contact_list(country):
     # Asks user if he would like to repeat
     print(
         f'{Fore.WHITE}» Do you want to prepare another contact upload? {Fore.WHITE}({YES}/{NO}):', end=' ')
-    choice = input(' ')
+    choice = input('')
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')

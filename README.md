@@ -30,10 +30,6 @@ Can help with implementation_
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 - Uses PURL to ensure field merges on linked sites will be working
 
-_ToDo:_
-
-- [ ] _If there are placeholder urls in mail, ask for correct link and swap_
-
 ---
 
 ### [ELQuent.page](utils/page.py)
@@ -137,10 +133,6 @@ _ToDo:_
 - Creates export definition for activity API and downloads data from it
 - Refreshes and download segment counts
 
-_ToDo:_
-
-- [ ] _For each consecutive sync try make the wait longer_
-
 ---
 
 ### [ELQuent.helper](utils/helper.py)
@@ -158,4 +150,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.9_]
+[_Version: 1.7.10_]

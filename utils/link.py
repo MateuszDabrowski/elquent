@@ -175,7 +175,7 @@ def clean_elq_track():
 
     # Asks user if he would like to repeat
     print(f'\n{Fore.WHITE}» Do you want to clean another code? {Fore.WHITE}({YES}/{NO}):', end=' ')
-    choice = input(' ')
+    choice = input('')
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')
@@ -233,7 +233,7 @@ def swap_utm_track(code='', email_id='', name=''):
               f'\n{Fore.WHITE}From › {Fore.YELLOW}{(utm_track.findall(code))[0][0]}',
               f'\n{Fore.WHITE}To › {Fore.YELLOW}{new_utm}',
               f'\n{Fore.WHITE}({YES}/{NO}):', end=' ')
-        swapping = input(' ')
+        swapping = input('')
 
     if swapping.lower() == 'y':
         print(

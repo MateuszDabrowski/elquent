@@ -94,7 +94,7 @@ def campaign_name_getter():
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}]',
             f'{Fore.WHITE}Write or copypaste name of the Campaign and click [Enter]')
-        campaign_name = input(' ')
+        campaign_name = input('')
         if not campaign_name:
             campaign_name = pyperclip.paste()
         campaign_name = campaign_name.split('_')
@@ -123,8 +123,8 @@ def campaign_type_getter():
           f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}] Always lead',
           f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead')
     while True:
-        print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
-        lead_or_contact_form = input(' ')
+        print(f'{Fore.YELLOW}Enter number associated with your choice:', end=' ')
+        lead_or_contact_form = input('')
         if lead_or_contact_form in ['0', '1', '2']:
             lead_or_contact_form = int(lead_or_contact_form)
             break

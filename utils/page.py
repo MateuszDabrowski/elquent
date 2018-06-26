@@ -309,7 +309,7 @@ def create_form():
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
                 f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {Fore.WHITE}({YES}/{NO}):', end=' ')
-            swapping = input(' ')
+            swapping = input('')
 
         if swapping.lower() == 'y':
             # Prepare lead-by-phone snippet with correct values
@@ -338,7 +338,7 @@ def create_form():
         while swapping.lower() != 'y' and swapping.lower() != 'n':
             print(
                 f'\t{Fore.WHITE}Add information about data administrator? {Fore.WHITE}({YES}/{NO}):', end=' ')
-            swapping = input(' ')
+            swapping = input('')
 
         if swapping.lower() == 'y':
             # Gets place where GDPR info should be appended
@@ -441,7 +441,7 @@ def create_form():
             while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
                 print(
                     f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? {Fore.WHITE}({YES}/{NO}):', end=' ')
-                required = input(' ')
+                required = input('')
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)
                 regex_req = re.compile(

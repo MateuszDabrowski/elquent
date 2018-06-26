@@ -169,10 +169,10 @@ def campaign_first_mail(main_lp_url='', reminder=True):
     Returns eloqua id of both
     '''
     # Creates first mail from package
-    mail_html = mail.mail_constructor(source_country, campaign=True)
     if main_lp_url:
-        mail_html = mail_html.replace(
-            'http://wolterskluwer.pl', main_lp_url + '/<span class=eloquaemail >PURL_NAME1</span>')
+        mail_html = mail.mail_constructor(source_country, campaign=main_lp_url)
+    else:  # If we don't know target URL
+        mail_html = mail.mail_constructor(source_country, campaign='linkless')
 
     # Create e-mail
     mail_name = (('_').join(campaign_name[0:4]) + '_EML')
@@ -668,7 +668,7 @@ def content_campaign():
     # Creates main e-mail and reminder
     mail_id, reminder_id = '', ''
     print(f'\n{Fore.YELLOW}»{Fore.WHITE} Start with e-mail package? {Fore.WHITE}({YES}/{NO}):', end=' ')
-    choice = input(' ')
+    choice = input('')
     if choice.lower() == 'y':
         mail_id, reminder_id = campaign_first_mail(main_lp_url)
 

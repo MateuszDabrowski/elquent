@@ -13,6 +13,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import re
 import sys
+import json
 import pyperclip
 from colorama import Fore, Style, init
 
@@ -24,6 +25,7 @@ init(autoreset=True)
 
 # Globals
 source_country = None
+naming = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -53,6 +55,12 @@ def file(file_path, file_name='', folder_name=''):
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, filename)
+        elif directory == 'api':  # For reading api files
+            if getattr(sys, 'frozen', False):
+                datadir = os.path.dirname(sys.executable)
+            else:
+                datadir = os.path.dirname(os.path.dirname(__file__))
+            return os.path.join(datadir, 'utils', directory, filename)
         elif directory == 'incomes':  # For reading user files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
@@ -73,6 +81,7 @@ def file(file_path, file_name='', folder_name=''):
             return os.path.join(datadir, 'incomes', folder_name, filename)
 
     file_paths = {
+        'naming': find_data_file('naming.json', directory='api'),
         'incomes': find_data_file('incomes', directory='main'),
         'package': find_data_file(f'{file_name}'),
         'package_file': find_data_file(f'{file_name}', directory='package', folder_name=folder_name),
@@ -229,6 +238,11 @@ def mail_constructor(country, campaign=False):
     global source_country
     source_country = country
 
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
     # Asks user to firstly upload images to Eloqua
     print(
         f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with',
@@ -309,15 +323,48 @@ def mail_constructor(country, campaign=False):
     print(f'\n{Fore.WHITE}» {SUCCESS}Images uploaded and added to e-mail')
 
     '''
+    =================================================== Placeholder links
+    '''
+
+    utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
+    placeholder_link = naming[source_country]['mail']['placeholder_link']
+    placeholder_regex = re.compile(placeholder_link, re.UNICODE)
+    if html_files and placeholder_regex.findall(html) or mjml_files and placeholder_regex.findall(mjml):
+        # If we have URL of the main Eloqua LP
+        if campaign and campaign != 'linkless':
+            if html_files:
+                html = placeholder_regex.sub(campaign, html)
+            if mjml_files:
+                mjml = placeholder_regex.sub(campaign, mjml)
+        else:  # If we need to get the URL from the user
+            while True:
+                print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste',
+                      f'{Fore.YELLOW}untracked link for e-mail {Fore.WHITE}and click [Enter] or [S]kip')
+                main_url = input(' ')
+                if not main_url:
+                    main_url = pyperclip.paste()
+                if main_url == 's':  # If skipped
+                    break
+                elif utm_track.findall(main_url + '"'):
+                    print(f'{ERROR}Entered value should not have tracking queries!')
+                    continue
+                elif main_url.startswith('http') or main_url.startswith('www'):
+                    if html_files:
+                        html = placeholder_regex.sub(main_url, html)
+                    if mjml_files:
+                        mjml = placeholder_regex.sub(main_url, mjml)
+                    break
+                else:
+                    print(f'{ERROR}Entered value is not valid link!')
+
+    '''
     =================================================== Track URL
     '''
 
     # Gets new UTM tracking
-    utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
-        print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste',
-            f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste',
+              f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
         if not utm:
             utm = pyperclip.paste()
@@ -423,7 +470,7 @@ def mail_constructor(country, campaign=False):
     # Asks user about reminder e-mail creation
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to {Fore.YELLOW}create reminder{Fore.WHITE} Email?',
           f'{Fore.WHITE}({YES}/{NO}):', end=' ')
-    choice = input(' ')
+    choice = input('')
     if choice.lower() == 'y':
         regex_mail_preheader = re.compile(
             r'<!--pre-start.*?pre-end-->', re.UNICODE)
@@ -452,7 +499,7 @@ def mail_constructor(country, campaign=False):
     # Asks user if he would like to repeat
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to {Fore.YELLOW}construct another Email{Fore.WHITE}?',
           f'{Fore.WHITE}({YES}/{NO}):', end=' ')
-    choice = input(' ')
+    choice = input('')
     if choice.lower() == 'y':
         print(
             f'\n{Fore.GREEN}-----------------------------------------------------------------------------')

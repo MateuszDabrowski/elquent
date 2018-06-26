@@ -198,7 +198,7 @@ def get_asset_id(asset):
             while choice.lower() != 'y' and choice.lower() != 'n':
                 print(
                     f'{Fore.WHITE}» Continue with {Fore.YELLOW}{asset_exists[0]}{Fore.WHITE}? {Fore.WHITE}({YES}/{NO}):', end=' ')
-                choice = input(' ')
+                choice = input('')
             if choice.lower() == 'y':
                 return asset_id
             elif choice.lower() == 'n':
@@ -286,7 +286,7 @@ def eloqua_asset_name():
                 f'{ERROR}"{name_check[2]}" is not existing campaign type')
         else:
             return name
-        print(f'{Fore.YELLOW}Please write or paste correct name:')
+        print(f'{Fore.YELLOW}Please write or copypaste correct name:')
 
 
 def eloqua_asset_get(asset_id, asset_type, depth=''):
@@ -603,6 +603,7 @@ def eloqua_post_sync(uri, return_uri=False):
     sync_uri = sync_eloqua['uri']
     status = sync_eloqua['status']
 
+    sync_counter = 1
     while True:
         root = eloqua_bulk + sync_uri
         sync_body = {'syncedInstanceUri': f'/{sync_uri}'}
@@ -613,7 +614,8 @@ def eloqua_post_sync(uri, return_uri=False):
         if status in ['warning', 'error', 'success']:
             eloqua_log_sync(sync_uri)
             break
-        time.sleep(5)
+        time.sleep(5 * sync_counter)
+        sync_counter += 1
 
     if return_uri:
         return sync_uri
@@ -1182,8 +1184,8 @@ def eloqua_create_email(name, code):
 
     # Gets subject line for the e-mail
     while True:
-        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copy',
-            f'{Fore.YELLOW}e-mail subject{Fore.WHITE} and click [Enter] or [S]kip')
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste',
+              f'{Fore.YELLOW}e-mail subject{Fore.WHITE} and click [Enter] or [S]kip')
         subject = input(' ')
         if not subject:
             subject = pyperclip.paste()
