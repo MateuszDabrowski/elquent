@@ -15,6 +15,7 @@ import os
 import re
 import sys
 import json
+import pyperclip
 from colorama import Fore, Style, init
 
 # ELQuent imports
@@ -182,10 +183,21 @@ def campaign_first_mail(main_lp_url='', reminder=True):
 
     regex_mail_preheader = re.compile(
         r'<!--pre-start.*?pre-end-->', re.UNICODE)
-    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
-          f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
-          f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
-    reminder_preheader = input(' ')
+    while True:
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
+              f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
+              f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
+        reminder_preheader = input(' ')
+        if not reminder_preheader:
+            reminder_preheader = pyperclip.paste()
+        if len(reminder_preheader) < 1:
+            print(f'\n{ERROR}Pre-header can not be blank')
+            continue
+        elif len(reminder_preheader) > 140:
+            print(f'\n{ERROR}Pre-header is over 140 characters long')
+            continue
+        else:
+            break
     if reminder_preheader.lower() != 's':
         reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
         reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)

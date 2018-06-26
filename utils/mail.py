@@ -130,14 +130,16 @@ def output_method(html_code='', mjml_code=''):
             break
         elif choice == '3':
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] » Write or paste name of the E-mail:')
+                f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] » Write or copypaste name of the E-mail:')
             name = api.eloqua_asset_name()
             api.eloqua_create_email(name, html_code)
             break
         elif choice == '4':
             print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}] » Write or paste ID of the E-mail to update:')
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}] » Write or copypaste ID of the E-mail to update:')
             email_id = input(' ')
+            if not email_id:
+                email_id = pyperclip.paste()
             api.eloqua_update_email(email_id, html_code)
             break
         else:
@@ -314,9 +316,13 @@ def mail_constructor(country, campaign=False):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     while True:
         print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste',
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste',
             f'{Fore.YELLOW}UTM tracking script{Fore.WHITE} and click [Enter] or [S]kip')
         utm = input(' ')
+        if not utm:
+            utm = pyperclip.paste()
+            if utm_track.findall(utm + '"'):
+                break
         if utm.lower() == 's':
             break
         if utm_track.findall(utm + '"'):
@@ -374,10 +380,19 @@ def mail_constructor(country, campaign=False):
 
     # Gets pre-header from user
     if (html_files and re.search('Pre-header', html)) or (mjml_files and re.search('Pre-header', mjml)):
-        print(
-            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste desired',
-            f'{Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
-        preheader = input(' ')
+        while True:
+            print(
+                f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste desired',
+                f'{Fore.YELLOW}pre-header{Fore.WHITE} text and click [Enter] or [S]kip')
+            preheader = input(' ')
+            if not preheader:
+                preheader = pyperclip.paste()
+            if len(preheader) < 1:
+                print(f'\n{ERROR}Pre-header can not be blank')
+            elif len(preheader) > 140:
+                print(f'\n{ERROR}Pre-header is over 140 characters long')
+            else:
+                break
         preheader = '<!--pre-start-->' + preheader + '<!--pre-end-->'
 
         if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
@@ -412,10 +427,21 @@ def mail_constructor(country, campaign=False):
     if choice.lower() == 'y':
         regex_mail_preheader = re.compile(
             r'<!--pre-start.*?pre-end-->', re.UNICODE)
-        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
-              f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
-              f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
-        reminder_preheader = input(' ')
+        while True:
+            print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
+                  f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
+                  f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
+            reminder_preheader = input(' ')
+            if not reminder_preheader:
+                reminder_preheader = pyperclip.paste()
+            if len(reminder_preheader) < 1:
+                print(f'\n{ERROR}Pre-header can not be blank')
+                continue
+            elif len(reminder_preheader) > 140:
+                print(f'\n{ERROR}Pre-header is over 140 characters long')
+                continue
+            else:
+                break
         if reminder_preheader.lower() != 's':
             reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
             reminder_html = regex_mail_preheader.sub(reminder_preheader, html)

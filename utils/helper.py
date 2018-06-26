@@ -14,6 +14,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import sys
 import json
+import pyperclip
 from colorama import Fore, init
 
 # Initialize colorama
@@ -92,8 +93,10 @@ def campaign_name_getter():
     while True:
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}CAMPAIGN{Fore.WHITE}]',
-            f'{Fore.WHITE}Write or paste name of the Campaign and click [Enter]')
+            f'{Fore.WHITE}Write or copypaste name of the Campaign and click [Enter]')
         campaign_name = input(' ')
+        if not campaign_name:
+            campaign_name = pyperclip.paste()
         campaign_name = campaign_name.split('_')
         if len(campaign_name) != 5:
             print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
@@ -153,6 +156,14 @@ def asset_name_getter():
             print(
                 f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
             asset_name = input(' ')
+            if not asset_name:
+                asset_name = pyperclip.paste()
+            if len(asset_name) < 1:
+                print(f'\n{ERROR}Title can not be blank')
+                continue
+            elif len(asset_name) > 200:
+                print(f'\n{ERROR}Title is over 200 characters long')
+                continue
             break
         else:
             print(f'{ERROR}Entered value does not belong to any choice!')
@@ -168,6 +179,8 @@ def asset_link_getter():
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}URL{Fore.WHITE}] Enter link to the asset or asset page')
         asset_url = input(' ')
+        if not asset_url:
+            asset_url = pyperclip.paste()
         if asset_url.startswith('http') or asset_url.startswith('www'):
             break
         else:
@@ -185,10 +198,21 @@ def product_name_getter(campaign_name=''):
     if local_name[0] in naming[source_country]['product']:
         product_name = naming[source_country]['product'][local_name[0]]
     else:
-        print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}]',
-            f'{Fore.WHITE}Could not recognize product name, please write its name: ', end='')
-        product_name = input(' ')
+        while True:
+            print(
+                f'\n{Fore.WHITE}» [{Fore.YELLOW}PRODUCT{Fore.WHITE}]',
+                f'{Fore.WHITE}Could not recognize product name, please write its name: ', end='')
+            product_name = input(' ')
+            if not product_name:
+                product_name = pyperclip.paste()
+            if len(product_name) < 1:
+                print(f'\n{ERROR}Product name can not be blank')
+                continue
+            elif len(product_name) > 60:
+                print(f'\n{ERROR}Product name is over 60 characters long')
+                continue
+            else:
+                break
 
     return product_name
 
@@ -197,8 +221,16 @@ def header_text_getter():
     '''
     Returns optional text for header
     '''
-    print(f'\n{Fore.WHITE}» [{Fore.YELLOW}OPTIONAL{Fore.WHITE}]',
-          f'{Fore.WHITE}Text to be displayed on the left side of header bar:')
-    header_text = input(' ')
+    while True:
+        print(f'\n{Fore.WHITE}» [{Fore.YELLOW}OPTIONAL{Fore.WHITE}]',
+              f'{Fore.WHITE}Text to be displayed on the left side of header bar:')
+        header_text = input(' ')
+        if not header_text:
+            header_text = pyperclip.paste()
+        elif len(header_text) > 60:
+            print(f'\n{ERROR}Optional text is over 60 characters long')
+            continue
+        else:
+            break
 
     return header_text

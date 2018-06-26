@@ -218,8 +218,10 @@ def swap_utm_track(code='', email_id='', name=''):
 
     while True:
         print(
-            f'{Fore.WHITE}» Write or paste new UTM tracking script and click [Enter]')
+            f'{Fore.WHITE}» Write or copypaste new UTM tracking script and click [Enter]')
         new_utm = input(' ')
+        if not new_utm:
+            new_utm = pyperclip.paste()
         if utm_track.findall(new_utm + '"'):
             break
         print(f'{ERROR}Entered UTM tracking script is incorrect')

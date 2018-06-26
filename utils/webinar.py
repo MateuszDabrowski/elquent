@@ -17,6 +17,7 @@ import sys
 import json
 import pickle
 import datetime
+import pyperclip
 from colorama import Fore, init
 
 # ELQuent imports
@@ -101,8 +102,10 @@ def get_click_auth():
     if not os.path.isfile(file('click')):
         while True:
             print(
-                f'\n{Fore.WHITE}Write or paste ClickMeeting API Key and click [Enter]')
+                f'\n{Fore.WHITE}Write or copypaste ClickMeeting API Key and click [Enter]')
             click_api_key = input(' ')
+            if not click_api_key:
+                click_api_key = pyperclip.paste()
             if len(click_api_key) == 42:
                 break
             else:

@@ -20,6 +20,7 @@ import base64
 import pickle
 import getpass
 import webbrowser
+import pyperclip
 import requests
 from colorama import Fore, Style, init
 
@@ -171,12 +172,12 @@ def get_asset_id(asset):
     while True:
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}]',
-            f'{Fore.WHITE}Write/paste {asset} ID or copy the code and click [Enter]', end='')
+            f'{Fore.WHITE}Write or copypaste {asset} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
-
-        # If there was no input, skips to get code via pyperclip
         if not asset_id:
-            return None
+            asset_id = pyperclip.paste()
+            if len(asset_id) > 10:
+                return None
 
         # Checks if input in numerical value
         try:
@@ -268,6 +269,8 @@ def eloqua_asset_name():
     '''
     while True:
         name = input(' ')
+        if not name:
+            name = pyperclip.paste()
         name_check = name.split('_')
         if len(name_check) != 5:
             print(
@@ -717,6 +720,8 @@ def eloqua_create_landingpage(name, code):
                 f'\n  {ERROR}URL ending "/{html_name}" already exists!',
                 f'\n  {Fore.WHITE}» Enter new URL ending:', end='')
             html_name = input(' ')
+            if not html_name:
+                html_name = pyperclip.paste()
             continue
         elif isinstance(landing_page, list):  # Other errors
             print(f'{Fore.YELLOW}{landing_page}')
@@ -1176,9 +1181,20 @@ def eloqua_create_email(name, code):
     }
 
     # Gets subject line for the e-mail
-    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or paste',
-          f'{Fore.YELLOW}e-mail subject{Fore.WHITE} and click [Enter] or [S]kip')
-    subject = input(' ')
+    while True:
+        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copy',
+            f'{Fore.YELLOW}e-mail subject{Fore.WHITE} and click [Enter] or [S]kip')
+        subject = input(' ')
+        if not subject:
+            subject = pyperclip.paste()
+        if len(subject) < 1:
+            print(f'\n{ERROR}Subject can not be blank')
+            continue
+        elif len(subject) > 100:
+            print(f'\n{ERROR}Subject is over 100 characters long')
+            continue
+        else:
+            break
     if subject.lower() != 's':
         data['subject'] = subject
 
