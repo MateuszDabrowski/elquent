@@ -329,6 +329,7 @@ def mail_constructor(country, campaign=False):
     utm_track = re.compile(r'((\?|&)(kampania|utm).*?)(?=(#|"))', re.UNICODE)
     placeholder_link = naming[source_country]['mail']['placeholder_link']
     placeholder_regex = re.compile(placeholder_link, re.UNICODE)
+
     if html_files and placeholder_regex.findall(html) or mjml_files and placeholder_regex.findall(mjml):
         # If we have URL of the main Eloqua LP
         if campaign and campaign != 'linkless':
@@ -392,13 +393,13 @@ def mail_constructor(country, campaign=False):
     # Appending PURL & UTM to all trackable_links in HTML
     if html_files:
         for link in trackable_links:
-            if 'info.wolterskluwer' in link and link[-1] == '/':
+            if 'info.wolterskluwer' in link and link[-2] == '/':
                 html = html.replace(
-                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + '"'))
-            elif 'info.wolterskluwer' in link and link[-1] != '/':
+                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+            elif 'info.wolterskluwer' in link and link[-2] != '/':
                 html = html.replace(
-                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + '"'))
-            if utm.lower() != 's':
+                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+            elif utm.lower() != 's':
                 if '?' in link:
                     html = html.replace(
                         link, (link[:-1] + '&' + utm[1:] + '"'))
@@ -408,13 +409,13 @@ def mail_constructor(country, campaign=False):
     # Appending PURL & UTM to all trackable_links in MJML
     if mjml_files:
         for link in trackable_links:
-            if 'info.wolterskluwer' in link and link[-1] == '/':
+            if 'info.wolterskluwer' in link and link[-2] == '/':
                 mjml = mjml.replace(
-                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + '"'))
-            elif 'info.wolterskluwer' in link and link[-1] != '/':
+                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+            elif 'info.wolterskluwer' in link and link[-2] != '/':
                 mjml = mjml.replace(
-                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + '"'))
-            if utm.lower() != 's':
+                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+            elif utm.lower() != 's':
                 if '?' in link:
                     mjml = mjml.replace(
                         link, (link[:-1] + '&' + utm[1:] + '"'))

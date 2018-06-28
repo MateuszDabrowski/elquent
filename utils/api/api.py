@@ -256,7 +256,7 @@ def eloqua_asset_html_name(name):
         elif date_element.search(part):
             continue
         else:
-            html_name += f'{part}-'
+            html_name += f'{part[:20]}-'
     # Gets asset type last part of html_name
     html_name += name.split('_')[-1]
 
@@ -959,7 +959,7 @@ def eloqua_fill_mail_params(name):
         params = {'depth': 'complete',
                   'search': f'{phrase}*',
                   'orderBy': 'id DESC',
-                  'count': '10'}
+                  'count': '6'}
         response = api_request(root, params=params)
         email = response.json()
 
@@ -972,7 +972,8 @@ def eloqua_fill_mail_params(name):
     # Builds search name to use for fillers
     name_split = name.split('_')
     local_name = name_split[3].split('-')
-    search_name = name_split[0:3]
+    search_full_name = name_split[:-1]
+    search_name = name_split[:3]
     search_name.append(local_name[0])
 
     # Start building data dict
@@ -1030,55 +1031,67 @@ def eloqua_fill_mail_params(name):
     '''
 
     # If there is still something to fill, tries fill from last 10 similar
+    search_full_phrase = '_'.join(search_full_name)
     search_phrase = '_'.join(search_name)
-    previous_mails = eloqua_search_emails(search_phrase)
 
-    # Fills gatherers with data
-    for mail in previous_mails['elements']:
+    for search_query in [search_full_phrase, search_phrase]:
+        previous_mails = eloqua_search_emails(search_query)
+
+        # Fills gatherers with data
+        for mail in previous_mails['elements']:
+            for gatherer in gatherers:
+                try:
+                    gatherer[0].append(mail[gatherer[1]])
+                except KeyError:
+                    continue
+
+        # Deduplicates to check for pattern
+        sender_mail = list(set(sender_mail))
+        sender_name = list(set(sender_name))
+        reply_mail = list(set(reply_mail))
+        folder_id = list(set(folder_id))
+        footer = list(set(footer))
+        header = list(set(header))
+        if not header:
+            header = ['9']  # Default empty header
+        group_id = list(set(group_id))
+
+        # Rebuilds gatherers list
+        gatherers = build_gatherers(
+            sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
+
+        # Fills data if there is a single pattern
         for gatherer in gatherers:
-            try:
-                gatherer[0].append(mail[gatherer[1]])
-            except KeyError:
-                continue
+            gatherer_fill(gatherer)
 
-    # Deduplicates to check for pattern
-    sender_mail = list(set(sender_mail))
-    sender_name = list(set(sender_name))
-    reply_mail = list(set(reply_mail))
-    folder_id = list(set(folder_id))
-    footer = list(set(footer))
-    header = list(set(header))
-    if not header:
-        header = ['9']  # Default empty header
-    group_id = list(set(group_id))
+        # Updates gatherers to keep only missing ones
+        gatherers = [(x, y) for (x, y) in gatherers if len(x) != 1]
 
-    # Rebuilds gatherers list
-    gatherers = build_gatherers(
-        sender_mail, sender_name, reply_mail, folder_id, footer, header, group_id)
-
-    # Fills data if there is a single pattern
-    for gatherer in gatherers:
-        gatherer_fill(gatherer)
-
-    # Updates gatherers to keep only missing ones
-    gatherers = [(x, y) for (x, y) in gatherers if len(x) != 1]
-
-    # Returns data if all data elements were filled
-    try:
-        if data['senderEmail']\
-                and data['senderName']\
-                and data['replyToEmail']\
-                and data['folderId']\
-                and data['emailFooterId']\
-                and data['emailHeaderId']\
-                and data['emailGroupId']:
-            print(f'\n{Fore.WHITE}» {SUCCESS}E-mail data ready for upload:')
-            for value in data.items():
-                print(
-                    f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
-            return data
-    except KeyError:
-        pass
+        # Returns data if all data elements were filled
+        try:
+            if data['senderEmail']\
+                    and data['senderName']\
+                    and data['replyToEmail']\
+                    and data['folderId']\
+                    and data['emailFooterId']\
+                    and data['emailHeaderId']\
+                    and data['emailGroupId']:
+                # If gathering data from broader search, gets confirmation on chosen e-mail sender
+                if search_query == search_phrase:
+                    print(f'\n{Fore.WHITE}» Continue with {Fore.YELLOW}{data["senderEmail"]}',
+                          f'{Fore.WHITE}as sender e-mail? ({YES}/{NO}):', end=' ')
+                    sender_acceptance = input('')
+                    if sender_acceptance.lower() == 'n':
+                        data['senderEmail'] = ''
+                        data['replyToEmail'] = ''
+                        raise KeyError
+                print(f'\n{Fore.WHITE}» {SUCCESS}E-mail data ready for upload:')
+                for value in data.items():
+                    print(
+                        f'   {Fore.YELLOW}› {Fore.GREEN}{value[0]}{Fore.WHITE} {value[1]}')
+                return data
+        except KeyError:
+            pass
 
     '''
     =================================================== Step 3: Fill from user input
@@ -1086,8 +1099,7 @@ def eloqua_fill_mail_params(name):
 
     # Fill sender/reply e-mail address based on user choice
     if not data.get('senderEmail', False):
-        if not sender_mail:
-            sender_mail = naming[source_country]['mail']['senders']
+        sender_mail = naming[source_country]['mail']['senders']
         print(f'\n{Fore.GREEN}Choose sender and reply e-mail address:')
         for i, sender in enumerate(sender_mail):
             print(

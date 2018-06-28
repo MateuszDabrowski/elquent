@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.6
 # -*- coding: utf8 -*-
-#pylint: disable=unused-argument
 
 '''
 ELQuent.menu
@@ -192,7 +191,7 @@ def clean_incomes():
     return
 
 
-def clean_folders(country):
+def clean_folders(_):
     '''
     Cleaning functions menu
     '''
