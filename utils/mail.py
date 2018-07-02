@@ -435,19 +435,22 @@ def mail_constructor(country, campaign=False):
             preheader = input(' ')
             if not preheader:
                 preheader = pyperclip.paste()
-            if len(preheader) < 1:
+            if preheader == 's':
+                preheader = '<!--pre-start-->pre-header<!--pre-end-->'
+                break
+            elif len(preheader) < 1:
                 print(f'\n{ERROR}Pre-header can not be blank')
             elif len(preheader) > 140:
                 print(f'\n{ERROR}Pre-header is over 140 characters long')
             else:
+                preheader = '<!--pre-start-->' + preheader + '<!--pre-end-->'
                 break
-        preheader = '<!--pre-start-->' + preheader + '<!--pre-end-->'
 
         if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
             html = html.replace('Pre-header', preheader)
 
         if mjml_files and preheader.lower() != 's' and re.search('Pre-header', mjml):
-            mjml = mjml.replace('Pre-header', preheader)
+            mjml = mjml.replace('>Pre-header', '>' + preheader)
 
     '''
     =================================================== Save MJML to Outcomes

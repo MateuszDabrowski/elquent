@@ -12,3 +12,6 @@ click.p
 # cx_Freeze
 __pycache__
 build
+
+# VSCode
+.vscode
