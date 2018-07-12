@@ -519,7 +519,7 @@ def swap_form(code, form):
         r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
     if regex_submit_text.findall(code):
         button_text = '"' + (4 * '&nbsp;&zwnj; ') + \
-            regex_submit_text.findall(code)[0] + ' →"'
+            regex_submit_text.findall(code)[0] + '"'
         code = regex_submit_text.sub(button_text, code)
 
     return code

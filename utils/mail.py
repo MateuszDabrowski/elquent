@@ -104,6 +104,13 @@ def output_method(html_code='', mjml_code=''):
     Allows user choose how the program should output the results
     Returns email_id if creation/update in Eloqua was selected
     '''
+    # Cleans technical comments from the code
+    if html_code:
+        html_code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
+    if mjml_code:
+        mjml_code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
+
+    # Asks which output
     print(
         f'\n{Fore.GREEN}New code should be:',
         f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t»',
