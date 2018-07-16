@@ -16,6 +16,7 @@ import re
 import sys
 import csv
 import json
+from datetime import datetime
 from colorama import Fore, init
 
 # ELQuent imports
@@ -95,23 +96,15 @@ def file(file_path, name=''):
 
 '''
 =================================================================================
-                        Export Bounceback Activity Flow
+                                Helper functions
 =================================================================================
 '''
 
 
-def export_bouncebacks(country):
+def export_timeframe():
     '''
-    Exports bouncebacks with Eloqua Bulk API
-    Converts response to .csv and saves to outcomes
+    Returns timeframe for export
     '''
-
-    # Create global source_country and load json file with naming convention
-    country_naming_setter(country)
-
-    # Gets payload for preparation
-    with open(file('definition'), 'r', encoding='utf-8') as f:
-        definition = f.read()
 
     # Check date input format
     valid_date = re.compile(r'[0-1]\d-[0-3]\d-20\d\d')
@@ -135,6 +128,28 @@ def export_bouncebacks(country):
             break
         else:
             print(f'{ERROR}Date should be in MM-DD-YYYY format\n')
+
+    return (start_date, end_date)
+
+
+'''
+=================================================================================
+                        Export Bounceback Activity Flow
+=================================================================================
+'''
+
+
+def export_bouncebacks():
+    '''
+    Exports bouncebacks with Eloqua Bulk API
+    Converts response to .csv and saves to outcomes
+    '''
+
+    # Gets payload for preparation
+    with open(file('definition'), 'r', encoding='utf-8') as f:
+        definition = f.read()
+
+    start_date, end_date = export_timeframe()
 
     definition = definition\
         .replace('WKSOURCECOUNTRY', f'WK{source_country}')\
@@ -170,4 +185,127 @@ def export_bouncebacks(country):
 
     print(f'\n{SUCCESS}Bounceback export saved to Outcomes folder')
 
-    return True
+    return
+
+
+'''
+=================================================================================
+                            Export Campaign Data
+=================================================================================
+'''
+
+
+def export_campaigns():
+    '''
+    Exports campaigns by country with Eloqua REST API
+    Converts response to .csv and saves to outcomes
+    '''
+
+    # Gets timeframe for export and converts dates to unix
+    start_date, end_date = export_timeframe()
+    unix_start = int(datetime.strptime(start_date, '%m-%d-%Y').timestamp())
+    unix_end = int(datetime.strptime(end_date, '%m-%d-%Y').timestamp())
+
+    # Builds search query for API
+    search_query = f"name='WK{source_country}*'createdAt>='{unix_start}'createdAt<='{unix_end}'"
+
+    # Creates file to save outcomes
+    with open(file('outcome-csv', f'campaigns-{start_date}-{end_date}'), 'w', encoding='utf-8') as f:
+        fieldnames = ['Name', 'ID', 'Status', 'CreatedBy', 'CreatedAt', 'UpdatedAt',
+                      'Start', 'End', 'Type', 'Folder']
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+    # Iterates over pages of outcomes
+    page = 1
+    while True:
+        campaigns = api.eloqua_get_campaigns(search_query, page)
+
+        # Creates dict with data from API
+        for campaign in campaigns['elements']:
+            campaign_info = {
+                'Name': campaign['name'],
+                'ID': int(campaign['id']),
+                'Status': campaign['currentStatus'],
+                'CreatedBy': int(campaign['createdBy']),
+                'CreatedAt': datetime.utcfromtimestamp(int(campaign['createdAt'])).strftime('%Y-%m-%d %H:%M:%S'),
+                'UpdatedAt': datetime.utcfromtimestamp(int(campaign['updatedAt'])).strftime('%Y-%m-%d %H:%M:%S'),
+                'Folder': int(campaign['folderId']),
+                'Type': 'multistep' if campaign['isEmailMarketingCampaign'] == 'false' else 'simple'
+            }
+
+            # Getting start date and end date of campaign in a way that takes care of blanks
+            try:
+                campaign_info['Start'] = datetime.utcfromtimestamp(
+                    int(campaign['startAt'])).strftime('%Y-%m-%d %H:%M:%S')
+            except KeyError:
+                campaign_info['Start'] = '0'
+            try:
+                campaign_info['End'] = datetime.utcfromtimestamp(
+                    int(campaign['endAt'])).strftime('%Y-%m-%d %H:%M:%S')
+            except KeyError:
+                campaign_info['End'] = '0'
+
+            # Append batch of data to file
+            with open(file('outcome-csv', f'campaigns-{start_date}-{end_date}'), 'a', encoding='utf-8') as f:
+                fieldnames = ['Name', 'ID', 'Status', 'CreatedBy', 'CreatedAt', 'UpdatedAt',
+                              'Start', 'End', 'Type', 'Folder']
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writerow(campaign_info)
+
+        # Clears dict for next batch
+        campaign_info = {}
+
+        # Stops iteration when full list is obtained
+        if campaigns['total'] - page * 40 < 0:
+            break
+
+        # Else increments page to get next part of outcomes
+        page += 1
+
+        # Every ten batches draws hyphen for better readability
+        if page % 10 == 0:
+            print(f'{Fore.YELLOW}-', end='', flush=True)
+
+    print(f'\n{SUCCESS}Campaign export saved to Outcomes folder')
+
+    return
+
+
+'''
+=================================================================================
+                                Link module menu
+=================================================================================
+'''
+
+
+def export_module(country):
+    '''
+    Lets user choose which export module utility he wants to use
+    '''
+
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+
+    print(
+        f'\n{Fore.GREEN}ELQuent.export Utilites:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Bounceback{Fore.WHITE}] Export bouncebacks by bounce date'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Campaign{Fore.WHITE}] Export campaign data by creation date'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+    )
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            export_bouncebacks()
+            break
+        elif choice == '2':
+            export_campaigns()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
+
+    return

@@ -1301,6 +1301,29 @@ def eloqua_create_campaign(name, data):
     return (campaign_id, campaign)
 
 
+def eloqua_get_campaigns(query, page):
+    '''
+    Requires timeframe and country for building call
+    Returns partial list of campaigns and their full count
+    '''
+    # Builds the API request
+    payload = {
+        'search': query,  # Filter by query
+        'depth': 'complete',  # Required to work
+        'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
+        'count': '40',  # Required to work, may be changed from 1 up to 1000
+        'page': page  # Pagination of outcomes
+    }
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/campaigns'
+    response = api_request(root, params=payload)
+    campaigns = response.json()
+    print(f'{Fore.GREEN}|', end='', flush=True)
+
+    return campaigns
+
+
 '''
 =================================================================================
                                 Program API

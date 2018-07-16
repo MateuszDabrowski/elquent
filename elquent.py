@@ -252,7 +252,7 @@ def menu(choice=''):
         'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
-        'bouncebacks': (export.export_bouncebacks, f'Export{Fore.WHITE}] Export and save hard bounceback data'),
+        'bouncebacks': (export.export_module, f'Export{Fore.WHITE}] Export and save bounceback or campaign data'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
     }
 
@@ -347,7 +347,7 @@ elif sys.argv[1] == 'web':
 elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
 elif sys.argv[1] == 'bounce':
-    export.export_bouncebacks(SOURCE_COUNTRY)
+    export.export_module(SOURCE_COUNTRY)
 
 # Allows to cycle through options after first errand
 while True:
