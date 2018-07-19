@@ -323,7 +323,7 @@ with open(file('utils'), 'r', encoding='utf-8') as f:
 SOURCE_COUNTRY = get_source_country()
 
 # Get eloqua auth for multiple calls
-api.get_eloqua_auth(SOURCE_COUNTRY)
+eloqua_key = api.get_eloqua_auth(SOURCE_COUNTRY)
 
 # Load domain and user name
 ELOQUA_DOMAIN, ELOQUA_USER = pickle.load(open(file('eloqua'), 'rb'))
@@ -348,6 +348,8 @@ elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
 elif sys.argv[1] == 'bounce':
     export.export_module(SOURCE_COUNTRY)
+elif sys.argv[1] == 'password':
+    print(f'{Fore.YELLOW}Key » {Fore.WHITE}{eloqua_key}')
 
 # Allows to cycle through options after first errand
 while True:

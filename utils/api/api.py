@@ -401,7 +401,7 @@ def get_eloqua_auth(country):
     global eloqua_rest
     eloqua_rest = eloqua_root + '/api/REST/2.0/'
 
-    return eloqua_root
+    return eloqua_key
 
 
 '''
