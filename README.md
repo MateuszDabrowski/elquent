@@ -97,6 +97,7 @@ _ToDo:_
 #### Module focused on exporting data from Eloqua instance
 
 - Gets full bounceback activity data from chosen timeframe
+- Gets full pageview activity data from chosen timeframe
 - Gets predefined campaign data from chosen timeframe
 - Saves exported data to .json/.csv files
 
@@ -152,4 +153,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.12_]
+[_Version: 1.7.13_]
