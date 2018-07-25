@@ -86,6 +86,7 @@ def file(file_path, name=''):
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
         'click': find_data_file('click.p', directory='api'),
+        'activity-export': find_data_file(f'WKCORP_activity_export.json', directory='templates'),
         'bounceback-def': find_data_file(f'WK{source_country}_bounceback_export.txt', directory='templates'),
         'pageview-def': find_data_file(f'WK{source_country}_pageview_export.txt', directory='templates'),
         'outcome-json': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes'),
@@ -102,81 +103,35 @@ def file(file_path, name=''):
 '''
 
 
-def export_helper(definition):
+def export_timeframe():
     '''
-    Uses given export definition with timeframe input to return export data
-    '''
-
-    def export_timeframe():
-        '''
-        Returns timeframe for export
-        '''
-
-        # Check date input format
-        valid_date = re.compile(r'[0-1]\d-[0-3]\d-20\d\d')
-
-        # Get start date
-        while True:
-            print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}START{Fore.WHITE}] Enter export start date [MM-DD-YYYY] ', end='')
-            start_date = input(' ')
-            if valid_date.findall(start_date):
-                break
-            else:
-                print(f'{ERROR}Date should be in MM-DD-YYYY format\n')
-
-        # Get end date
-        while True:
-            print(
-                f'{Fore.WHITE}[{Fore.YELLOW}END{Fore.WHITE}] Enter export end date [MM-DD-YYYY]', end='')
-            end_date = input(' ')
-            if valid_date.findall(end_date):
-                break
-            else:
-                print(f'{ERROR}Date should be in MM-DD-YYYY format\n')
-
-        return (start_date, end_date)
-
-    start_date, end_date = export_timeframe()
-
-    definition = definition\
-        .replace('WKSOURCECOUNTRY', f'WK{source_country}')\
-        .replace('START_DATE', start_date)\
-        .replace('END_DATE', end_date)
-
-    # Changes txt to json for API call
-    definition_json = json.loads(definition)
-
-    # Bounceback activity export flow
-    export_uri = api.eloqua_post_export(
-        definition_json, export_type='activity')
-    print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
-    sync_uri = api.eloqua_post_sync(export_uri, return_uri=True)
-    export_json = api.eloqua_sync_data(sync_uri)
-
-    return (export_json, start_date, end_date)
-
-
-def output_helper(export_json, activity_name, start_date, end_date):
-    '''
-    Gets name, start date and end date.
-    Outputs correct activity export to .json and .csv files
+    Returns timeframe for export
     '''
 
-    # Saves export data to .json
-    with open(file('outcome-json', f'{activity_name}-{start_date}-{end_date}'), 'w', encoding='utf-8') as f:
-        json.dump(export_json, f)
-    # Saves export data to .csv
-    with open(file('outcome-csv', f'{activity_name}-{start_date}-{end_date}'), 'a', encoding='utf-8') as csv_output:
-        output = csv.writer(csv_output)
-        headers = False
-        for element in export_json:
-            if not headers:
-                output.writerow(element.keys())
-                headers = True
-            output.writerow(element.values())
+    # Check date input format
+    valid_date = re.compile(r'[0-1]\d-[0-3]\d-20\d\d')
 
-    return
+    # Get start date
+    while True:
+        print(
+            f'\n{Fore.WHITE}[{Fore.YELLOW}START{Fore.WHITE}] Enter export start date [MM-DD-YYYY] ', end='')
+        start_date = input(' ')
+        if valid_date.findall(start_date):
+            break
+        else:
+            print(f'{ERROR}Date should be in MM-DD-YYYY format\n')
+
+    # Get end date
+    while True:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}END{Fore.WHITE}] Enter export end date [MM-DD-YYYY]', end='')
+        end_date = input(' ')
+        if valid_date.findall(end_date):
+            break
+        else:
+            print(f'{ERROR}Date should be in MM-DD-YYYY format\n')
+
+    return (start_date, end_date)
 
 
 '''
@@ -192,19 +147,54 @@ def export_activity(activity_name):
     Converts response to .csv and saves to outcomes
     '''
 
-    # Gets payload for preparation
-    with open(file(f'{activity_name}-def'), 'r', encoding='utf-8') as f:
-        definition = f.read()
+    # Gets timeframe for activity data export
+    start_date, end_date = export_timeframe()
 
-    export_json, start_date, end_date = export_helper(definition)
+    # Loads json file with activity export definitions
+    with open(file('activity-export'), 'r', encoding='utf-8') as f:
+        definitions = json.load(f)
 
+    # Selects correct definition
+    chosen_definition = definitions.get(activity_name)
+
+    # Appends name and filter
+    chosen_definition['name'] = f'WK{source_country}_ELQuent-Activity-{activity_name}-Export'
+    activity_start = "'{{Activity.CreatedAt}}' >= '" + \
+                     start_date + " 00:00:01'"
+    activity_end = "'{{Activity.CreatedAt}}' <= '" + \
+        end_date + " 23:59:59'"
+    activity_type = "'{{Activity.Type}}'='" + \
+        activity_name + "'"
+    chosen_definition['filter'] = f'{activity_start} AND {activity_end} AND {activity_type}'
+
+    # Bounceback activity export flow
+    export_uri = api.eloqua_post_export(
+        chosen_definition, export_type='activity')
+    print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
+    sync_uri = api.eloqua_post_sync(export_uri, return_uri=True)
+    export_json = api.eloqua_sync_data(sync_uri)
+
+    # Save data if there is any
     if not export_json:
         print(f'\n{Fore.WHITE}» {ERROR}No {activity_name}s found between {start_date} and {end_date} for WK{source_country}')
 
         return False
     else:
-        output_helper(export_json, activity_name, start_date, end_date)
-        print(f'\n{SUCCESS}{activity_name.title()} export saved to Outcomes folder')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}SAVING{Fore.WHITE}] Outputting data to .json and .csv files')
+        # Saves export data to .json
+        with open(file('outcome-json', f'{activity_name}-{start_date}-{end_date}'), 'w', encoding='utf-8') as f:
+            json.dump(export_json, f)
+        # Saves export data to .csv
+        with open(file('outcome-csv', f'{activity_name}-{start_date}-{end_date}'), 'a', encoding='utf-8') as csv_output:
+            output = csv.writer(csv_output)
+            headers = False
+            for element in export_json:
+                if not headers:
+                    output.writerow(element.keys())
+                    headers = True
+                output.writerow(element.values())
+        print(f'\n{SUCCESS}{activity_name} export saved to Outcomes folder')
 
         return True
 
@@ -239,6 +229,7 @@ def export_campaigns():
 
     # Iterates over pages of outcomes
     page = 1
+    print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
     while True:
         campaigns = api.eloqua_get_campaigns(search_query, page)
 
@@ -308,26 +299,33 @@ def export_module(country):
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
 
+    available_utils = ['Campaign', 'EmailSend', 'EmailOpen', 'EmailClickthrough',
+                       'Bounceback', 'FormSubmit', 'Subscribe', 'Unsubscribe', 'WebVisit', 'PageView']
+
+    # Lists utils available to chosen user
+    print(f'\n{Fore.GREEN}ELQuent.export Utilites:')
+    for i, function in enumerate(available_utils):
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{function}s{Fore.WHITE}]')
     print(
-        f'\n{Fore.GREEN}ELQuent.export Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Bounceback{Fore.WHITE}] Export bouncebacks by bounce date'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}PageView{Fore.WHITE}] Export pageviews by visit date'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Campaign{Fore.WHITE}] Export campaign data by creation date'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
-    )
+        f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
+
     while True:
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
         choice = input(' ')
         if choice.lower() == 'q':
             break
-        elif choice == '1':
-            export_activity('bounceback')
-            break
-        elif choice == '2':
-            export_activity('pageview')
-            break
-        elif choice == '3':
+        elif choice == '0':
             export_campaigns()
+            break
+        try:
+            choice = int(choice)
+        except (TypeError, ValueError):
+            print(f'{Fore.RED}Please enter numeric value!')
+            choice = ''
+            continue
+        if 0 <= choice < len(available_utils):
+            export_activity(available_utils[choice])
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')

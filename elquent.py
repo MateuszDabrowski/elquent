@@ -252,7 +252,7 @@ def menu(choice=''):
         'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
-        'bouncebacks': (export.export_module, f'Export{Fore.WHITE}] Export and save bounceback or campaign data'),
+        'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
     }
 
@@ -346,7 +346,7 @@ elif sys.argv[1] == 'web':
     webinar.click_to_elq(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
-elif sys.argv[1] == 'bounce':
+elif sys.argv[1] == 'export':
     export.export_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'password':
     print(f'{Fore.YELLOW}Key » {Fore.WHITE}{eloqua_key}')
