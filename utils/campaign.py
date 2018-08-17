@@ -390,7 +390,7 @@ def campaign_confirmation_mail(blindform_html_name, asset_name, confirmation_lp_
             rf'{converter_value}', confirmation_code)
 
     # Saves standard + reminder
-    for mail_name in ['_confirmation-EML', '_confirmation-reminder-EML']:
+    for mail_name in ['_confirmation-TECH-EML', '_confirmation-reminder-TECH-EML']:
         file_name = (('_').join(campaign_name[1:4]) + mail_name)
 
         if mail_name == '_confirmation-reminder-EML':
@@ -445,7 +445,7 @@ def campaign_asset_mail(asset_name, asset_url):
     Creates asset e-mail in Eloqua
     Returns asset mail id
     '''
-    file_name = (('_').join(campaign_name[1:4]) + '_Asset-EML')
+    file_name = (('_').join(campaign_name[1:4]) + '_asset-TECH-EML')
     with open(file('asset-eml'), 'r', encoding='utf-8') as f:
         asset_code = f.read()
     asset_code = regex_product_name.sub(product_name, asset_code)
