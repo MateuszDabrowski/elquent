@@ -253,14 +253,7 @@ def contact_list(country):
     # Asks if user want to upload contacts to Eloqua
     name = ''
     if naming[source_country]['api']['bulk'] == 'enabled':
-        swapping = ''
-        while swapping.lower() != 'y' and swapping.lower() != 'n':
-            print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}UPLOAD{Fore.WHITE}]',
-                f'{Fore.YELLOW}Do you want to upload that list to Eloqua {Fore.WHITE}({YES}/{NO}):', end=' ')
-            swapping = input('')
-        if swapping.lower() == 'y':
-            name = upload_to_eloqua(contacts)
+        name = upload_to_eloqua(contacts)
     name = f'WK{source_country}_Contact-Upload' if not name else name
 
     # Builds .csv file in eloqua compliant structure
@@ -282,7 +275,8 @@ def contact_list(country):
 
     # Asks user if he would like to repeat
     print(
-        f'{Fore.WHITE}» Do you want to prepare another contact upload? {Fore.WHITE}({YES}/{NO}):', end=' ')
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to {Fore.YELLOW}prepare another contact upload{Fore.WHITE}?',
+        f'{Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input('')
     if choice.lower() == 'y':
         print(
