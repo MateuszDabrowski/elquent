@@ -290,10 +290,8 @@ def create_form():
 
         phone_field = ''
         # Gets the code of phone field
-        search_phone_field = re.compile(r'(Numer telefonu)', re.UNICODE)
         for field in get_form_fields(form):
-            is_phone_field = re.search(search_phone_field, field[0])  # Boolean
-            if is_phone_field:
+            if 'name="telefon"' in field[0] or 'name="busPhone"' in field[0]:
                 phone_field = field[0]
                 break
         if not phone_field:
