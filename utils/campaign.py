@@ -173,6 +173,10 @@ def campaign_first_mail(main_lp_url='', reminder=True):
         mail_html = mail.mail_constructor(source_country, campaign=main_lp_url)
     else:  # If we don't know target URL
         mail_html = mail.mail_constructor(source_country, campaign='linkless')
+    if not mail_html and not reminder:
+        return False
+    elif not mail_html and reminder:
+        return False, False
 
     # Create e-mail
     mail_name = (('_').join(campaign_name[0:4]) + '_EML')
@@ -523,6 +527,8 @@ def simple_campaign():
 
     # Creates main e-mail and reminder
     mail_id = campaign_first_mail(reminder=False)
+    if not mail_id:
+        return False
 
     '''
     =================================================== Create Campaign
@@ -583,6 +589,8 @@ def basic_campaign():
 
     # Creates main e-mail and reminder
     mail_id, reminder_id = campaign_first_mail()
+    if not mail_id:
+        return False
 
     '''
     =================================================== Create Campaign
@@ -671,6 +679,8 @@ def content_campaign():
     choice = input('')
     if choice.lower() == 'y':
         mail_id, reminder_id = campaign_first_mail(main_lp_url)
+        if not mail_id:
+            return False
 
     # Create one or two thank you pages depending on previous user input
     campaign_ty_page(lead_or_contact_form)
