@@ -1201,9 +1201,9 @@ def eloqua_create_email(name, code):
         subject = input(' ')
         if not subject:
             subject = pyperclip.paste()
-        if len(subject) < 1:
-            print(f'\n{ERROR}Subject can not be blank')
-            continue
+            if not subject:
+                print(f'\n{ERROR}Subject can not be blank')
+                continue
         elif len(subject) > 100:
             print(f'\n{ERROR}Subject is over 100 characters long')
             continue

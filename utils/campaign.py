@@ -194,9 +194,9 @@ def campaign_first_mail(main_lp_url='', reminder=True):
         reminder_preheader = input(' ')
         if not reminder_preheader:
             reminder_preheader = pyperclip.paste()
-        if len(reminder_preheader) < 1:
-            print(f'\n{ERROR}Pre-header can not be blank')
-            continue
+            if not reminder_preheader:
+                print(f'\n{ERROR}Pre-header can not be blank')
+                continue
         elif len(reminder_preheader) > 140:
             print(f'\n{ERROR}Pre-header is over 140 characters long')
             continue

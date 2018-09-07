@@ -445,7 +445,7 @@ def mail_constructor(country, campaign=False):
             if preheader == 's':
                 preheader = '<!--pre-start-->pre-header<!--pre-end-->'
                 break
-            elif len(preheader) < 1:
+            elif not preheader:
                 print(f'\n{ERROR}Pre-header can not be blank')
             elif len(preheader) > 140:
                 print(f'\n{ERROR}Pre-header is over 140 characters long')
@@ -458,6 +458,17 @@ def mail_constructor(country, campaign=False):
 
         if mjml_files and preheader.lower() != 's' and re.search('Pre-header', mjml):
             mjml = mjml.replace('>Pre-header', '>' + preheader)
+
+    '''
+    =================================================== Swap CDN base URL
+    '''
+
+    if html_files:
+        html.replace('http://images.go.wolterskluwer.com',
+                     'https://img06.en25.com')
+    if mjml_files:
+        mjml.replace('http://images.go.wolterskluwer.com',
+                     'https://img06.en25.com')
 
     '''
     =================================================== Save MJML to Outcomes
@@ -492,9 +503,9 @@ def mail_constructor(country, campaign=False):
             reminder_preheader = input(' ')
             if not reminder_preheader:
                 reminder_preheader = pyperclip.paste()
-            if len(reminder_preheader) < 1:
-                print(f'\n{ERROR}Pre-header can not be blank')
-                continue
+                if not reminder_preheader:
+                    print(f'\n{ERROR}Pre-header can not be blank')
+                    continue
             elif len(reminder_preheader) > 140:
                 print(f'\n{ERROR}Pre-header is over 140 characters long')
                 continue

@@ -158,9 +158,9 @@ def asset_name_getter():
             asset_name = input(' ')
             if not asset_name:
                 asset_name = pyperclip.paste()
-            if len(asset_name) < 1:
-                print(f'\n{ERROR}Title can not be blank')
-                continue
+                if not asset_name:
+                    print(f'\n{ERROR}Title can not be blank')
+                    continue
             elif len(asset_name) > 200:
                 print(f'\n{ERROR}Title is over 200 characters long')
                 continue
@@ -205,9 +205,9 @@ def product_name_getter(campaign_name=''):
             product_name = input(' ')
             if not product_name:
                 product_name = pyperclip.paste()
-            if len(product_name) < 1:
-                print(f'\n{ERROR}Product name can not be blank')
-                continue
+                if not product_name:
+                    print(f'\n{ERROR}Product name can not be blank')
+                    continue
             elif len(product_name) > 60:
                 print(f'\n{ERROR}Product name is over 60 characters long')
                 continue
