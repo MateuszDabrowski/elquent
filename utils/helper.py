@@ -182,6 +182,8 @@ def asset_link_getter():
         if not asset_url:
             asset_url = pyperclip.paste()
         if asset_url.startswith('http') or asset_url.startswith('www'):
+            asset_url = asset_url.replace('http://images.go.wolterskluwer.com',
+                                          'https://img06.en25.com')
             break
         else:
             print(f'{ERROR}Entered value is not valid link!')

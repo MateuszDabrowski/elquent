@@ -109,6 +109,7 @@ def file(file_path, name='LP'):
         'submit-button': find_data_file(f'WKCORP_submit-button.txt'),
         'validation-body': find_data_file('WKCORP_validation-body.txt'),
         'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
+        'phone-required': find_data_file(f'WK{source_country}_required-phone-js.txt'),
         'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
         'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
         'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
@@ -227,6 +228,8 @@ def create_landing_page():
 =================================================================================
 '''
 
+# TODO: Add phone validation
+
 
 def create_form():
     '''
@@ -235,7 +238,7 @@ def create_form():
 
     def get_form():
         '''
-        Returns validated form code form clipoard
+        Returns validated form code form clipboard
         '''
         form_id = api.get_asset_id('Form')
         if form_id:
@@ -322,6 +325,18 @@ def create_form():
             regex_phone_field = re.compile(
                 rf'((<div id="formElement{id_name[0][0]}"[\s\S\n]*?</p>))', re.UNICODE)
             form = regex_phone_field.sub(snippet, form)
+
+            # Make phone field required for lead order
+            form = form.replace('type="submit"',
+                                'type="submit" onclick="leadPhoneRequired()"')
+            with open(file('phone-required'), 'r', encoding='utf-8') as f:
+                phone_validation = f.read()
+                phone_validation = regex_id.sub(
+                    id_name[0][0], phone_validation)
+            validation_function = 'function handleFormSubmit(ele)'
+            form = form.replace(validation_function,
+                                phone_validation + validation_function)
+
             print(f'\t{Fore.CYAN} » Adding lead-by-phone mechanism')
 
         return form
@@ -652,6 +667,8 @@ def page_gen(country):
     form, required = create_form()
     code = swap_form(code, form)
     code = javascript(code, required)
+    code = code.replace('http://images.go.wolterskluwer.com',
+                        'https://img06.en25.com')
 
     # Two way return of new code
     pyperclip.copy(code)
