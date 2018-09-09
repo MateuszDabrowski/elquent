@@ -39,6 +39,7 @@ Can help with implementation_
 - RegEx work automator
 - Allows user to automatically swap Eloqua Form in Landing Page
 - Allows to use built-in landing page templates for quick deployment
+- Adds lead by phone mechanism with conditional validation
 - Cleans code, appends snippets, changes form code
 
 _ToDo:_
@@ -152,4 +153,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.15_]
+[_Version: 1.7.16_]

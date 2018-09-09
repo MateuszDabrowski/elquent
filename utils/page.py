@@ -228,8 +228,6 @@ def create_landing_page():
 =================================================================================
 '''
 
-# TODO: Add phone validation
-
 
 def create_form():
     '''
