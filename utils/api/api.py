@@ -1186,6 +1186,9 @@ def eloqua_create_email(name, code):
     # Checks if there already is E-mail with that name
     eloqua_asset_exist(name, asset='Mail')
 
+    # Cleans technical comments
+    code = code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
+
     # Gets required data for the API call
     data = eloqua_fill_mail_params(name)
     data['isTracked'] = 'true'
