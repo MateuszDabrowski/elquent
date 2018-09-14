@@ -409,9 +409,17 @@ def mail_constructor(country, campaign=False):
             elif utm.lower() != 's':
                 if '?' in link:
                     html = html.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '"'))
+                        link, (link[:-1] + '&' + utm[1:] + '&TrackAll=True"'))
                 else:
-                    html = html.replace(link, (link[:-1] + utm + '"'))
+                    html = html.replace(
+                        link, (link[:-1] + utm + '&TrackAll=True"'))
+            elif utm.lower() == 's':
+                if '?' in link:
+                    mjml = mjml.replace(
+                        link, (link[:-1] + '&TrackAll=True"'))
+                else:
+                    mjml = mjml.replace(
+                        link, (link[:-1] + '?TrackAll=True"'))
 
     # Appending PURL & UTM to all trackable_links in MJML
     if mjml_files:
@@ -425,9 +433,17 @@ def mail_constructor(country, campaign=False):
             elif utm.lower() != 's':
                 if '?' in link:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '"'))
+                        link, (link[:-1] + '&' + utm[1:] + '&TrackAll=True"'))
                 else:
-                    mjml = mjml.replace(link, (link[:-1] + utm + '"'))
+                    mjml = mjml.replace(
+                        link, (link[:-1] + utm + '&TrackAll=True"'))
+            elif utm.lower() == 's':
+                if '?' in link:
+                    mjml = mjml.replace(
+                        link, (link[:-1] + '&TrackAll=True"'))
+                else:
+                    mjml = mjml.replace(
+                        link, (link[:-1] + '?TrackAll=True"'))
 
     '''
     =================================================== Swap pre-header

@@ -29,6 +29,7 @@ Can help with implementation_
 - Works with both HTML and MJML files
 - Outputs HTML, MJML, updates e-mail or creates new one directly in Eloqua
 - Uses PURL to ensure field merges on linked sites will be working
+- Adds TrackAll=True to all trackable link (PURL excluded)
 
 ---
 
@@ -153,4 +154,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.16_]
+[_Version: 1.7.17_]
