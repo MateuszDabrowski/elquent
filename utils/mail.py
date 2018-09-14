@@ -409,17 +409,17 @@ def mail_constructor(country, campaign=False):
             elif utm.lower() != 's':
                 if '?' in link:
                     html = html.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '&TrackAll=True"'))
+                        link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
                 else:
                     html = html.replace(
-                        link, (link[:-1] + utm + '&TrackAll=True"'))
+                        link, (link[:-1] + utm + '&elqTrack=true"'))
             elif utm.lower() == 's':
                 if '?' in link:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '&TrackAll=True"'))
+                        link, (link[:-1] + '&elqTrack=true"'))
                 else:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '?TrackAll=True"'))
+                        link, (link[:-1] + '?elqTrack=true"'))
 
     # Appending PURL & UTM to all trackable_links in MJML
     if mjml_files:
@@ -433,17 +433,17 @@ def mail_constructor(country, campaign=False):
             elif utm.lower() != 's':
                 if '?' in link:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '&TrackAll=True"'))
+                        link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
                 else:
                     mjml = mjml.replace(
-                        link, (link[:-1] + utm + '&TrackAll=True"'))
+                        link, (link[:-1] + utm + '&elqTrack=true"'))
             elif utm.lower() == 's':
                 if '?' in link:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '&TrackAll=True"'))
+                        link, (link[:-1] + '&elqTrack=true"'))
                 else:
                     mjml = mjml.replace(
-                        link, (link[:-1] + '?TrackAll=True"'))
+                        link, (link[:-1] + '?elqTrack=true"'))
 
     '''
     =================================================== Swap pre-header
