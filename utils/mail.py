@@ -94,79 +94,6 @@ def file(file_path, file_name='', folder_name=''):
 
 '''
 =================================================================================
-                                Code Output Helper
-=================================================================================
-'''
-
-
-def output_method(html_code='', mjml_code=''):
-    '''
-    Allows user choose how the program should output the results
-    Returns email_id if creation/update in Eloqua was selected
-    '''
-    # Cleans technical comments from the code
-    if html_code:
-        html_code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
-    if mjml_code:
-        mjml_code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
-
-    # Asks which output
-    print(
-        f'\n{Fore.GREEN}New code should be:',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t»',
-        f'{Fore.WHITE}[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
-    if html_code:
-        print(
-            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t»',
-            f'{Fore.WHITE}[{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
-    if mjml_code:
-        print(
-            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t»',
-            f'{Fore.WHITE}[{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
-    print(
-        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t»',
-        f'{Fore.WHITE}[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
-        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t»',
-        f'{Fore.WHITE}[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
-    email_id = ''
-    while True:
-        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
-        choice = input(' ')
-        if choice == '0':
-            break
-        elif choice == '1' and html_code:
-            pyperclip.copy(html_code)
-            print(
-                f'\n{SUCCESS}You can now paste the HTML code [CTRL+V]')
-            break
-        elif choice == '2' and mjml_code:
-            pyperclip.copy(mjml_code)
-            print(
-                f'\n{SUCCESS}You can now paste the MJML code [CTRL+V]')
-            break
-        elif choice == '3':
-            print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] » Write or copypaste name of the E-mail:')
-            name = api.eloqua_asset_name()
-            api.eloqua_create_email(name, html_code)
-            break
-        elif choice == '4':
-            print(
-                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}] » Write or copypaste ID of the E-mail to update:')
-            email_id = input(' ')
-            if not email_id:
-                email_id = pyperclip.paste()
-            api.eloqua_update_email(email_id, html_code)
-            break
-        else:
-            print(f'{ERROR}Entered value does not belong to any utility!')
-            choice = ''
-
-        return
-
-
-'''
-=================================================================================
                             Preparation of the program
 =================================================================================
 '''
@@ -227,6 +154,117 @@ def package_chooser():
         packages.get(folder_name).get('mjml'),
         packages.get(folder_name).get('img')
     )
+
+
+'''
+=================================================================================
+                                Code Manipulation Helpers
+=================================================================================
+'''
+
+
+def link_manipulator(code_file, trackable_links, utm):
+    '''
+    Appends PURL, UTM & elqTrack to viable links and changes CDN to SSL Eloqua one
+    '''
+    for link in trackable_links:
+        if 'info.wolterskluwer' in link and link[-2] == '/':
+            code_file = code_file.replace(
+                link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+        elif 'info.wolterskluwer' in link and link[-2] != '/':
+            code_file = code_file.replace(
+                link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
+        elif utm.lower() != 's':
+            if '?' in link:
+                code_file = code_file.replace(
+                    link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
+            else:
+                code_file = code_file.replace(
+                    link, (link[:-1] + utm + '&elqTrack=true"'))
+        elif utm.lower() == 's':
+            if '?' in link:
+                code_file = code_file.replace(
+                    link, (link[:-1] + '&elqTrack=true"'))
+            else:
+                code_file = code_file.replace(
+                    link, (link[:-1] + '?elqTrack=true"'))
+    code_file = code_file.replace(
+        'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
+
+    return code_file
+
+
+'''
+=================================================================================
+                                Code Output Helper
+=================================================================================
+'''
+
+
+def output_method(html_code='', mjml_code=''):
+    '''
+    Allows user choose how the program should output the results
+    Returns email_id if creation/update in Eloqua was selected
+    '''
+    # Cleans technical comments from the code
+    html_code = html_code.replace(
+        '<!--pre-start-->', '').replace('<!--pre-end-->', '')
+    mjml_code = mjml_code.replace(
+        '<!--pre-start-->', '').replace('<!--pre-end-->', '')
+
+    # Asks which output
+    print(
+        f'\n{Fore.GREEN}New code should be:',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}FILE{Fore.WHITE}] Only saved to Outcomes folder')
+    if html_code:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t»',
+            f'{Fore.WHITE}[{Fore.YELLOW}HTML{Fore.WHITE}] Copied to clipboard as HTML for pasting [CTRL+V]')
+    if mjml_code:
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t»',
+            f'{Fore.WHITE}[{Fore.YELLOW}MJML{Fore.WHITE}] Copied to clipboard as MJML for pasting [CTRL+V]')
+    print(
+        f'{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}CREATE{Fore.WHITE}] Uploaded to Eloqua as a new E-mail',
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t»',
+        f'{Fore.WHITE}[{Fore.YELLOW}UPDATE{Fore.WHITE}] Uploaded to Eloqua as update to existing E-mail')
+    email_id = ''
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice == '0':
+            break
+        elif choice == '1' and html_code:
+            pyperclip.copy(html_code)
+            print(
+                f'\n{SUCCESS}You can now paste the HTML code [CTRL+V]')
+            break
+        elif choice == '2' and mjml_code:
+            pyperclip.copy(mjml_code)
+            print(
+                f'\n{SUCCESS}You can now paste the MJML code [CTRL+V]')
+            break
+        elif choice == '3':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] » Write or copypaste name of the E-mail:')
+            name = api.eloqua_asset_name()
+            api.eloqua_create_email(name, html_code)
+            break
+        elif choice == '4':
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}ID{Fore.WHITE}] » Write or copypaste ID of the E-mail to update:')
+            email_id = input(' ')
+            if not email_id:
+                email_id = pyperclip.paste()
+            api.eloqua_update_email(email_id, html_code)
+            break
+        else:
+            print(f'{ERROR}Entered value does not belong to any utility!')
+            choice = ''
+
+        return
 
 
 '''
@@ -397,53 +435,11 @@ def mail_constructor(country, campaign=False):
         if not link or 'googleapis' in link or 'emailfield' in link:
             trackable_links.remove(link)
 
-    # Appending PURL & UTM to all trackable_links in HTML
     if html_files:
-        for link in trackable_links:
-            if 'info.wolterskluwer' in link and link[-2] == '/':
-                html = html.replace(
-                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
-            elif 'info.wolterskluwer' in link and link[-2] != '/':
-                html = html.replace(
-                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
-            elif utm.lower() != 's':
-                if '?' in link:
-                    html = html.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
-                else:
-                    html = html.replace(
-                        link, (link[:-1] + utm + '&elqTrack=true"'))
-            elif utm.lower() == 's':
-                if '?' in link:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + '&elqTrack=true"'))
-                else:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + '?elqTrack=true"'))
+        html = link_manipulator(html, trackable_links, utm)
 
-    # Appending PURL & UTM to all trackable_links in MJML
     if mjml_files:
-        for link in trackable_links:
-            if 'info.wolterskluwer' in link and link[-2] == '/':
-                mjml = mjml.replace(
-                    link, (link[:-1] + '<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
-            elif 'info.wolterskluwer' in link and link[-2] != '/':
-                mjml = mjml.replace(
-                    link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
-            elif utm.lower() != 's':
-                if '?' in link:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
-                else:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + utm + '&elqTrack=true"'))
-            elif utm.lower() == 's':
-                if '?' in link:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + '&elqTrack=true"'))
-                else:
-                    mjml = mjml.replace(
-                        link, (link[:-1] + '?elqTrack=true"'))
+        mjml = link_manipulator(mjml, trackable_links, utm)
 
     '''
     =================================================== Swap pre-header
@@ -474,17 +470,6 @@ def mail_constructor(country, campaign=False):
 
         if mjml_files and preheader.lower() != 's' and re.search('Pre-header', mjml):
             mjml = mjml.replace('>Pre-header', '>' + preheader)
-
-    '''
-    =================================================== Swap CDN base URL
-    '''
-
-    if html_files:
-        html.replace('http://images.go.wolterskluwer.com',
-                     'https://img06.en25.com')
-    if mjml_files:
-        mjml.replace('http://images.go.wolterskluwer.com',
-                     'https://img06.en25.com')
 
     '''
     =================================================== Save MJML to Outcomes
