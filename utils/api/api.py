@@ -1304,27 +1304,46 @@ def eloqua_create_campaign(name, data):
     return (campaign_id, campaign)
 
 
-def eloqua_get_campaigns(query, page):
+def eloqua_get_campaigns(query, page, depth='complete'):
     '''
     Requires timeframe and country for building call
     Returns partial list of campaigns and their full count
     '''
+    # Sets output page element count to bigger for smaller response depth
+    if depth == 'minimal':
+        count = 500
+    else:
+        count = 40
+
     # Builds the API request
     payload = {
         'search': query,  # Filter by query
-        'depth': 'complete',  # Required to work
+        'depth': depth,  # Sets required depth of data output
         'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
-        'count': '40',  # Required to work, may be changed from 1 up to 1000
+        'count': count,  # Sets count according to depth
         'page': page  # Pagination of outcomes
     }
 
-    # Creating a post call to Eloqua API
+    # Creating a get call to Eloqua API
     root = f'{eloqua_rest}assets/campaigns'
     response = api_request(root, params=payload)
     campaigns = response.json()
     print(f'{Fore.GREEN}|', end='', flush=True)
 
     return campaigns
+
+
+def eloqua_get_campaign(campaign_id):
+    '''
+    Requires campaign id
+    Returns full data on selected campaign
+    '''
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/campaign/{campaign_id}'
+    response = api_request(root)
+    campaign = response.json()
+
+    return campaign
 
 
 '''
@@ -1355,6 +1374,26 @@ def eloqua_create_program(name, data):
     webbrowser.open(url, new=2, autoraise=True)
 
     return (program_id, program)
+
+
+'''
+=================================================================================
+                                User API
+=================================================================================
+'''
+
+
+def eloqua_get_user(user_id):
+    '''
+    Required user id
+    Returns user data
+    '''
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}system/user/{user_id}'
+    response = api_request(root)
+    user = response.json()
+
+    return user
 
 
 '''

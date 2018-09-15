@@ -14,8 +14,12 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 import os
 import sys
 import json
+from datetime import datetime
 import pyperclip
 from colorama import Fore, init
+
+# ELQuent imports
+import utils.api.api as api
 
 # Initialize colorama
 init(autoreset=True)
@@ -50,21 +54,21 @@ def country_naming_setter(country):
 '''
 
 
-def file(file_path):
+def file(file_path, name=''):
     '''
     Returns file path to template files
     '''
 
-    def find_data_file(filename, directory='templates'):
+    def find_data_file(filename, directory):
         '''
         Returns correct file path for both script and frozen app
         '''
-        if directory == 'templates':  # For reading template files
+        if directory == 'outcomes':  # For saving outcomes
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
-            return os.path.join(datadir, 'utils', directory, filename)
+            return os.path.join(datadir, directory, filename)
         elif directory == 'api':  # For reading api files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
@@ -74,6 +78,7 @@ def file(file_path):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
+        'outcome-json': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -132,6 +137,33 @@ def campaign_type_getter():
             print(f'{ERROR}Entered value does not belong to any choice!')
 
     return lead_or_contact_form
+
+
+def date_swapper(date):
+    '''
+    Changes date format from DD/MM/YYYY to MM/DD/YYYY and the other way round
+    '''
+    date_parts = date.split('-')
+    swapped_date = f'{date_parts[1]}-{date_parts[0]}-{date_parts[2]}'
+
+    return swapped_date
+
+
+def user_getter(user_id):
+    '''
+    Returns data on Eloqua user with provided ID
+    '''
+    user = api.eloqua_get_user(user_id)
+
+    user_dict = {
+        'id': user['id'],
+        'name': user['name'],
+        'mail': user['emailAddress'],
+        'createdAt': datetime.utcfromtimestamp(
+            int(user['createdAt'])).strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+    return user_dict
 
 
 def asset_name_getter():
