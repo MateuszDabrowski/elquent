@@ -28,6 +28,7 @@ import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.export as export
+import utils.validator as validator
 import utils.corp as corp
 import utils.api.api as api
 
@@ -253,6 +254,7 @@ def menu(choice=''):
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
+        'validator': (validator.validator_module, f'Validator{Fore.WHITE}] Test and validate assets and campaigns'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
     }
 

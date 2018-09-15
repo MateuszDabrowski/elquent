@@ -105,9 +105,17 @@ _ToDo:_
 
 ---
 
+### [ELQuent.validator](utils/validator.py)
+
+#### Module focused on validating assets & campaigns
+
+- Exports active multistep campaigns with member count, start and end dates
+
+---
+
 ### [ELQuent.corp](utils/corp.py)
 
-#### Specialized utils for core admins
+#### Specialized utils for core admins made on demand
 
 - Creates forms and shared lists for e-mail group control based on country splitted json file
 - Creates program canvas and automatically adds above assets to program steps
@@ -137,6 +145,7 @@ _ToDo:_
 - Creates export definition for activity API and downloads data from it
 - Refreshes and download segment counts
 - Gets campaign data
+- Gets user data
 
 ---
 
@@ -150,9 +159,11 @@ _ToDo:_
 - Gets link to the asset
 - Gets promoted product name either from campaign name (via naming convention) or from user
 - Gets optional header text
+- Gets users via api module
+- Changes date format from US to EU and the other way round
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.7.18_]
+[_Version: 1.8.0_]

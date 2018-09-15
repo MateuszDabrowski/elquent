@@ -24,14 +24,29 @@ import utils.api.api as api
 init(autoreset=True)
 
 # Globals
-source_country = None
 naming = None
+source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
 NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
+
+
+def country_naming_setter(country):
+    '''
+    Sets source_country for all functions
+    Loads json file with naming convention
+    '''
+    global source_country
+    source_country = country
+
+    # Loads json file with naming convention
+    with open(file('naming'), 'r', encoding='utf-8') as f:
+        global naming
+        naming = json.load(f)
+
 
 '''
 =================================================================================
@@ -279,14 +294,9 @@ def mail_constructor(country, campaign=False):
     Builds .mjml and .html files with eloqua-linked images, correct tracking scripts and pre-header
     Returns html code
     '''
-    # Creates global source_country from main module
-    global source_country
-    source_country = country
 
-    # Loads json file with naming convention
-    with open(file('naming'), 'r', encoding='utf-8') as f:
-        global naming
-        naming = json.load(f)
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
 
     # Asks user to firstly upload images to Eloqua
     print(
