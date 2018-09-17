@@ -127,7 +127,13 @@ def package_chooser():
     packages = {}
     print(f'\n{Fore.GREEN}Available packages:', end='')
     for i, folder in enumerate(folders):
-        files = os.listdir(file('package', file_name=folder))
+        try:
+            files = os.listdir(file('package', file_name=folder))
+        except NotADirectoryError:
+            print(
+                f'\n{Fore.YELLOW}There is non-folder file in Incomes.',
+                f'\n{Fore.WHITE}Please put it inside a folder to see it listed here.')
+            continue
         files = [f for f in files if not f.startswith('.')]
         html = [f for f in files if f.endswith('.html')]
         mjml = [f for f in files if f.endswith('.mjml')]
