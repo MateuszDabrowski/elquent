@@ -290,6 +290,54 @@ def output_method(html_code='', mjml_code=''):
 
 '''
 =================================================================================
+                                Alert Mail Helper
+=================================================================================
+'''
+
+
+def generator_constructor(country, generated_mail):
+    '''
+    Gets, fixes and uploads alert mail code to Eloqua
+    Returns eloqua mail id
+    '''
+
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+
+    # Asks user paste html code from generator
+    print(
+        f'\n{Fore.YELLOW}»{Fore.WHITE} Please copy {Fore.YELLOW}e-mail HTML {Fore.WHITE}and click [Enter]')
+    mail_html = pyperclip.paste()
+
+    # Gathers all links in HTML
+    links = re.compile(r'href=(".*?")', re.UNICODE)
+    trackable_links = links.findall(mail_html)
+    trackable_links = list(set(trackable_links))
+
+    # Removes untrackable links
+    for link in trackable_links[:]:
+        if not link or 'googleapis' in link or 'emailfield' in link:
+            trackable_links.remove(link)
+
+    # Fixes links in alert mails
+    if generated_mail == 'alert':
+        for link in trackable_links:
+            base_part = link.split('?')[0]
+            tracking_part = link.split('?')[1].split('#')[0]
+            asset_part = link.split('?')[1].split('#')[1]
+            filter_part = link.split('?')[2]
+            new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}&elqTrack=true'
+            mail_html = mail_html.replace(link, new_link)
+
+    # Swaps file storage links to unbranded SSL
+    mail_html = mail_html.replace(
+        'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
+
+    return mail_html
+
+
+'''
+=================================================================================
                                 Main program flow
 =================================================================================
 '''

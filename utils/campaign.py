@@ -163,7 +163,7 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail(main_lp_url='', reminder=True):
+def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
@@ -171,7 +171,7 @@ def campaign_first_mail(main_lp_url='', reminder=True):
     # Creates first mail from package
     if main_lp_url:
         mail_html = mail.mail_constructor(source_country, campaign=main_lp_url)
-    else:  # If we don't know target URL
+    elif not mail_html:  # If we don't know target URL nor have html from paste
         mail_html = mail.mail_constructor(source_country, campaign='linkless')
     if not mail_html and not reminder:
         return False
@@ -525,17 +525,28 @@ def simple_campaign():
     Saves html and mjml codes of e-mail as backup to outcome folder
     '''
 
-    # Creates main e-mail and reminder
-    mail_id = campaign_first_mail(reminder=False)
-    if not mail_id:
-        return False
+    # Checks if campaign is built with externally generated HTML
+    if campaign_name[2] == 'RET' and campaign_name[3].startswith('LA'):
+        generated_mail = 'alert'
+    elif campaign_name[2] == 'NSL' and campaign_name[3].split('-')[0] not in ['NP', 'NPS', 'NPA']:
+        generated_mail = 'newsletter'
+    else:
+        generated_mail = False
+
+    # Creates main e-mail for simple campaign
+    if generated_mail:
+        mail_html = mail.generator_constructor(source_country, generated_mail)
+        mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
+        if not mail_id:
+            return False
+    else:
+        mail_id = campaign_first_mail(reminder=False)
+        if not mail_id:
+            return False
 
     '''
     =================================================== Create Campaign
     '''
-
-    # Chosses correct folder ID for campaign
-    folder_id = naming[source_country]['id']['campaign'].get(campaign_name[1])
 
     # Gets campaign code out of the campaign name
     campaign_code = []
@@ -550,6 +561,21 @@ def simple_campaign():
         # Change to string for easy replacing
         campaign_string = json.dumps(campaign_json)
         campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+        if generated_mail:
+            # Create name structure for getting data from json
+            generated_type = campaign_name[2] + \
+                '_' + campaign_name[3].split('-')[0]
+            # Capture specific folder
+            folder_id = naming[source_country]['mail']['by_name'][generated_type]['folder_id']
+            # Capture specific segment
+            segment_id = naming[source_country]['mail']['by_name'][generated_type]['segment_id']
+            campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
+        else:
+            # Capture generic folder for campaign type
+            folder_id = naming[source_country]['id']['campaign'].get(
+                campaign_name[1])
+            # Insert test segment
+            campaign_string = campaign_string.replace('SEGMENT_ID', '466')
         # Change back to json for API call
         campaign_json = json.loads(campaign_string)
         campaign_json['name'] = '_'.join(campaign_name)

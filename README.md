@@ -31,6 +31,7 @@ Can help with implementation_
 - Uses PURL to ensure field merges on linked sites will be working
 - Adds elqTrack=true to all viable link (PURL excluded)
 - Swaps CDN URLs to SSL on the fly
+- Special campaign sub-flow for externally generated mails
 
 ---
 
