@@ -566,9 +566,9 @@ def simple_campaign():
             generated_type = campaign_name[2] + \
                 '_' + campaign_name[3].split('-')[0]
             # Capture specific folder
-            folder_id = naming[source_country]['mail']['by_name'][generated_type]['folder_id']
+            folder_id = naming[source_country]['mail']['by_name'][generated_type]['folderId']
             # Capture specific segment
-            segment_id = naming[source_country]['mail']['by_name'][generated_type]['segment_id']
+            segment_id = naming[source_country]['mail']['by_name'][generated_type]['segmentId']
             campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
         else:
             # Capture generic folder for campaign type

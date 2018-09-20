@@ -209,6 +209,8 @@ def link_manipulator(code_file, trackable_links, utm):
             else:
                 code_file = code_file.replace(
                     link, (link[:-1] + '?elqTrack=true"'))
+
+    # Swaps file storage links to unbranded SSL
     code_file = code_file.replace(
         'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
 
@@ -304,10 +306,36 @@ def generator_constructor(country, generated_mail):
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)
 
-    # Asks user paste html code from generator
+    '''
+    =================================================== Get HTML
+    '''
+
+    # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}»{Fore.WHITE} Please copy {Fore.YELLOW}e-mail HTML {Fore.WHITE}and click [Enter]')
-    mail_html = pyperclip.paste()
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with HTML file to Incomes folder.',
+        f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
+    input(' ')
+
+    # Lets user choose package to construct
+    while True:
+        # Gets name and files but image_files with index 3
+        folder_name, html_files, _, _ = package_chooser()
+        if not folder_name:
+            return False
+        if not html_files:
+            print(
+                f'{ERROR}Chosen package doesn\'t have HTML file!')
+        else:
+            break
+
+    mail_html = ''
+    if html_files:
+        with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
+            mail_html = f.read()
+
+    '''
+    =================================================== Modify package
+    '''
 
     # Gathers all links in HTML
     links = re.compile(r'href=(".*?")', re.UNICODE)
@@ -322,12 +350,18 @@ def generator_constructor(country, generated_mail):
     # Fixes links in alert mails
     if generated_mail == 'alert':
         for link in trackable_links:
-            base_part = link.split('?')[0]
-            tracking_part = link.split('?')[1].split('#')[0]
-            asset_part = link.split('?')[1].split('#')[1]
-            filter_part = link.split('?')[2]
-            new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}&elqTrack=true'
-            mail_html = mail_html.replace(link, new_link)
+            if 'sip.lex' in link and '#' in link:
+                base_part = link.split('?')[0]
+                tracking_part = link.split('?')[1].split('#')[0]
+                asset_part = link.split('?')[1].split('#')[1]
+                if '?p=' in link:
+                    filter_part = link.split('?')[2]
+                    new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
+                else:
+                    new_link = f'{base_part}#{asset_part}?{tracking_part}'
+                if '&elqTrack=true' not in new_link:
+                    new_link = new_link + '&elqTrack=true'
+                mail_html = mail_html.replace(link, new_link + '"')
 
     # Swaps file storage links to unbranded SSL
     mail_html = mail_html.replace(
