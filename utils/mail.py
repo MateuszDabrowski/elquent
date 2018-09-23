@@ -229,12 +229,6 @@ def output_method(html_code='', mjml_code=''):
     Allows user choose how the program should output the results
     Returns email_id if creation/update in Eloqua was selected
     '''
-    # Cleans technical comments from the code
-    html_code = html_code.replace(
-        '<!--pre-start-->', '').replace('<!--pre-end-->', '')
-    mjml_code = mjml_code.replace(
-        '<!--pre-start-->', '').replace('<!--pre-end-->', '')
-
     # Asks which output
     print(
         f'\n{Fore.GREEN}New code should be:',
@@ -565,9 +559,14 @@ def mail_constructor(country, campaign=False):
 
         if html_files and preheader.lower() != 's' and re.search('Pre-header', html):
             html = html.replace('Pre-header', preheader)
+            reminder_html = html
+            html = html.replace('<!--pre-start-->', '')\
+                       .replace('<!--pre-end-->', '')
 
         if mjml_files and preheader.lower() != 's' and re.search('Pre-header', mjml):
-            mjml = mjml.replace('>Pre-header', '>' + preheader)
+            mjml = mjml.replace('>Pre-header', '>' + preheader)\
+                       .replace('<!--pre-start-->', '')\
+                       .replace('<!--pre-end-->', '')
 
     '''
     =================================================== Save MJML to Outcomes
@@ -612,7 +611,10 @@ def mail_constructor(country, campaign=False):
                 break
         if reminder_preheader.lower() != 's':
             reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
-            reminder_html = regex_mail_preheader.sub(reminder_preheader, html)
+            reminder_html = regex_mail_preheader.sub(
+                reminder_preheader, reminder_html)
+            reminder_html = reminder_html.replace('<!--pre-start-->', '')\
+                                         .replace('<!--pre-end-->', '')
         else:
             reminder_html = html
         output_method(reminder_html)
