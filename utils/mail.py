@@ -188,6 +188,7 @@ def link_manipulator(code_file, trackable_links, utm):
     '''
     Appends PURL, UTM & elqTrack to viable links and changes CDN to SSL Eloqua one
     '''
+    utm_element = re.compile(r'(&|)(utm.*?)(?=(&|"))', re.UNICODE)
     for link in trackable_links:
         if 'info.wolterskluwer' in link and link[-2] == '/':
             code_file = code_file.replace(
@@ -196,12 +197,18 @@ def link_manipulator(code_file, trackable_links, utm):
             code_file = code_file.replace(
                 link, (link[:-1] + '/<span class=eloquaemail >PURL_NAME1</span>' + utm + '"'))
         elif utm.lower() != 's':
-            if '?' in link:
+            new_link = link
+            # Cleans old tracking script if any
+            if 'utm_' in link:
+                new_link = utm_element.sub('', link)
+                new_link = new_link.replace('?"', '"')
+            # Appends new tracking script
+            if '?' in new_link:
                 code_file = code_file.replace(
-                    link, (link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
+                    link, (new_link[:-1] + '&' + utm[1:] + '&elqTrack=true"'))
             else:
                 code_file = code_file.replace(
-                    link, (link[:-1] + utm + '&elqTrack=true"'))
+                    link, (new_link[:-1] + utm + '&elqTrack=true"'))
         elif utm.lower() == 's':
             if '?' in link:
                 code_file = code_file.replace(
