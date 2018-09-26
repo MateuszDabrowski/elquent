@@ -298,7 +298,7 @@ def output_method(html_code='', mjml_code=''):
 '''
 
 
-def generator_constructor(country, generated_mail):
+def generator_constructor(country):
     '''
     Gets, fixes and uploads alert mail code to Eloqua
     Returns eloqua mail id
@@ -349,20 +349,19 @@ def generator_constructor(country, generated_mail):
             trackable_links.remove(link)
 
     # Fixes links in alert mails
-    if generated_mail == 'alert':
-        for link in trackable_links:
-            if 'sip.lex' in link and '#' in link:
-                base_part = link.split('?')[0]
-                tracking_part = link.split('?')[1].split('#')[0]
-                asset_part = link.split('?')[1].split('#')[1]
-                if '?p=' in link:
-                    filter_part = link.split('?')[2]
-                    new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
-                else:
-                    new_link = f'{base_part}#{asset_part}?{tracking_part}'
-                if '&elqTrack=true' not in new_link:
-                    new_link = new_link + '&elqTrack=true'
-                mail_html = mail_html.replace(link, new_link + '"')
+    for link in trackable_links:
+        if 'sip.lex' in link and '#' in link:
+            base_part = link.split('?')[0]
+            tracking_part = link.split('?')[1].split('#')[0]
+            asset_part = link.split('?')[1].split('#')[1]
+            if '?p=' in link:
+                filter_part = link.split('?')[2]
+                new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
+            else:
+                new_link = f'{base_part}#{asset_part}?{tracking_part}'
+            if '&elqTrack=true' not in new_link:
+                new_link = new_link + '&elqTrack=true'
+            mail_html = mail_html.replace(link, new_link + '"')
 
     # Swaps file storage links to unbranded SSL
     mail_html = mail_html.replace(

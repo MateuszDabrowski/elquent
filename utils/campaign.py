@@ -526,16 +526,12 @@ def simple_campaign():
     '''
 
     # Checks if campaign is built with externally generated HTML
-    if campaign_name[2] == 'RET' and campaign_name[3].startswith('LA'):
-        generated_mail = 'alert'
-    elif campaign_name[2] == 'NSL' and campaign_name[3].split('-')[0] not in ['NP', 'NPS', 'NPA']:
-        generated_mail = 'newsletter'
-    else:
-        generated_mail = False
+    alert_name = ('_').join([campaign_name[2], campaign_name[3].split('-')[0]])
+    generated_mail = True if alert_name.startswith('RET_LA') else False
 
     # Creates main e-mail for simple campaign
     if generated_mail:
-        mail_html = mail.generator_constructor(source_country, generated_mail)
+        mail_html = mail.generator_constructor(source_country)
         mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
         if not mail_id:
             return False
@@ -566,7 +562,8 @@ def simple_campaign():
             generated_type = campaign_name[2] + \
                 '_' + campaign_name[3].split('-')[0]
             # Capture specific folder
-            folder_id = naming[source_country]['mail']['by_name'][generated_type]['folderId']
+            folder_id = naming[source_country]['id']['campaign'].get(
+                alert_name)
             # Capture specific segment
             segment_id = naming[source_country]['mail']['by_name'][generated_type]['segmentId']
             campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
