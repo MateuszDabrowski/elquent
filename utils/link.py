@@ -145,6 +145,42 @@ def output_method(code, email_id, name):
 
 '''
 =================================================================================
+                                elqTrack Helper
+=================================================================================
+'''
+
+
+def add_elqtrack(code):
+    '''
+    Returns code after appending correctly elqTrack=true to viable links
+    '''
+    # Gathers all links in HTML
+    links = re.compile(r'href=(".*?")', re.UNICODE)
+    trackable_links = links.findall(code)
+    trackable_links = list(set(trackable_links))
+
+    # Removes untrackable links
+    for link in trackable_links[:]:
+        if not link or 'googleapis' in link or 'emailfield' in link:
+            trackable_links.remove(link)
+
+    # Fixes links in alert mails
+    for link in trackable_links:
+        # Appends new tracking script
+        if '?' in link:
+            code = code.replace(link, (link[:-1] + '&elqTrack=true"'))
+        else:
+            code = code.replace(link, (link[:-1] + '?elqTrack=true"'))
+
+    # Swaps file storage links to unbranded SSL
+    code = code.replace(
+        'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
+
+    return code
+
+
+'''
+=================================================================================
                                 Cleaning functions
 =================================================================================
 '''
@@ -166,6 +202,7 @@ def clean_elq_track():
             f'\n{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}]',
             f'{Fore.WHITE}Cleaned {len(elq_track.findall(code))} elqTracks and saved to Outcomes folder.')
         code = elq_track.sub('', code)
+        code = add_elqtrack(code)
         with open(file('elqtrack', name=name), 'w', encoding='utf-8') as f:
             f.write(code)
         # Asks if user want another method of code usage
@@ -239,6 +276,7 @@ def swap_utm_track(code='', email_id='', name=''):
         print(
             f'{Fore.GREEN}» Swapped {len(utm_track.findall(code))} UTM tracking scripts and saved to Outcomes folder.')
         code = utm_track.sub(new_utm, code)
+        code = add_elqtrack(code)
         with open(file('utmswap', name=name), 'w', encoding='utf-8') as f:
             f.write(code)
         # Asks if user want another method of code usage
