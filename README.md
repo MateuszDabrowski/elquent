@@ -111,6 +111,7 @@ _ToDo:_
 #### Module focused on validating assets & campaigns
 
 - Exports active multistep campaigns with member count, start and end dates
+- Basic campaign validation (fields, assets, steps)
 
 ---
 
@@ -162,9 +163,10 @@ _ToDo:_
 - Gets optional header text
 - Gets users via api module
 - Changes date format from US to EU and the other way round
+- Converts epoch to readable date format
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.2_]
+[_Version: 1.8.3_]

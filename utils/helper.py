@@ -141,12 +141,25 @@ def campaign_type_getter():
 
 def date_swapper(date):
     '''
-    Changes date format from DD/MM/YYYY to MM/DD/YYYY and the other way round
+    Changes date format from DD-MM-YYYY to MM-DD-YYYY and the other way round
     '''
     date_parts = date.split('-')
     swapped_date = f'{date_parts[1]}-{date_parts[0]}-{date_parts[2]}'
 
     return swapped_date
+
+
+def epoch_to_date(epoch):
+    '''
+    Converts epoch timestamp to readable datetime format DD-MM-YYYY
+    '''
+    if not epoch:
+        return False
+    else:
+        readable_time = datetime.fromtimestamp(int(epoch))
+        readable_time = readable_time.strftime('%d-%m-%Y')
+
+        return readable_time
 
 
 def user_getter(user_id):

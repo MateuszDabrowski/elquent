@@ -29,6 +29,7 @@ init(autoreset=True)
 # Globals
 naming = None
 source_country = None
+campaign_name = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -45,6 +46,9 @@ def country_naming_setter(country):
     '''
     global source_country
     source_country = country
+
+    # Prepares globals for imported modules
+    helper.country_naming_setter(source_country)
 
     # Loads json file with naming convention
     with open(file('naming'), 'r', encoding='utf-8') as f:
@@ -97,7 +101,104 @@ def file(file_path, name=''):
 
 '''
 =================================================================================
-                            Campaign Lifespan Program
+                            Campaign Asset Validation
+=================================================================================
+'''
+
+
+def campaign_field_validator(campaign_data):
+    '''
+    Lists errors with campaign fields
+    '''
+    for field in ['Region', 'Type', 'PSP', 'VSP']:
+        if not campaign_data.get(field):
+            print(f'{ERROR}Campaign field {field} is not filled!')
+        if campaign_data.get(field) not in campaign_name:
+            print(f'{ERROR}Campaign field {field} has incorrect value!')
+
+    return
+
+
+def campaign_asset_validator(campaign_json, asset_type):
+    '''
+    Requires json with campaign data and asset type
+    Possible asset names ['segment', 'email', 'landingPage', 'form']
+    Returns a list of IDs of the assets
+    '''
+    asset_list = []
+    asset_type_capitalized = asset_type[:1].capitalize() + asset_type[1:]
+    for element in campaign_json['elements']:
+        if element['type'] == f'Campaign{asset_type_capitalized}':
+            # Gathers basic data on asset
+            asset_list.append(element.get(f'{asset_type}Id'))
+
+            # Validates whether asset is connected
+            if not element.get(f'{asset_type}Id'):
+                print(f'{ERROR}Add {asset_type} to {element.get("name")} step!')
+
+            # Validates whether there are defined outputs
+            if not element.get('outputTerminals'):
+                print(f'{ERROR}{element.get("name")} is not connected to any step!')
+
+    return asset_list
+
+
+def campaign_data_getter():
+    '''
+    Automatically tests whether campaign assets are correct
+    '''
+    # Gets name of the campaign that should be validated
+    global campaign_name
+    campaign_name = helper.campaign_name_getter()
+    campaign_name = '_'.join(campaign_name)
+
+    # Searches Eloqua for a campaign with above acquired name
+    campaign_json = api.eloqua_get_campaigns(campaign_name)
+    if len(campaign_json['elements']) > 1:
+        print(f'{ERROR}There is more than one campaign with the same name!')
+        return False
+    else:
+        campaign_json = campaign_json['elements'][0]
+
+    # Creates dict to map information about the campaign
+    print(f'\n{Fore.WHITE}» Gathering Campaign Data')
+    campaign_data = {
+        'Name': campaign_json['name'],
+        'ID': campaign_json['id'],
+        'Category': 'multistep' if campaign_json['campaignCategory'] == 'contact' else 'simple',
+        'StartDate': helper.epoch_to_date(campaign_json.get('startAt', False)),
+        'EndDate': helper.epoch_to_date(campaign_json.get('endAt', False)),
+        'Region': campaign_json.get('region'),
+        'Type': campaign_json.get('campaignType'),
+        'PSP': campaign_json['fieldValues'][0].get('value'),
+        'VSP': campaign_json.get('product'),
+    }
+
+    # Validate campaign fields
+    campaign_field_validator(campaign_data)
+
+    # Validate all assets included in the campaign and add to campaign_data
+    for asset in ['segment', 'email', 'landingPage', 'form']:
+        campaign_asset = campaign_asset_validator(campaign_json, asset)
+        asset_capitalized = asset[:1].capitalize() + asset[1:]
+        campaign_data[asset_capitalized] = campaign_asset
+
+    print(campaign_data)
+
+    # TODO: Get all connected decision steps
+    # TODO: Search for not connected assets (especially forms, LPs)
+    # TODO: Validate campaign elements
+
+    # TODO: Validate names of all assets
+
+    # TODO: Automatically fix all bugs using APIs
+
+    return
+
+
+'''
+=================================================================================
+                            Campaign Lifespan Validation
 =================================================================================
 '''
 
@@ -106,6 +207,30 @@ def lifespan_analytics_menu(today):
     '''
     Automatically points at campaigns that require attention and allows to take action
     '''
+
+    def lifespan_analytics(campaign_list):
+        '''
+        Shows chosen list of attention needing campaigns and allows to open them in Eloqua for further analysis
+        campaign_list is a list of lists with ['id', 'name', 'createdBy', 'lifespan']
+        '''
+        for campaign in campaign_list:
+            print(
+                f'\n{Fore.YELLOW}» {Fore.WHITE}{campaign[1]}'
+                f'\n{Fore.WHITE}[Span: {Fore.YELLOW}{campaign[3]} days{Fore.WHITE}] '
+                f'{Fore.WHITE}[ID: {Fore.YELLOW}{campaign[0]}{Fore.WHITE}] '
+                f'{Fore.WHITE}[User: {Fore.YELLOW}{campaign[2]}{Fore.WHITE}]')
+
+        print(f'\n{Fore.YELLOW}» Open all those campaigns in Eloqua? '
+              f'{Fore.WHITE}({YES}/{NO}):', end='')
+        choice = input(' ')
+        if choice.lower() == 'y':
+            for campaign in campaign_list:
+                # Open in new tab
+                url = naming['root'] + '#campaigns&id=' + campaign[0]
+                webbrowser.open(url, new=2, autoraise=True)
+
+        return
+
     # Lists of attention needing campaigns
     over_10_prof = []
     over_90 = []
@@ -172,30 +297,6 @@ def lifespan_analytics_menu(today):
         else:
             print(f'{Fore.RED}Entered value does not belong to any option!')
             choice = ''
-
-    return
-
-
-def lifespan_analytics(campaign_list):
-    '''
-    Shows chosen list of attention needing campaigns and allows to open them in Eloqua for further analysis
-    campaign_list is a list of lists with ['id', 'name', 'createdBy', 'lifespan']
-    '''
-    for campaign in campaign_list:
-        print(
-            f'\n{Fore.YELLOW}» {Fore.WHITE}{campaign[1]}'
-            f'\n{Fore.WHITE}[Span: {Fore.YELLOW}{campaign[3]} days{Fore.WHITE}] '
-            f'{Fore.WHITE}[ID: {Fore.YELLOW}{campaign[0]}{Fore.WHITE}] '
-            f'{Fore.WHITE}[User: {Fore.YELLOW}{campaign[2]}{Fore.WHITE}]')
-
-    print(f'\n{Fore.YELLOW}» Open all those campaigns in Eloqua? '
-          f'{Fore.WHITE}({YES}/{NO}):', end='')
-    choice = input(' ')
-    if choice.lower() == 'y':
-        for campaign in campaign_list:
-            # Open in new tab
-            url = naming['root'] + '#campaigns&id=' + campaign[0]
-            webbrowser.open(url, new=2, autoraise=True)
 
     return
 
@@ -321,7 +422,8 @@ def validator_module(country):
     # Campaign type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.validator Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Lifespan{Fore.WHITE}] Exports time data of all active multistep campaigns'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Campaign{Fore.WHITE}] Validates various elements of chosen campaign'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Lifespan{Fore.WHITE}] Exports time data of all active multistep campaigns'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -330,6 +432,9 @@ def validator_module(country):
         if choice.lower() == 'q':
             break
         elif choice == '1':
+            campaign_data_getter()
+            break
+        elif choice == '2':
             campaign_lifespan()
             break
         else:

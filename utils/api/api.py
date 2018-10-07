@@ -1304,9 +1304,9 @@ def eloqua_create_campaign(name, data):
     return (campaign_id, campaign)
 
 
-def eloqua_get_campaigns(query, page, depth='complete'):
+def eloqua_get_campaigns(query, page='1', depth='complete'):
     '''
-    Requires timeframe and country for building call
+    Requires query string, pagination and optionally depth
     Returns partial list of campaigns and their full count
     '''
     # Sets output page element count to bigger for smaller response depth
@@ -1328,7 +1328,8 @@ def eloqua_get_campaigns(query, page, depth='complete'):
     root = f'{eloqua_rest}assets/campaigns'
     response = api_request(root, params=payload)
     campaigns = response.json()
-    print(f'{Fore.GREEN}|', end='', flush=True)
+    if campaigns['total'] > count:
+        print(f'{Fore.GREEN}|', end='', flush=True)
 
     return campaigns
 
