@@ -113,7 +113,7 @@ def campaign_field_validator(campaign_data):
     for field in ['Region', 'Type', 'PSP', 'VSP']:
         if not campaign_data.get(field):
             print(f'{ERROR}Campaign field {field} is not filled!')
-        if campaign_data.get(field) not in campaign_name:
+        elif campaign_data.get(field) not in campaign_name:
             print(f'{ERROR}Campaign field {field} has incorrect value!')
 
     return
@@ -132,20 +132,61 @@ def campaign_asset_validator(campaign_json, asset_type):
             # Gathers basic data on asset
             asset_list.append(element.get(f'{asset_type}Id'))
 
-            # Validates whether asset is connected
-            if not element.get(f'{asset_type}Id'):
-                print(f'{ERROR}Add {asset_type} to {element.get("name")} step!')
+            # Validates whether there are defined outputs
+            if not element.get('outputTerminals'):
+                print(f'{ERROR}{element.get("name")} has no output routes!')
+
+    return asset_list
+
+
+def campaign_decision_validator(campaign_json, decision_type):
+    '''
+    Requires json with campaign data and decision type
+    Possible asset names ['EmailOpened', 'EmailClickthrough', 'EmailSent',
+    'SubmitForm', 'ContactFilterMembershi', 'ContactListMembership']
+    Returns a list of IDs of the decisions
+    '''
+    decision_list = []
+    for element in campaign_json['elements']:
+        if element['type'] == f'Campaign{decision_type}Rule':
+            # Gathers basic data on decision
+            if 'email' in decision_type.lower():
+                decision_list.append(element.get(f'emailId'))
+            elif 'form' in decision_type.lower():
+                decision_list.append(element.get(f'formId'))
+            elif 'filter' in decision_type.lower():
+                decision_list.append(element.get(f'filterId'))
+            elif 'list' in decision_type.lower():
+                decision_list.append(element.get(f'listId'))
+
+            # Validates whether decision step is set to asset from that campaign
+            if decision_type is in ['EmailOpened', 'EmailClickthrough', 'EmailSent']\
+                    and decision_list[-1] is not in campaign_data['Email']\
+                    or decision_type is 'SubmitForm'\
+                    and decision_list[-1] is not in campaign_data['Form']:
+            print(f'{WARNING}{element.get("name")} has asset not from this camapign.')
 
             # Validates whether there are defined outputs
             if not element.get('outputTerminals'):
-                print(f'{ERROR}{element.get("name")} is not connected to any step!')
+                print(f'{ERROR}{element.get("name")} has no output routes!')
+            elif len(element['outputTerminals']) == 1:
+                print(f'{WARNING}{element.get("name")} has only one output route.')
 
-    return asset_list
+            # Validates whether there is correct evaluation period
+            if element.get('evaluateNoAfter') == '0':
+                print(f'{ERROR}{element.get("name")} There is no evaluation period.')
+
+    return decision_list
 
 
 def campaign_data_getter():
     '''
     Automatically tests whether campaign assets are correct
+    Currently checks:
+    » Canvas:
+        › Campaign Fields (completness and correctness)
+        › Asset Steps (output routes)
+        › Decision Steps (attribution, evaluation and output routes)
     '''
     # Gets name of the campaign that should be validated
     global campaign_name
@@ -161,7 +202,7 @@ def campaign_data_getter():
         campaign_json = campaign_json['elements'][0]
 
     # Creates dict to map information about the campaign
-    print(f'\n{Fore.WHITE}» Gathering Campaign Data')
+    print(f'\n{Fore.WHITE}» Campaign Validation')
     campaign_data = {
         'Name': campaign_json['name'],
         'ID': campaign_json['id'],
@@ -179,18 +220,19 @@ def campaign_data_getter():
 
     # Validate all assets included in the campaign and add to campaign_data
     for asset in ['segment', 'email', 'landingPage', 'form']:
-        campaign_asset = campaign_asset_validator(campaign_json, asset)
+        asset_id_list = campaign_asset_validator(campaign_json, asset)
         asset_capitalized = asset[:1].capitalize() + asset[1:]
-        campaign_data[asset_capitalized] = campaign_asset
+        campaign_data[asset_capitalized] = asset_id_list
 
-    print(campaign_data)
+    # Validate all decision steps in the campaign
+    for decision in ['EmailOpened', 'EmailClickthrough', 'EmailSent', 'SubmitForm',
+                     'ContactFilterMembershi', 'ContactListMembership']:
+        decision_id_list = campaign_decision_validator(campaign_json, decision)
+        campaign_data[decision] = decision_id_list
 
-    # TODO: Get all connected decision steps
     # TODO: Search for not connected assets (especially forms, LPs)
     # TODO: Validate campaign elements
-
     # TODO: Validate names of all assets
-
     # TODO: Automatically fix all bugs using APIs
 
     return

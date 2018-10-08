@@ -2,9 +2,6 @@
 
 Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Automation tool
 
-_Interested in using this tool for your company?
-Can help with implementation_
-
 ---
 
 ## Main modules
