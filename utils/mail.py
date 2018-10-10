@@ -350,6 +350,7 @@ def generator_constructor(country):
 
     # Fixes links in alert mails
     for link in trackable_links:
+        link = link[1:-1]
         if 'sip.lex' in link and '#' in link:
             base_part = link.split('?')[0]
             tracking_part = link.split('?')[1].split('#')[0]
@@ -361,7 +362,12 @@ def generator_constructor(country):
                 new_link = f'{base_part}#{asset_part}?{tracking_part}'
             if '&elqTrack=true' not in new_link:
                 new_link = new_link + '&elqTrack=true'
-            mail_html = mail_html.replace(link, new_link + '"')
+            mail_html = mail_html.replace(link, new_link)
+        elif '&elqTrack=true' not in link:
+            mail_html = mail_html.replace(link, link + '&elqTrack=true')
+
+    # Beautify arrow links
+    mail_html = mail_html.replace('>>', '»')
 
     # Swaps file storage links to unbranded SSL
     mail_html = mail_html.replace(
