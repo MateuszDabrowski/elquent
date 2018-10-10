@@ -112,6 +112,14 @@ _ToDo:_
 
 ---
 
+### [ELQuent.cert](utils/cert.py)
+
+#### Module focused on creating certificates for Eloqua campaigns
+
+- From template.pdf and database.csv creates personalized certificates for every user
+
+---
+
 ### [ELQuent.corp](utils/corp.py)
 
 #### Specialized utils for core admins made on demand
@@ -166,4 +174,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.4_]
+[_Version: 1.8.5_]
