@@ -100,7 +100,7 @@ def file(file_path, name=''):
         'database': find_data_file('database.csv', directory='incomes'),
         'template': find_data_file('template.pdf', directory='incomes'),
         'certified': find_data_file('certified_users.csv', directory='outcomes'),
-        'certificate': find_data_file(f'Certificate-{name}.pdf', directory='outcomes')
+        'certificate': find_data_file(f'Certificate-{name}', directory='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -137,28 +137,29 @@ def set_font():
     '''
     # Font chooser
     font_type = ''
-    while int(font_type) not in range(1, 4):
+    while font_type not in ['1', '2', '3', '4']:
         print(
             f'\n{Fore.GREEN}Please select font you want to use:'
             f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}FiraSans{Fore.WHITE}]'
             f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}FiraSans Italic{Fore.WHITE}]'
             f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}FiraSans Bold{Fore.WHITE}]'
             f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}FiraSans Bold Italic{Fore.WHITE}]'
+            f'\n{Fore.YELLOW}Enter number associated with chosen font type:', end=' '
         )
         font_type = input(' ')
-        if int(font_type) not in range(1, 4):
+        if font_type not in ['1', '2', '3', '4']:
             print(f'{Fore.RED}Entered value is not valid!')
     font_type = ['FiraSans', 'FiraSans I',
                  'FiraSans B', 'FiraSans BI'][int(font_type) - 1]
 
     # Page size chooser
-    print(f'{Fore.YELLOW}Please write font size of the text:', end=' ')
+    print(f'\n{Fore.YELLOW}Please write font size of the text:', end=' ')
     font_size = input(' ')
 
-    return (font_type, font_size)
+    return (font_type, int(font_size))
 
 
-def create_name_file(width, height, font, size, first_name, last_name):
+def create_name_file(width, height, font, size, first_name, last_name, text_height=''):
     '''
     Requires:
     » width, height, size: integers
@@ -168,9 +169,11 @@ def create_name_file(width, height, font, size, first_name, last_name):
     packet = io.BytesIO()
 
     # Page size chooser
-    print(f'{Fore.YELLOW}Please write y-axis value for first name (middle: {height/2}):', end=' ')
-    text_height = input(' ')
-    text_height = int(text_height)
+    if not text_height:
+        print(
+            f'\n{Fore.YELLOW}Please write y-axis value for first name (middle: {height/2}):', end=' ')
+        text_height = input(' ')
+        text_height = int(text_height)
 
     # Create a new PDF with Reportlab
     name_watermark = canvas.Canvas(packet)
@@ -180,7 +183,7 @@ def create_name_file(width, height, font, size, first_name, last_name):
                                      text_height,
                                      first_name)
     name_watermark.drawCentredString(width/2,
-                                     text_height - size * 1.5,
+                                     text_height - size,
                                      last_name)
     name_watermark.showPage()
     name_watermark.save()
@@ -189,7 +192,7 @@ def create_name_file(width, height, font, size, first_name, last_name):
     packet.seek(0)
     name_watermark_pdf = PyPDF2.PdfFileReader(packet)
 
-    return name_watermark_pdf
+    return (name_watermark_pdf, text_height)
 
 
 def create_cert_file(template_pdf, name_pdf, first_name, last_name):
@@ -236,7 +239,7 @@ def cert_constructor(country):
     # Asks user to firstly add required files
     while True:
         print(
-            f'\n{Fore.WHITE}Please add to Incomes folder:',
+            f'\n{Fore.GREEN}Please add to Incomes folder:',
             f'\n{Fore.WHITE}» {Fore.YELLOW}database.csv{Fore.WHITE} [Email Address, First Name, Last Name]',
             f'\n{Fore.WHITE}» {Fore.YELLOW}template.pdf',
             f'\n{Fore.WHITE}[Enter] to continue when finished or [Q] to quit.', end='')
@@ -256,16 +259,17 @@ def cert_constructor(country):
 
     # Create sample certificate to test settings
     while True:
-        name_pdf = create_name_file(
+        template_pdf, width, height = get_template()
+        name_pdf, text_position = create_name_file(
             width, height, font, size, 'Mateusz', 'Dąbrowski')
         create_cert_file(template_pdf, name_pdf, 'Mateusz', 'Dąbrowski')
-        print(f'{SUCCESS}Saved sample certificate for Mateusz Dąbrowski in Outcomes folder!',
-              f'\n{Fore.WHITE}Continue with current settings? ({YES}/{NO}):', end=' ')
+        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Check sample certificate for Mateusz Dąbrowski in Outcomes folder!',
+              f'\n{Fore.WHITE}  Continue with current settings? ({YES}/{NO}):', end=' ')
         choice = input('')
         if choice.lower() == 'y':
             break
         else:
-            while int(choice) not in range(1, 2):
+            while choice not in ['1', '2']:
                 print(
                     f'\n{Fore.GREEN}Please select what you want to change:'
                     f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Font type or size{Fore.WHITE}]'
@@ -281,25 +285,51 @@ def cert_constructor(country):
                     break
 
     # Loads all users from database.csv
-    with open(file('database'), 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        users = list(reader)
+    while True:
+        with open(file('database'), 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            users = list(reader)
 
-    # TODO: basic .csv content validation
+        # Checks if csv has correct number of rows
+        if len(users[0]) == 3 and '@' in users[1][0]:
+            break
+        else:
+            print(f'{ERROR}Incorrect structure of database.csv!'
+                  f'{Fore.YELLOW}Add csv with three columns [Email Address, First Name, Last Name] and click [Enter]')
+            input('')
 
-    certified_users = []
-    for user in users:
+    # Create structure for csv output
+    certified_users = [['Source_Country', 'Email Address',
+                        'First Name', 'Last Name', 'Certificate']]
+    print(f'\n{Fore.WHITE}Creating certificates:', end=' ')
+    for user in users[1:]:
         email, first_name, last_name = (user[0], user[1], user[2])
 
+        # Gets clean template
+        template_pdf, width, height = get_template()
+
         # Creates name watermark with given data
-        name_pdf = create_name_file(
-            width, height, font, size, first_name, last_name)
+        name_pdf, _ = create_name_file(
+            width, height, font, size, first_name, last_name, text_position)
 
         # Creates certificate for the user
         cert_path = create_cert_file(
             template_pdf, name_pdf, first_name, last_name)
 
-    # TODO: Eloqua API pdf upload, url feedback, new .csv creation
-        # header_row = ['Source_Country', 'Email Address', 'First Name', 'Last Name', 'WKCORP_Free_Field']
-        # certified_user = [source_country] + user + [cert_url]
-        # certified_users.append(certified_user)
+        certified_users.append(
+            [f'WK{source_country}', email, first_name, last_name, cert_path])
+
+        print(f'{Fore.GREEN}|', end='', flush=True)
+
+    print(
+        f'\n\n{SUCCESS}{len(certified_users)-1} certificates created and saved to Outcomes folder!')
+
+    with open(file('certified'), 'w', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerows(certified_users)
+
+    # TODO: question on eloqua distribution of certs
+    # Eloqua API pdf upload, url feedback, new .csv creation
+    # header_row = ['Source_Country', 'Email Address', 'First Name', 'Last Name', 'WKCORP_Free_Field']
+    # certified_user = [source_country] + user + [cert_url]
+    # certified_users.append(certified_user)

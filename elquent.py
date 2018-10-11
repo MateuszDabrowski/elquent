@@ -24,6 +24,7 @@ from colorama import Fore, init
 import utils.mail as mail
 import utils.link as link
 import utils.page as page
+import utils.cert as cert
 import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
@@ -252,9 +253,10 @@ def menu(choice=''):
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
         'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
-        'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
-        'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'validator': (validator.validator_module, f'Validator{Fore.WHITE}] Test and validate assets and campaigns'),
+        'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
+        'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
     }
 
