@@ -345,7 +345,8 @@ def get_eloqua_auth(country):
         'Program': 'program',
         'Filter': 'contact/filter',
         'Segment': 'contact/segment',
-        'Image': 'image'
+        'Image': 'image',
+        'File': 'importedFile'
     }
 
     # Gets data from naming.json
@@ -1399,7 +1400,7 @@ def eloqua_get_user(user_id):
 
 '''
 =================================================================================
-                                Image URL Getter API
+                                Image Storage API
 =================================================================================
 '''
 
@@ -1470,6 +1471,78 @@ def eloqua_post_image(image):
     print(f'{Fore.GREEN} › {Fore.WHITE}ELQ', end='', flush=True)
 
     return image_link
+
+
+'''
+=================================================================================
+                                File Storage API
+=================================================================================
+'''
+
+
+def eloqua_get_files(file_name):
+    '''
+    Returns url of uploaded file
+    '''
+
+    # Gets data of requested image name
+    root = f'{eloqua_rest}assets/importedFiles'
+    params = {'depth': 'complete',
+              'orderBy': 'createdAt Desc',
+              'search': file_name}
+    response = api_request(root, params=params)
+    file_info = response.json()
+
+    # Gets file_link
+    file_link = file_info['elements'][0]['trackedLink']
+
+    # Warns if there are multiple images found by query
+    if int(file_info['total']) > 1:
+        print(
+            f'\n{WARNING}More then one file found - adding newest ', end='')
+
+    return file_link
+
+
+def eloqua_post_file(imported_file):
+    '''
+    Returns url of uploaded file
+    '''
+
+    def eloqua_move_file(file_id):
+        '''
+        Moves file to ELQuent file storage uploads folder
+        '''
+
+        # Gets image data to prepare PUT body
+        file_data = eloqua_asset_get(
+            file_id, asset_type='File', depth='complete')
+
+        # Gets and swaps folder_id to correct one for ELQuent image uploads
+        folder_id = naming[source_country]['id']['certificate']
+        file_data['folderId'] = folder_id
+
+        # Updates image folder_id
+        root = f'{eloqua_rest}assets/importedFile/{file_id}'
+        api_request(root, call='put', data=json.dumps(file_data))
+
+        return
+
+    # Posts image to Eloqua
+    root = f'{eloqua_rest}assets/importedFile/content'
+    response = api_request(root, call='post', files=imported_file)
+    file_info = response.json()
+
+    # Builds image_link
+    file_link = file_info['trackedLink']
+
+    # Moves file to correct image folder
+    file_id = file_info['id']
+    eloqua_move_file(file_id)
+
+    print(f'{Fore.GREEN} › {Fore.WHITE}ELQ', end='', flush=True)
+
+    return file_link
 
 
 '''

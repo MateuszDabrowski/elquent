@@ -116,7 +116,9 @@ _ToDo:_
 
 #### Module focused on creating certificates for Eloqua campaigns
 
-- From template.pdf and database.csv creates personalized certificates for every user
+- From template.pdf and database.csv creates personalized certificates for every customer
+- Automatically uploads them to Eloqua and gets tracked links for .pdf files
+- Builds contact upload .csv with certificate link for field merging in communication
 
 ---
 
@@ -149,6 +151,8 @@ _ToDo:_
 - Gets form fields and form fills data
 - Creates campaign and program canvas
 - Creates shared filters
+- Uploads and updates images
+- Uploads and updates files in file storage
 - Creates export definition for activity API and downloads data from it
 - Refreshes and download segment counts
 - Gets campaign data
@@ -174,4 +178,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.5_]
+[_Version: 1.8.6_]

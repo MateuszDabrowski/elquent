@@ -16,6 +16,8 @@ import io
 import sys
 import csv
 import json
+import webbrowser
+from datetime import datetime
 import PyPDF2
 from colorama import Fore, Style, init
 from reportlab.pdfgen import canvas
@@ -204,18 +206,42 @@ def create_cert_file(template_pdf, name_pdf, first_name, last_name):
     '''
     output = PyPDF2.PdfFileWriter()
 
+    accent_dict = {
+        'ą': 'a', 'ę': 'e', 'ó': 'o', 'ś': 's', 'ł': 'l',
+        'ż': 'z', 'ź': 'z', 'ć': 'c', 'ń': 'n'
+    }
+
+    # Gets date for file naming
+    today = str(datetime.now())[:10]
+
     # Overlays first page of name_pdf over first page of template_pdf
     page = template_pdf.getPage(0)
     page.mergePage(name_pdf.getPage(0))
     output.addPage(page)
 
+    deaccented_first_name = ''
+    for char in first_name.lower():
+        if char in accent_dict.keys():
+            deaccented_first_name += accent_dict.get('char', '_')
+        else:
+            deaccented_first_name += char
+
+    deaccented_last_name = ''
+    for char in last_name.lower():
+        if char in accent_dict.keys():
+            deaccented_last_name += accent_dict.get(char, '_')
+        else:
+            deaccented_last_name += char
+
     # Saves filled certificate to Outcomes folder
-    outputStream = open(
-        file('certificate', name=f'{first_name}-{last_name}.pdf'), "wb")
+    outputStream = open(file(
+        'certificate',
+        name=f'{today}-{deaccented_first_name}-{deaccented_last_name}.pdf'), "wb")
     output.write(outputStream)
     outputStream.close()
 
-    return file('certificate', name=f'{first_name}-{last_name}.pdf')
+    return file('certificate',
+                name=f'{today}-{deaccented_first_name}-{deaccented_last_name}.pdf')
 
 
 '''
@@ -240,9 +266,10 @@ def cert_constructor(country):
     while True:
         print(
             f'\n{Fore.GREEN}Please add to Incomes folder:',
-            f'\n{Fore.WHITE}» {Fore.YELLOW}database.csv{Fore.WHITE} [Email Address, First Name, Last Name]',
-            f'\n{Fore.WHITE}» {Fore.YELLOW}template.pdf',
-            f'\n{Fore.WHITE}[Enter] to continue when finished or [Q] to quit.', end='')
+            f'\n{Fore.YELLOW}» {Fore.WHITE}database.csv [Email Address, First Name, Last Name]',
+            f'\n{Fore.YELLOW}» {Fore.WHITE}template.pdf',
+            f'\n{Fore.WHITE}[{Fore.YELLOW}Enter{Fore.WHITE}] to continue when finished '
+            f'{Fore.WHITE}or [{Fore.YELLOW}Q{Fore.WHITE}] to quit.', end='')
         menu = input(' ')
         if menu.lower() == 'q':
             return
@@ -262,9 +289,11 @@ def cert_constructor(country):
         template_pdf, width, height = get_template()
         name_pdf, text_position = create_name_file(
             width, height, font, size, 'Mateusz', 'Dąbrowski')
-        create_cert_file(template_pdf, name_pdf, 'Mateusz', 'Dąbrowski')
+        cert_path = create_cert_file(
+            template_pdf, name_pdf, 'Mateusz', 'Dąbrowski')
         print(f'\n{Fore.YELLOW}» {Fore.WHITE}Check sample certificate for Mateusz Dąbrowski in Outcomes folder!',
               f'\n{Fore.WHITE}  Continue with current settings? ({YES}/{NO}):', end=' ')
+        webbrowser.open(f'file://{cert_path}', new=2, autoraise=False)
         choice = input('')
         if choice.lower() == 'y':
             break
@@ -316,20 +345,51 @@ def cert_constructor(country):
         cert_path = create_cert_file(
             template_pdf, name_pdf, first_name, last_name)
 
+        # Builds list for outcome .csv
         certified_users.append(
-            [f'WK{source_country}', email, first_name, last_name, cert_path])
+            [source_country, email, first_name, last_name, cert_path])
 
         print(f'{Fore.GREEN}|', end='', flush=True)
 
-    print(
-        f'\n\n{SUCCESS}{len(certified_users)-1} certificates created and saved to Outcomes folder!')
+    print(f'\n\n{SUCCESS}{len(certified_users)-1} '
+          f'{Fore.WHITE}certificates created and saved to Outcomes folder!')
 
+    # Let user decide whether certificates should be uploaded to Eloqua
+    choice = ''
+    while choice.lower() not in ['y', 'n']:
+        print(
+            f'\n{Fore.YELLOW}» {Fore.WHITE}Upload to Eloqua? ({YES}/{NO}):', end=' ')
+        choice = input('')
+        if choice.lower() == 'n':
+            # Create a csv with file paths if no upload
+            with open(file('certified'), 'w', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerows(certified_users)
+            print(f'\n\n{SUCCESS} contact upload file saved to Outcomes folder!')
+
+            return
+        elif choice.lower() == 'y':
+            break
+
+    # Upload all certificates to Eloqua
+    upload_list = [['Source_Country', 'Email Address',
+                    'First Name', 'Last Name', 'Certificate Link']]
+    for user in certified_users[1:]:
+        print(f'\n   {Fore.YELLOW}› {Fore.WHITE}Adding '
+              f'{Fore.WHITE}{user[2]} {user[3]} certificate to', end='')
+        cert_path = user[4]
+        certificate = {'file': open(cert_path, 'rb')}
+        cert_link = api.eloqua_post_file(certificate)
+
+        # Builds list for outcome .csv
+        user[4] = cert_link
+        upload_list.append(user)
+        print(f'{Fore.GREEN} › {Fore.WHITE}CSV', end='', flush=True)
+
+    # Create a csv with certificate links for upload
     with open(file('certified'), 'w', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerows(certified_users)
+        writer.writerows(upload_list)
 
-    # TODO: question on eloqua distribution of certs
-    # Eloqua API pdf upload, url feedback, new .csv creation
-    # header_row = ['Source_Country', 'Email Address', 'First Name', 'Last Name', 'WKCORP_Free_Field']
-    # certified_user = [source_country] + user + [cert_url]
-    # certified_users.append(certified_user)
+    print(f'\n\n{SUCCESS}{len(certified_users)-1} certificates uploaded to Eloqua!'
+          f'\n{Fore.WHITE}Contact upload .csv file saved to Outcomes folder!')
