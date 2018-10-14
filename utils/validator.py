@@ -458,7 +458,7 @@ def campaign_lifespan():
 
 def validator_module(country):
     '''
-    Lets user choose which link module utility he wants to use
+    Lets user choose which validator module utility he wants to use
     '''
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)

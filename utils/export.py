@@ -43,6 +43,9 @@ def country_naming_setter(country):
     global source_country
     source_country = country
 
+    # Prepares globals for imported modules
+    helper.country_naming_setter(source_country)
+
     # Loads json file with naming convention
     with open(file('naming'), 'r', encoding='utf-8') as f:
         global naming
