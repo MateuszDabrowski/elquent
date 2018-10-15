@@ -112,6 +112,14 @@ _ToDo:_
 
 ---
 
+### [ELQuent.modifier](utils/modifier.py)
+
+#### Module for modification of multiple assets
+
+- Adds redirect script to completed campaigns landing pages
+
+---
+
 ### [ELQuent.cert](utils/cert.py)
 
 #### Module focused on creating certificates for Eloqua campaigns
@@ -178,4 +186,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.6_]
+[_Version: 1.8.7_]

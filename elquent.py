@@ -30,6 +30,7 @@ import utils.webinar as webinar
 import utils.database as database
 import utils.export as export
 import utils.validator as validator
+import utils.modifier as modifier
 import utils.corp as corp
 import utils.api.api as api
 
@@ -254,6 +255,7 @@ def menu(choice=''):
         'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'validator': (validator.validator_module, f'Validator{Fore.WHITE}] Test and validate assets and campaigns'),
+        'modifier': (modifier.modifier_module, f'Modifier{Fore.WHITE}] Modify multiple assets at once'),
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
@@ -352,6 +354,10 @@ elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
 elif sys.argv[1] == 'export':
     export.export_module(SOURCE_COUNTRY)
+elif sys.argv[1] == 'validate':
+    validator.validator_module(SOURCE_COUNTRY)
+elif sys.argv[1] == 'modify':
+    modifier.modifier_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'password':
     print(f'{Fore.YELLOW}Key » {Fore.WHITE}{eloqua_key}')
 
