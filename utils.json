@@ -1,5 +1,5 @@
 {
-    "country": ["CORP", "AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "NL", "PL", "SK"],
+    "country": ["CORP", "AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "NL", "PL", "PT", "SK", "LSW"],
     "ADMIN": [
         "clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "contacts",
         "webinar", "mail_groups", "export", "validator", "modifier", "cert"

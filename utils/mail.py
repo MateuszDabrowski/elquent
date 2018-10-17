@@ -352,19 +352,35 @@ def generator_constructor(country):
     for link in trackable_links:
         link = link[1:-1]
         if 'sip.lex' in link and '#' in link:
-            base_part = link.split('?')[0]
-            tracking_part = link.split('?')[1].split('#')[0]
-            asset_part = link.split('?')[1].split('#')[1]
-            if '?p=' in link:
-                filter_part = link.split('?')[2]
-                new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
-            else:
-                new_link = f'{base_part}#{asset_part}?{tracking_part}'
-            if '&elqTrack=true' not in new_link:
+            question_marks = 0
+            for char in link:
+                if char == '?':
+                    question_marks += 1
+            if question_marks > 0:
+                base_part = link.split('?')[0]
+                tracking_part = link.split('?')[1].split('#')[0]
+                asset_part = link.split('?')[1].split('#')[1]
+                if question_marks == 2:
+                    filter_part = link.split('?')[2]
+                    new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
+                elif question_marks == 1:
+                    new_link = f'{base_part}#{asset_part}?{tracking_part}'
+                elif question_marks == 0:
+                    new_link = link
+                else:
+                    print(f'{ERROR}Incorrect links in package: {link}!')
+                    new_link = link
+            if 'elqTrack=true' not in new_link:
                 new_link = new_link + '&elqTrack=true'
-            mail_html = mail_html.replace(link, new_link)
-        elif '&elqTrack=true' not in link:
-            mail_html = mail_html.replace(link, link + '&elqTrack=true')
+            mail_html = mail_html.replace(
+                f'"{link}"',
+                f'"{new_link}"'
+            )
+        elif 'elqTrack=true' not in link:
+            mail_html = mail_html.replace(
+                f'"{link}"',
+                f'"{link}&elqTrack=true"'
+            )
 
     # Beautify arrow links
     mail_html = mail_html.replace('>>', '»')
@@ -372,6 +388,9 @@ def generator_constructor(country):
     # Swaps file storage links to unbranded SSL
     mail_html = mail_html.replace(
         'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
+
+    with open(file('mail_html', file_name=folder_name), 'w', encoding='utf-8') as f:
+        f.write(mail_html)
 
     return mail_html
 
