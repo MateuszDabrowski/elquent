@@ -118,6 +118,15 @@ def redirect_lp():
         elif choice.lower() == 'n':
             return False
 
+    # Gets list of already redirected or no-LP campaigns
+    redirected_campaigns = api.eloqua_asset_get(
+        naming[source_country]['id']['redirected_list'], 'landingPage')
+    redirected_campaigns = redirected_campaigns.split(',')
+
+    '''
+    =================================================== Getting complete Campaigns
+    '''
+
     # Builds search query for campaign API
     search_query = f"name='WK{source_country}*'"
 
@@ -131,7 +140,8 @@ def redirect_lp():
 
         # Creates list of completed campaigns » ['id', 'name']
         for campaign in campaigns['elements']:
-            if campaign.get('currentStatus', 'Completed') == 'Completed':
+            if campaign.get('currentStatus', 'Completed') == 'Completed'\
+                    and campaign.get('id') not in redirected_campaigns:
                 completed_campaigns.append(
                     [campaign.get('id'), campaign.get('name')]
                 )
@@ -147,10 +157,36 @@ def redirect_lp():
         if page % 10 == 0:
             print(f'{Fore.YELLOW}-', end='', flush=True)
 
-    # TODO:
-    # 3. Get all landing pages for those campaigns
-    # 4. Modify all landing pages connected to those campaigns
-    # 5. Mark that they are modified (either name or folder or description)
+    '''
+    =================================================== Getting Landing Pages
+    '''
+
+    for campaign in completed_campaigns:
+        # Create search query to get all LPs connected to campaign
+        campaign_name = campaign[1]
+        search_query = campaign_name.split('_')
+        search_query = ('_').join(search_query[0:-1]) + '*'
+
+        # Iterates over pages of outcomes
+        page = 1
+        while True:
+            landing_pages = api.eloqua_get_landingpages(
+                search_query, page=page)
+
+            # TODO:
+            # 4. Modify all landing pages connected to those campaigns
+            # 5. Mark that they are modified (in 5469 LP)
+
+            # Stops iteration when full list is obtained
+            if landing_pages['total'] - page * 20 < 0:
+                break
+
+            # Else increments page to get next part of outcomes
+            page += 1
+
+            # Every ten batches draws hyphen for better readability
+            if page % 10 == 0:
+                print(f'{Fore.YELLOW}-', end='', flush=True)
 
     return
 

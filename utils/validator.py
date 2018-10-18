@@ -405,7 +405,7 @@ def campaign_lifespan():
     print(f'\n{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ',
           end='', flush=True)
     for campaign_id in active_campaigns:
-        campaign = api.eloqua_get_campaign(campaign_id)
+        campaign = api.eloqua_asset_get(campaign_id, 'Campaign', 'complete')
 
         campaign_info = {
             'Name': campaign['name'],

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 # -*- coding: utf8 -*-
+# pylint: disable=W0702
 
 '''
 ELQuent.certificate
@@ -33,12 +34,6 @@ init(autoreset=True)
 # Globals
 naming = None
 source_country = None
-
-# Fira Sans fonts
-pdfmetrics.registerFont(TTFont('FiraSans', 'FiraSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('FiraSans I', 'FiraSans-Italic.ttf'))
-pdfmetrics.registerFont(TTFont('FiraSans B', 'FiraSans-SemiBold.ttf'))
-pdfmetrics.registerFont(TTFont('FiraSans BI', 'FiraSans-SemiBoldItalic.ttf'))
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -258,6 +253,20 @@ def cert_constructor(country):
     » template.pdf: pdf on which the First Name and Last Name should be printed
     » Fira Sans: installed font: https://fonts.google.com/specimen/Fira+Sans
     '''
+
+    try:  # Fira Sans font registration
+        pdfmetrics.registerFont(
+            TTFont('FiraSans', 'FiraSans-Regular.ttf'))
+        pdfmetrics.registerFont(
+            TTFont('FiraSans I', 'FiraSans-Italic.ttf'))
+        pdfmetrics.registerFont(
+            TTFont('FiraSans B', 'FiraSans-SemiBold.ttf'))
+        pdfmetrics.registerFont(
+            TTFont('FiraSans BI', 'FiraSans-SemiBoldItalic.ttf'))
+    except:  # Triggered by lack of above fonts in default folder
+        print(f'\n{ERROR}Fira Sans fonts are not installed!'
+              f'{Fore.WHITE}» Install from: https://fonts.google.com/specimen/Fira+Sans')
+        return
 
     # Create global source_country and load json file with naming convention
     country_naming_setter(country)

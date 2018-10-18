@@ -291,7 +291,7 @@ def eloqua_asset_name():
 
 def eloqua_asset_get(asset_id, asset_type, depth=''):
     '''
-    Returns name and optionally code of Eloqua asst of given ID
+    Returns name and optionally code of Eloqua asset of given ID
     '''
 
     # Gets required endpoint
@@ -672,6 +672,36 @@ def eloqua_sync_data(sync_uri):
 '''
 
 
+def eloqua_get_landingpages(query, page='1', depth='complete'):
+    '''
+    Requires query string, pagination and optionally depth
+    Returns partial list of landingpages and their full count
+    '''
+    # Sets output page element count to bigger for smaller response depth
+    if depth == 'minimal':
+        count = 500
+    else:
+        count = 20
+
+    # Builds the API request
+    payload = {
+        'search': query,  # Filter by query
+        'depth': depth,  # Sets required depth of data output
+        'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
+        'count': count,  # Sets count according to depth
+        'page': page  # Pagination of outcomes
+    }
+
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/landingPages'
+    response = api_request(root, params=payload)
+    landing_pages = response.json()
+    if landing_pages['total'] > count:
+        print(f'{Fore.GREEN}|', end='', flush=True)
+
+    return landing_pages
+
+
 def eloqua_create_landingpage(name, code):
     '''
     Requires name and code of the landing page to create LP in Eloqua
@@ -780,7 +810,7 @@ def eloqua_create_filter(name, data):
 
 def eloqua_get_forms():
     '''
-    Returns name and code of Form of given ID
+    Returns whole data on all forms for user source country
     '''
     all_forms = []
     page = 1
@@ -1333,19 +1363,6 @@ def eloqua_get_campaigns(query, page='1', depth='complete'):
         print(f'{Fore.GREEN}|', end='', flush=True)
 
     return campaigns
-
-
-def eloqua_get_campaign(campaign_id):
-    '''
-    Requires campaign id
-    Returns full data on selected campaign
-    '''
-    # Creating a get call to Eloqua API
-    root = f'{eloqua_rest}assets/campaign/{campaign_id}'
-    response = api_request(root)
-    campaign = response.json()
-
-    return campaign
 
 
 '''
