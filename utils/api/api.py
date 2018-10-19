@@ -773,6 +773,26 @@ def eloqua_create_landingpage(name, code):
     return (lp_id, asset_url, direct_url)
 
 
+def eloqua_put_landingpage(lp_id, data):
+    '''
+    Requires id and data of the landing page to update LP in Eloqua
+    Returns success bool
+    '''
+
+    # Creating a put call to Eloqua API
+    root = f'{eloqua_rest}assets/landingPage/{lp_id}'
+    response = api_request(
+        root, call='put', data=json.dumps(data))
+    landing_page = response.json()
+
+    # Checks if there is error
+    if isinstance(landing_page, list) or landing_page['type'] != 'LandingPage':
+        print(f'{Fore.YELLOW}{landing_page}')
+        return False
+
+    return True
+
+
 '''
 =================================================================================
                                 SharedFilter API

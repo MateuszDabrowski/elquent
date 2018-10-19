@@ -235,6 +235,8 @@ def campaign_data_getter():
     # TODO: Search for not connected assets (especially forms, LPs)
     # TODO: Validate campaign elements
     # TODO: Validate names of all assets
+    # TODO: Validate tracking and PURLs in e-mails
+    # TODO: Validate implementation of forms on LP's (especially e-mail validation and field merges)
     # TODO: Automatically fix all bugs using APIs
 
     return

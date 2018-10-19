@@ -169,13 +169,50 @@ def redirect_lp():
 
         # Iterates over pages of outcomes
         page = 1
+        redirected_pages = []
         while True:
             landing_pages = api.eloqua_get_landingpages(
                 search_query, page=page)
 
-            # TODO:
-            # 4. Modify all landing pages connected to those campaigns
-            # 5. Mark that they are modified (in 5469 LP)
+            for landing_page in landing_pages['elements']:
+                # Builds valid redirect link string
+                redirect_link = naming[source_country]['id']['redirect']\
+                    + f'?utm_source={landing_page.get("name")}'
+                redirect_link = f'<script>document.location.replace("{redirect_link}")</script></head>'
+                redirect_link = redirect_link\
+                    .replace('"', r'\\')\
+                    .replace('/', r'\/')
+
+                # Gets and modifies code of the LP with redirect link
+                landing_page_html = landing_page['htmlContent'].get('html')
+                landing_page_html = landing_page_html.replace(
+                    r'<\/head>', redirect_link,
+                )
+
+                # Build landing page data
+                data = {
+                    'id': landing_page.get('id'),
+                    'name': landing_page.get('name'),
+                    'description': 'ELQuent API » Redirected',
+                    'folderId': landing_page.get('folderId'),
+                    'micrositeId': landing_page.get('micrositeId'),
+                    'relativePath': landing_page.get('relativePath'),
+                    'htmlContent': {
+                        'type': 'RawHtmlContent',
+                        'html': landing_page_html
+                    }
+                }
+
+                # Upload modified LP
+                landing_page_modification = api.eloqua_put_landingpage(
+                    landing_page.get('id'), data)
+
+                # Adds ID, Name and Bool of the page to list of redirected pages
+                redirected_pages.append([
+                    landing_page.get('id'),
+                    landing_page.get('name'),
+                    landing_page_modification
+                ])
 
             # Stops iteration when full list is obtained
             if landing_pages['total'] - page * 20 < 0:
@@ -187,6 +224,10 @@ def redirect_lp():
             # Every ten batches draws hyphen for better readability
             if page % 10 == 0:
                 print(f'{Fore.YELLOW}-', end='', flush=True)
+
+        # TODO: Mark that they are modified (in 5469 LP)
+
+    # TODO: Output list of changed assets to .csv in Outcomes folder
 
     return
 
