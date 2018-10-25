@@ -313,7 +313,8 @@ def generator_constructor(country):
 
     # Asks user to firstly upload images to Eloqua
     print(
-        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with HTML file to Incomes folder.',
+        f'\n{Fore.YELLOW}» {Fore.WHITE}Please add email folder with ',
+        f'{Fore.YELLOW}HTML{Fore.WHITE} file to Incomes folder.',
         f'\n{Fore.WHITE}[Enter] to continue when finished.', end='')
     input(' ')
 
@@ -370,17 +371,18 @@ def generator_constructor(country):
                 else:
                     print(f'{ERROR}Incorrect links in package: {link}!')
                     new_link = link
-            if 'elqTrack=true' not in new_link:
+        else:
+            new_link = link
+        if 'elqTrack=true' not in link:
+            if '?' in link:
                 new_link = new_link + '&elqTrack=true'
-            mail_html = mail_html.replace(
-                f'"{link}"',
-                f'"{new_link}"'
-            )
-        elif 'elqTrack=true' not in link:
-            mail_html = mail_html.replace(
-                f'"{link}"',
-                f'"{link}&elqTrack=true"'
-            )
+            else:
+                new_link = new_link + '?elqTrack=true'
+        # Swap old link to new link
+        mail_html = mail_html.replace(
+            f'"{link}"',
+            f'"{new_link}"'
+        )
 
     # Beautify arrow links
     mail_html = mail_html.replace('>>', '»')
@@ -435,11 +437,11 @@ def mail_constructor(country, campaign=False):
     '''
 
     html = ''
+    images = re.compile(r'src="(.*?)"', re.UNICODE)
     if html_files:
         with open(file('package_file', file_name=html_files[0], folder_name=folder_name), 'r', encoding='utf-8') as f:
             html = f.read()
         # Builds list of to-be-swapped images in html file
-        images = re.compile(r'src="(.*?)"', re.UNICODE)
         linkable_images_html = images.findall(html)
         linkable_images_html = list(set(linkable_images_html))
         linkable_images_html = [

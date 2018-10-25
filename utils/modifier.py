@@ -178,7 +178,7 @@ def redirect_lp():
                 # Builds valid redirect link string
                 redirect_link = naming[source_country]['id']['redirect']\
                     + f'?utm_source={landing_page.get("name")}'
-                redirect_link = f'<script>document.location.replace("{redirect_link}")</script></head>'
+                redirect_link = f'<head><script>window.location.replace("{redirect_link}")</script>'
                 redirect_link = redirect_link\
                     .replace('"', r'\\')\
                     .replace('/', r'\/')
@@ -186,7 +186,7 @@ def redirect_lp():
                 # Gets and modifies code of the LP with redirect link
                 landing_page_html = landing_page['htmlContent'].get('html')
                 landing_page_html = landing_page_html.replace(
-                    r'<\/head>', redirect_link,
+                    r'<head>', redirect_link,
                 )
 
                 # Build landing page data
