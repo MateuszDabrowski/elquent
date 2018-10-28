@@ -15,7 +15,6 @@ import os
 import re
 import sys
 import json
-import pyperclip
 from colorama import Fore, Style, init
 
 # ELQuent imports
@@ -99,34 +98,11 @@ def file(file_path, name=''):
 '''
 
 
-def redirect_lp():
+def get_completed_campaigns(redirected_campaigns):
     '''
-    Allows user to add redirecting script to all landing pages belonging to completed campaigns
+    Returns a list of ['id', 'name'] for all completed campaigns
+    that weren't already redirected during previous runs
     '''
-    # Gets redirect base URL
-    redirect_link = naming[source_country]['id']['redirect']
-
-    # Doublecheck if user is sure he wants to continue
-    choice = ''
-    while choice.lower() != 'y' and choice.lower() != 'n':
-        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Continue with redirecting '
-              f'all WK{source_country} completed campaign LPs to:'
-              f'\n  {Fore.YELLOW}{redirect_link}{Fore.WHITE}? ({YES}/{NO}):', end=' ')
-        choice = input('')
-        if choice.lower() == 'y':
-            break
-        elif choice.lower() == 'n':
-            return False
-
-    # Gets list of already redirected or no-LP campaigns
-    redirected_campaigns = api.eloqua_asset_get(
-        naming[source_country]['id']['redirected_list'], 'landingPage')
-    redirected_campaigns = redirected_campaigns.split(',')
-
-    '''
-    =================================================== Getting complete Campaigns
-    '''
-
     # Builds search query for campaign API
     search_query = f"name='WK{source_country}*'"
 
@@ -157,9 +133,23 @@ def redirect_lp():
         if page % 10 == 0:
             print(f'{Fore.YELLOW}-', end='', flush=True)
 
+    return completed_campaigns
+
+
+def put_modified_lp(completed_campaigns):
     '''
-    =================================================== Getting Landing Pages
+    Required completed_campaigns list of campaign ['id', 'name']
+
+    Finds all Landing Pages connected to campaigns from completed_campaigns list
+    Adds redirect script to the <head> tag and updates HTML in Eloqua
+
+    Returns ['campaign_id', 'campaign_name', 'lp_id', 'lp_name', modified_bool]
+    for each modified landing page
+    and a string with comma-separated id for every redirected campaign
     '''
+    redirected_pages_list = [['Campaign_ID', 'Campaign_Name',
+                              'LP_ID', 'LP_Name', 'Modified']]
+    redirected_campaigns_string = ''
 
     for campaign in completed_campaigns:
         # Create search query to get all LPs connected to campaign
@@ -169,7 +159,6 @@ def redirect_lp():
 
         # Iterates over pages of outcomes
         page = 1
-        redirected_pages = []
         while True:
             landing_pages = api.eloqua_get_landingpages(
                 search_query, page=page)
@@ -207,8 +196,10 @@ def redirect_lp():
                 landing_page_modification = api.eloqua_put_landingpage(
                     landing_page.get('id'), data)
 
-                # Adds ID, Name and Bool of the page to list of redirected pages
-                redirected_pages.append([
+                # Adds campagins and landing page data to a list for outputting
+                redirected_pages_list.append([
+                    campaign[0],
+                    campaign[1],
                     landing_page.get('id'),
                     landing_page.get('name'),
                     landing_page_modification
@@ -216,6 +207,8 @@ def redirect_lp():
 
             # Stops iteration when full list is obtained
             if landing_pages['total'] - page * 20 < 0:
+                # Adds ID to a string containg all redirected campaigns
+                redirected_campaigns_string += ',' + campaign[0]
                 break
 
             # Else increments page to get next part of outcomes
@@ -225,7 +218,47 @@ def redirect_lp():
             if page % 10 == 0:
                 print(f'{Fore.YELLOW}-', end='', flush=True)
 
-        # TODO: Mark that they are modified (in 5469 LP)
+    return (redirected_pages_list, redirected_campaigns_string)
+
+
+def redirect_lp():
+    '''
+    Allows user to add redirecting script to all landing pages belonging to completed campaigns
+    '''
+    # Gets redirect base URL
+    redirect_link = naming[source_country]['id']['redirect']
+
+    # Doublecheck if user is sure he wants to continue
+    choice = ''
+    while choice.lower() != 'y' and choice.lower() != 'n':
+        print(f'\n{Fore.YELLOW}» {Fore.WHITE}Continue with redirecting '
+              f'all WK{source_country} completed campaign LPs to:'
+              f'\n  {Fore.YELLOW}{redirect_link}{Fore.WHITE}? ({YES}/{NO}):', end=' ')
+        choice = input('')
+        if choice.lower() == 'y':
+            break
+        elif choice.lower() == 'n':
+            return False
+
+    # Gets list of already redirected or no-LP campaigns
+    old_redirected_campaigns = api.eloqua_asset_get(
+        naming[source_country]['id']['redirected_list'], 'landingPage')
+    old_redirected_campaigns = old_redirected_campaigns.split(',')
+
+    # Gets list of completed campaigns
+    completed_campaigns = get_completed_campaigns(old_redirected_campaigns)
+
+    # Gets list of modified landing pages
+    redirected_lp_list, new_redirected_campaigns = put_modified_lp(
+        completed_campaigns)
+
+    # Creates a string with id's of all redirected campaigns (previously and now)
+    all_redirected_campaigns = \
+        (',').join(old_redirected_campaigns) + new_redirected_campaigns
+    if all_redirected_campaigns.startswith(','):  # in case of no old campaigns
+        all_redirected_campaigns = all_redirected_campaigns[1:]
+
+    # TODO: Mark that they are modified (in 5469 LP) with all_redirected_campaigns
 
     # TODO: Output list of changed assets to .csv in Outcomes folder
 

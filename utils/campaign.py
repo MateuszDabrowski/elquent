@@ -209,7 +209,7 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
         reminder_html = mail_html
 
     # Create e-mail reminder
-    reminder_name = (('_').join(campaign_name[0:4]) + '_reminder-EML')
+    reminder_name = (('_').join(campaign_name[0:4]) + '_REM-EML')
     reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
 
     return (mail_id, reminder_id)
@@ -397,7 +397,7 @@ def campaign_confirmation_mail(blindform_html_name, asset_name, confirmation_lp_
     for mail_name in ['_confirmation-TECH-EML', '_confirmation-reminder-TECH-EML']:
         file_name = (('_').join(campaign_name[1:4]) + mail_name)
 
-        if mail_name == '_confirmation-reminder-EML':
+        if mail_name == '_confirmation-REM-EML':
             links = re.findall(r'href="(.*?)"', confirmation_code)
             for code in set(links):
                 if blindform_html_name in code:
