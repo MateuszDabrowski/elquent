@@ -29,6 +29,7 @@ source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
 NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
@@ -361,16 +362,17 @@ def generator_constructor(country):
                 base_part = link.split('?')[0]
                 tracking_part = link.split('?')[1].split('#')[0]
                 asset_part = link.split('?')[1].split('#')[1]
-                if question_marks == 2:
-                    filter_part = link.split('?')[2]
-                    new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
-                elif question_marks == 1:
-                    new_link = f'{base_part}#{asset_part}?{tracking_part}'
-                elif question_marks == 0:
-                    new_link = link
-                else:
-                    print(f'{ERROR}Incorrect links in package: {link}!')
-                    new_link = link
+            if question_marks == 2:
+                filter_part = link.split('?')[2]
+                new_link = f'{base_part}#{asset_part}?{filter_part}&{tracking_part}'
+            elif question_marks == 1:
+                new_link = f'{base_part}#{asset_part}?{tracking_part}'
+            elif question_marks == 0:
+                print(f'{WARNING}No tracking queries in link: {link}!')
+                new_link = link
+            else:
+                print(f'{ERROR}Incorrect link in package: {link}!')
+                new_link = link
         else:
             new_link = link
         if 'elqTrack=true' not in link:

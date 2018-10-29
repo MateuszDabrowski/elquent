@@ -160,6 +160,7 @@ def put_modified_lp(completed_campaigns):
         # Iterates over pages of outcomes
         page = 1
         while True:
+            # Gets full data on landing page
             landing_pages = api.eloqua_get_landingpages(
                 search_query, page=page)
 
@@ -241,8 +242,9 @@ def redirect_lp():
             return False
 
     # Gets list of already redirected or no-LP campaigns
-    old_redirected_campaigns = api.eloqua_asset_get(
-        naming[source_country]['id']['redirected_list'], 'landingPage')
+    redirected_campaigns_shared_list = api.eloqua_asset_get(
+        naming[source_country]['id']['redirected_list'], 'SC', depth='complete')
+    old_redirected_campaigns = redirected_campaigns_shared_list['contentHtml']
     old_redirected_campaigns = old_redirected_campaigns.split(',')
 
     # Gets list of completed campaigns
@@ -258,7 +260,16 @@ def redirect_lp():
     if all_redirected_campaigns.startswith(','):  # in case of no old campaigns
         all_redirected_campaigns = all_redirected_campaigns[1:]
 
-    # TODO: Mark that they are modified (in 5469 LP) with all_redirected_campaigns
+    # Build shared content data for updating the list of redirected campaings
+    data = {
+        'id': redirected_campaigns_shared_list.get('id'),
+        'name': redirected_campaigns_shared_list.get('name'),
+        'contentHTML': all_redirected_campaigns
+    }
+
+    # Updating list of redirected campaigns to shared content
+    api.eloqua_put_sharedcontent(
+        naming[source_country]['id']['redirected_list'], data=data)
 
     # TODO: Output list of changed assets to .csv in Outcomes folder
 

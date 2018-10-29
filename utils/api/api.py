@@ -313,6 +313,8 @@ def eloqua_asset_get(asset_id, asset_type, depth=''):
         code = asset_response['htmlContent']['html']
     elif asset_type == 'Form':
         code = asset_response['html']
+    elif asset_type == 'SC':
+        code = asset_response['contentHtml']
 
     if asset_type in ['LP', 'Mail', 'Form']:
         return (name, code)
@@ -346,7 +348,9 @@ def get_eloqua_auth(country):
         'Filter': 'contact/filter',
         'Segment': 'contact/segment',
         'Image': 'image',
-        'File': 'importedFile'
+        'File': 'importedFile',
+        'SC': 'contentSection',
+        'DC': 'dynamicContent'
     }
 
     # Gets data from naming.json
@@ -1584,7 +1588,34 @@ def eloqua_post_file(imported_file):
 
 '''
 =================================================================================
-                            Main Eloqua API Flows
+                                Shared Content API
+=================================================================================
+'''
+
+
+def eloqua_put_sharedcontent(sc_id, data):
+    '''
+    Requires id and data of the shared content to update SC in Eloqua
+    Returns success bool
+    '''
+
+    # Creating a put call to Eloqua API
+    root = f'{eloqua_rest}assets/contentSection/{sc_id}'
+    response = api_request(
+        root, call='put', data=json.dumps(data))
+    shared_content = response.json()
+
+    # Checks if there is error
+    if isinstance(shared_content, list) or shared_content['type'] != 'ContentSection':
+        print(f'{Fore.YELLOW}{shared_content}')
+        return False
+
+    return True
+
+
+'''
+=================================================================================
+                                Contact Upload API
 =================================================================================
 '''
 

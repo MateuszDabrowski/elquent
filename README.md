@@ -116,7 +116,7 @@ _ToDo:_
 
 #### Module for modification of multiple assets
 
-- Adds redirect script to completed campaigns landing pages
+- Adds redirect script to completed campaigns landing pages and saves list in shared content
 
 ---
 
@@ -165,6 +165,8 @@ _ToDo:_
 - Refreshes and download segment counts
 - Gets campaign data
 - Gets user data
+- Gets dynamic content
+- Gets and updates shared content
 
 ---
 
@@ -186,4 +188,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.8_]
+[_Version: 1.8.9_]
