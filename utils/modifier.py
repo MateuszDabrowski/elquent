@@ -12,7 +12,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 
 # Python imports
 import os
-import re
+import csv
 import sys
 import json
 from colorama import Fore, Style, init
@@ -84,7 +84,6 @@ def file(file_path, name=''):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
-        'outcome-json': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes'),
         'outcome-csv': find_data_file(f'WK{source_country}_{name}.csv', directory='outcomes')
     }
 
@@ -147,15 +146,16 @@ def put_modified_lp(completed_campaigns):
     for each modified landing page
     and a string with comma-separated id for every redirected campaign
     '''
-    redirected_pages_list = [['Campaign_ID', 'Campaign_Name',
-                              'LP_ID', 'LP_Name', 'Modified']]
     redirected_campaigns_string = ''
 
+    print(f'\n\n{Fore.WHITE}[{Fore.YELLOW}MODIFY{Fore.WHITE}] ')
     for campaign in completed_campaigns:
         # Create search query to get all LPs connected to campaign
         campaign_name = campaign[1]
         search_query = campaign_name.split('_')
-        search_query = ('_').join(search_query[0:-1]) + '*'
+        search_query = ('_').join(search_query[0:4]) + '*'
+        print(f'{Fore.WHITE}[{Fore.YELLOW}Campaign{Fore.WHITE}] › '
+              f'{Fore.YELLOW}{campaign_name}')
 
         # Iterates over pages of outcomes
         page = 1
@@ -164,14 +164,25 @@ def put_modified_lp(completed_campaigns):
             landing_pages = api.eloqua_get_landingpages(
                 search_query, page=page)
 
+            if not landing_pages:
+                print(
+                    f'{Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] » {Fore.YELLOW}Landing Page not found')
+                # Write modifier outcome to csv file
+                with open(file('outcome-csv', f'redirected-campaigns'), 'a', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([campaign[0], campaign[1],
+                                     'not found', 'not found', False])
+                break
+
             for landing_page in landing_pages['elements']:
+                landing_page_ending = landing_page.get("name").split('_')[-1]
+                print(f'{Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] {Fore.YELLOW}» '
+                      f'{Fore.WHITE}ID: {landing_page.get("id")} {Fore.YELLOW}› '
+                      f'{Fore.WHITE}_{landing_page_ending}', end=' ')
                 # Builds valid redirect link string
                 redirect_link = naming[source_country]['id']['redirect']\
-                    + f'?utm_source={landing_page.get("name")}'
+                    + f'?utm_source={landing_page.get("name")}&utm_medium=redirect'
                 redirect_link = f'<head><script>window.location.replace("{redirect_link}")</script>'
-                redirect_link = redirect_link\
-                    .replace('"', r'\\')\
-                    .replace('/', r'\/')
 
                 # Gets and modifies code of the LP with redirect link
                 landing_page_html = landing_page['htmlContent'].get('html')
@@ -197,14 +208,15 @@ def put_modified_lp(completed_campaigns):
                 landing_page_modification = api.eloqua_put_landingpage(
                     landing_page.get('id'), data)
 
-                # Adds campagins and landing page data to a list for outputting
-                redirected_pages_list.append([
-                    campaign[0],
-                    campaign[1],
-                    landing_page.get('id'),
-                    landing_page.get('name'),
-                    landing_page_modification
-                ])
+                # Write modifier outcome to csv file
+                with open(file('outcome-csv', f'redirected-campaigns'), 'a', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([campaign[0],
+                                     campaign[1],
+                                     landing_page.get('id'),
+                                     landing_page.get('name'),
+                                     landing_page_modification])
+                print(f'{SUCCESS}')
 
             # Stops iteration when full list is obtained
             if landing_pages['total'] - page * 20 < 0:
@@ -219,7 +231,7 @@ def put_modified_lp(completed_campaigns):
             if page % 10 == 0:
                 print(f'{Fore.YELLOW}-', end='', flush=True)
 
-    return (redirected_pages_list, redirected_campaigns_string)
+    return redirected_campaigns_string
 
 
 def redirect_lp():
@@ -247,12 +259,18 @@ def redirect_lp():
     old_redirected_campaigns = redirected_campaigns_shared_list['contentHtml']
     old_redirected_campaigns = old_redirected_campaigns.split(',')
 
+    # Write modifier outcome to csv file
+    with open(file('outcome-csv', f'redirected-campaigns'), 'w', encoding='utf-8') as f:
+        fieldnames = ['Campaign ID', 'Campaign Name',
+                      'Landing Page ID', 'Landing Page Name', 'Redirected']
+        writer = csv.writer(f)
+        writer.writerow(fieldnames)
+
     # Gets list of completed campaigns
     completed_campaigns = get_completed_campaigns(old_redirected_campaigns)
 
     # Gets list of modified landing pages
-    redirected_lp_list, new_redirected_campaigns = put_modified_lp(
-        completed_campaigns)
+    new_redirected_campaigns = put_modified_lp(completed_campaigns)
 
     # Creates a string with id's of all redirected campaigns (previously and now)
     all_redirected_campaigns = \
@@ -271,7 +289,7 @@ def redirect_lp():
     api.eloqua_put_sharedcontent(
         naming[source_country]['id']['redirected_list'], data=data)
 
-    # TODO: Output list of changed assets to .csv in Outcomes folder
+    print(f'\n{SUCCESS}List of redirected campaigns saved to Outcomes folder!')
 
     return
 
