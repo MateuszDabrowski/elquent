@@ -240,8 +240,8 @@ def export_campaigns():
     page = 1
     print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
     while True:
-        campaigns = api.eloqua_get_campaigns(
-            search_query, page=page, depth='complete')
+        campaigns = api.eloqua_get_assets(
+            search_query, asset_type='campaign', page=page)
 
         # Creates dict with data from API
         for campaign in campaigns['elements']:

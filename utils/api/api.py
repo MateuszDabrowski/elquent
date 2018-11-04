@@ -291,6 +291,7 @@ def eloqua_asset_name():
 
 def eloqua_asset_get(asset_id, asset_type, depth=''):
     '''
+    Requires asset_id, asset_type and optionally depth
     Returns name and optionally code of Eloqua asset of given ID
     '''
 
@@ -309,17 +310,50 @@ def eloqua_asset_get(asset_id, asset_type, depth=''):
 
     # Gets name and code of the asset
     name = asset_response['name']
-    if asset_type in ['LP', 'Mail']:
+    if asset_type in ['landingPage', 'mail']:
         code = asset_response['htmlContent']['html']
-    elif asset_type == 'Form':
+    elif asset_type == 'form':
         code = asset_response['html']
-    elif asset_type == 'SC':
+    elif asset_type == 'sharedContent':
         code = asset_response['contentHtml']
 
-    if asset_type in ['LP', 'Mail', 'Form']:
+    if asset_type in ['landingPage', 'mail', 'form']:
         return (name, code)
     else:
         return name
+
+
+def eloqua_get_assets(query, asset_type, count='', page='1', depth='complete'):
+    '''
+    Requires query string, asset_type and optionally count, pagination, depth
+    Returns partial list of assets and their full count
+    '''
+    # Sets output page element count to bigger for smaller response depth
+    if not count and depth == 'minimal':
+        count = 500
+    elif not count:
+        count = 20
+
+    # Gets required endpoint
+    endpoint = asset_names.get(asset_type) + 's'
+
+    # Builds the API request
+    payload = {
+        'search': query,  # Filter by query
+        'depth': depth,  # Sets required depth of data output
+        'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
+        'count': count,  # Sets count according to depth
+        'page': page  # Pagination of outcomes
+    }
+
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/{endpoint}'
+    response = api_request(root, params=payload)
+    assets = response.json()
+    if assets['total'] > count:
+        print(f'{Fore.GREEN}|', end='', flush=True)
+
+    return assets
 
 
 '''
@@ -340,17 +374,17 @@ def get_eloqua_auth(country):
 
     global asset_names
     asset_names = {
-        'LP': 'landingPage',
-        'Form': 'form',
-        'Mail': 'email',
-        'Campaign': 'campaign',
-        'Program': 'program',
-        'Filter': 'contact/filter',
-        'Segment': 'contact/segment',
-        'Image': 'image',
-        'File': 'importedFile',
-        'SC': 'contentSection',
-        'DC': 'dynamicContent'
+        'landingPage': 'landingPage',
+        'form': 'form',
+        'mail': 'email',
+        'campaign': 'campaign',
+        'program': 'program',
+        'sharedFilter': 'contact/filter',
+        'segment': 'contact/segment',
+        'image': 'image',
+        'file': 'importedFile',
+        'sharedContent': 'contentSection',
+        'dynamicContent': 'dynamicContent'
     }
 
     # Gets data from naming.json
@@ -676,36 +710,6 @@ def eloqua_sync_data(sync_uri):
 '''
 
 
-def eloqua_get_landingpages(query, page='1', depth='complete'):
-    '''
-    Requires query string, pagination and optionally depth
-    Returns partial list of landingpages and their full count
-    '''
-    # Sets output page element count to bigger for smaller response depth
-    if depth == 'minimal':
-        count = 500
-    else:
-        count = 20
-
-    # Builds the API request
-    payload = {
-        'search': query,  # Filter by query
-        'depth': depth,  # Sets required depth of data output
-        'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
-        'count': count,  # Sets count according to depth
-        'page': page  # Pagination of outcomes
-    }
-
-    # Creating a get call to Eloqua API
-    root = f'{eloqua_rest}assets/landingPages'
-    response = api_request(root, params=payload)
-    landing_pages = response.json()
-    if landing_pages['total'] > count:
-        print(f'{Fore.GREEN}|', end='', flush=True)
-
-    return landing_pages
-
-
 def eloqua_create_landingpage(name, code):
     '''
     Requires name and code of the landing page to create LP in Eloqua
@@ -715,7 +719,7 @@ def eloqua_create_landingpage(name, code):
     name = f'WK{source_country}_{name}'
 
     # Checks if there already is LP with that name
-    eloqua_asset_exist(name, asset='LP')
+    eloqua_asset_exist(name, asset='landingPage')
 
     # Chosses correct folder ID for upload
     segment = name.split('_')[1]
@@ -810,7 +814,7 @@ def eloqua_create_filter(name, data):
     Returns Filter ID and response of created filter
     '''
     # Checks if there already is Form with that name
-    eloqua_asset_exist(name, asset='Filter')
+    eloqua_asset_exist(name, asset='sharedFilter')
 
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/contact/filter'
@@ -830,40 +834,6 @@ def eloqua_create_filter(name, data):
                                     Form API
 =================================================================================
 '''
-
-
-def eloqua_get_forms():
-    '''
-    Returns whole data on all forms for user source country
-    '''
-    all_forms = []
-    page = 1
-
-    print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}FORMS{Fore.WHITE}] Getting form field data from Eloqua: ', end='', flush=True)
-    while True:
-        # Gets data of requested form
-        root = f'{eloqua_rest}assets/forms'
-        params = {'depth': 'complete',
-                  'search': f'WK{source_country}*',
-                  'orderBy': 'id DESC',
-                  'count': '50',
-                  'page': page}
-        response = api_request(root, params=params)
-        forms = response.json()
-
-        all_forms.extend(forms['elements'])
-        print(f'{Fore.GREEN}|', end='', flush=True)
-
-        # Stops iteration when full list is obtained
-        if forms['total'] - page * int(params.get('count')) < 0:
-            break
-
-        # Increments page to get next part of outcomes
-        page += 1
-
-    print()
-    return all_forms
 
 
 def eloqua_get_form_data(form_id):
@@ -900,7 +870,7 @@ def eloqua_create_form(name, data):
     Returns Form ID and response of created form
     '''
     # Checks if there already is Form with that name
-    eloqua_asset_exist(name, asset='Form')
+    eloqua_asset_exist(name, asset='form')
 
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/form'
@@ -929,7 +899,7 @@ def eloqua_update_form(form_id, css='', html='', processing=''):
     Returns Form ID
     '''
     # Gets current data of form to update
-    data = eloqua_asset_get(form_id, asset_type='Form', depth='complete')
+    data = eloqua_asset_get(form_id, asset_type='form', depth='complete')
     if css:
         data['customCSS'] = css
     if html:
@@ -1239,7 +1209,7 @@ def eloqua_create_email(name, code):
     '''
 
     # Checks if there already is E-mail with that name
-    eloqua_asset_exist(name, asset='Mail')
+    eloqua_asset_exist(name, asset='mail')
 
     # Cleans technical comments
     code = code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
@@ -1292,7 +1262,7 @@ def eloqua_update_email(email_id, code):
     Returns E-mail ID
     '''
     # Gets current data of e-mail to update
-    old_data = eloqua_asset_get(email_id, asset_type='Mail', depth='complete')
+    old_data = eloqua_asset_get(email_id, asset_type='mail', depth='complete')
     code = code.replace('"', '\"')
     data = {
         'type': 'Email',
@@ -1342,7 +1312,7 @@ def eloqua_create_campaign(name, data):
     Returns ID and reponse of created campaign canvas
     '''
     # Checks if there already is Campaign with that name
-    eloqua_asset_exist(name, asset='Campaign')
+    eloqua_asset_exist(name, asset='campaign')
 
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/campaign'
@@ -1359,36 +1329,6 @@ def eloqua_create_campaign(name, data):
     return (campaign_id, campaign)
 
 
-def eloqua_get_campaigns(query, page='1', depth='complete'):
-    '''
-    Requires query string, pagination and optionally depth
-    Returns partial list of campaigns and their full count
-    '''
-    # Sets output page element count to bigger for smaller response depth
-    if depth == 'minimal':
-        count = 500
-    else:
-        count = 40
-
-    # Builds the API request
-    payload = {
-        'search': query,  # Filter by query
-        'depth': depth,  # Sets required depth of data output
-        'orderBy': 'id DESC',  # Sorts from newest to oldest to get most important first
-        'count': count,  # Sets count according to depth
-        'page': page  # Pagination of outcomes
-    }
-
-    # Creating a get call to Eloqua API
-    root = f'{eloqua_rest}assets/campaigns'
-    response = api_request(root, params=payload)
-    campaigns = response.json()
-    if campaigns['total'] > count:
-        print(f'{Fore.GREEN}|', end='', flush=True)
-
-    return campaigns
-
-
 '''
 =================================================================================
                                 Program API
@@ -1402,7 +1342,7 @@ def eloqua_create_program(name, data):
     Returns ID and reponse of created program canvas
     '''
     # Checks if there already is Campaign with that name
-    eloqua_asset_exist(name, asset='Program')
+    eloqua_asset_exist(name, asset='program')
 
     # Creating a post call to Eloqua API
     root = f'{eloqua_rest}assets/program'
@@ -1484,7 +1424,7 @@ def eloqua_post_image(image):
 
         # Gets image data to prepare PUT body
         image_data = eloqua_asset_get(
-            image_id, asset_type='Image', depth='complete')
+            image_id, asset_type='image', depth='complete')
 
         # Gets and swaps folder_id to correct one for ELQuent image uploads
         folder_id = naming[source_country]['id']['image']
@@ -1557,7 +1497,7 @@ def eloqua_post_file(imported_file):
 
         # Gets image data to prepare PUT body
         file_data = eloqua_asset_get(
-            file_id, asset_type='File', depth='complete')
+            file_id, asset_type='file', depth='complete')
 
         # Gets and swaps folder_id to correct one for ELQuent image uploads
         folder_id = naming[source_country]['id']['certificate']

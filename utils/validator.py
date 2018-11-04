@@ -133,8 +133,10 @@ def campaign_asset_validator(campaign_json, asset_type):
             asset_list.append(element.get(f'{asset_type}Id'))
 
             # Validates whether there are defined outputs
-            if not element.get('outputTerminals'):
-                print(f'{ERROR}{element.get("name")} has no output routes!')
+            if not element.get('outputTerminals') and\
+                    campaign_json['campaignCategory'] == 'multistep':
+                print(f'{WARNING}{element.get("name")} '
+                      f'{Fore.YELLOW} » no output routes!')
 
     return asset_list
 
@@ -165,17 +167,22 @@ def campaign_decision_validator(campaign_data, campaign_json, decision_type):
                     or decision_type is 'SubmitForm'\
                     and decision_list[-1] not in campaign_data['Form']:
                 print(f'{WARNING}{element.get("name")} ',
-                      f'has asset not used in this camapign.')
+                      f'{Fore.YELLOW}» asset not used in this camapign.')
+                # TODO: Check if name is from this campaign (as it may be TECH EML)
 
             # Validates whether there are defined outputs
             if not element.get('outputTerminals'):
-                print(f'{ERROR}{element.get("name")} has no output routes!')
+                print(f'{ERROR}{element.get("name")} '
+                      f'{Fore.YELLOW}» no output routes!')
             elif len(element['outputTerminals']) == 1:
-                print(f'{WARNING}{element.get("name")} has only one output route.')
+                print(
+                    f'{WARNING}{element.get("name")} '
+                    f'{Fore.YELLOW}» only one output route.')
 
             # Validates whether there is correct evaluation period
             if element.get('evaluateNoAfter') == '0':
-                print(f'{ERROR}{element.get("name")} There is no evaluation period.')
+                print(f'{ERROR}{element.get("name")} '
+                      f'{Fore.RED}There is no evaluation period.')
 
     return decision_list
 
@@ -195,7 +202,7 @@ def campaign_data_getter():
     campaign_name = '_'.join(campaign_name)
 
     # Searches Eloqua for a campaign with above acquired name
-    campaign_json = api.eloqua_get_campaigns(campaign_name)
+    campaign_json = api.eloqua_get_assets(campaign_name, asset_type='campaign')
     if len(campaign_json['elements']) > 1:
         print(f'{ERROR}There is more than one campaign with the same name!')
         return False
@@ -232,7 +239,45 @@ def campaign_data_getter():
             campaign_data, campaign_json, decision)
         campaign_data[decision] = decision_id_list
 
-    # TODO: Search for not connected assets (especially forms, LPs)
+    # Building search query to find assets connected with campaign
+    search_query = campaign_name.split('_')
+    search_query = ('_').join(search_query[0:-1]) + '*'
+
+    # Create dict containing full data on all assets conencted with campaign
+    all_campaign_assets = {}
+    for asset_type in ['segment', 'email', 'landingPage', 'form']:
+        page = 1
+        assets = []
+        while True:
+            # Gets full data on first part of assets connected with campaign
+            assets_partial = api.eloqua_get_assets(
+                search_query, asset_type, page=page)
+
+            # Stop if there is none of particular asset_type
+            if not assets_partial:
+                print(
+                    f'{Fore.WHITE}[{Fore.YELLOW}{asset}{Fore.WHITE}] » '
+                    f'{Fore.YELLOW} not found for {campaign_name}')
+                break
+
+            # Add existing to a list
+            for single_asset in assets_partial['elements']:
+                assets.append(single_asset)
+
+            # Stops iteration when full list is obtained
+            if assets_partial['total'] - page * 20 < 0:
+                break
+
+            # Else increments page to get next part of outcomes
+            page += 1
+
+            # Every ten batches draws hyphen for better readability
+            if page % 10 == 0:
+                print(f'{Fore.YELLOW}-', end='', flush=True)
+
+        # Add all assets to all_campaign_assets dict
+        all_campaign_assets[asset_type] = assets
+
     # TODO: Validate campaign elements
     # TODO: Validate names of all assets
     # TODO: Validate tracking and PURLs in e-mails
@@ -366,8 +411,8 @@ def campaign_lifespan():
     print(f'\n{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ',
           end='', flush=True)
     while True:
-        campaigns = api.eloqua_get_campaigns(
-            search_query, page, depth='minimal')
+        campaigns = api.eloqua_get_assets(
+            search_query, asset_type='campaign', page=page, depth='minimal')
 
         # Adds active campaigns to a list
         for campaign in campaigns['elements']:
@@ -407,7 +452,8 @@ def campaign_lifespan():
     print(f'\n{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ',
           end='', flush=True)
     for campaign_id in active_campaigns:
-        campaign = api.eloqua_asset_get(campaign_id, 'Campaign', 'complete')
+        campaign = api.eloqua_asset_get(
+            campaign_id, asset_type='campaign', depth='complete')
 
         campaign_info = {
             'Name': campaign['name'],

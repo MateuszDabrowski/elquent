@@ -79,6 +79,11 @@ _ToDo:_
 - Automatically gets all needed data via API and restructures it
 - Uploads contacts to Eloqua shared list via ELQuent.api module
 
+_ToDo:_
+
+- [ ] _Save date of last sync in shared content_
+- [ ] _Save data to external activity_
+
 ---
 
 ### [ELQuent.database](utils/database.py)
@@ -188,4 +193,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.10_]
+[_Version: 1.8.11_]

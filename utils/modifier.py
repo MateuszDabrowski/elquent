@@ -110,8 +110,8 @@ def get_completed_campaigns(redirected_campaigns):
     completed_campaigns = []
     print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
     while True:
-        campaigns = api.eloqua_get_campaigns(
-            search_query, page=page, depth='minimal')
+        campaigns = api.eloqua_get_assets(
+            search_query, asset_type='campaign', page=page, depth='minimal')
 
         # Creates list of completed campaigns » ['id', 'name']
         for campaign in campaigns['elements']:
@@ -142,9 +142,7 @@ def put_modified_lp(completed_campaigns):
     Finds all Landing Pages connected to campaigns from completed_campaigns list
     Adds redirect script to the <head> tag and updates HTML in Eloqua
 
-    Returns ['campaign_id', 'campaign_name', 'lp_id', 'lp_name', modified_bool]
-    for each modified landing page
-    and a string with comma-separated id for every redirected campaign
+    Returns  a string with comma-separated id for every redirected campaign
     '''
     redirected_campaigns_string = ''
 
@@ -161,8 +159,8 @@ def put_modified_lp(completed_campaigns):
         page = 1
         while True:
             # Gets full data on landing page
-            landing_pages = api.eloqua_get_landingpages(
-                search_query, page=page)
+            landing_pages = api.eloqua_get_assets(
+                search_query, asset_type='landingPage', page=page)
 
             if not landing_pages:
                 print(
@@ -255,7 +253,7 @@ def redirect_lp():
 
     # Gets list of already redirected or no-LP campaigns
     redirected_campaigns_shared_list = api.eloqua_asset_get(
-        naming[source_country]['id']['redirected_list'], 'SC', depth='complete')
+        naming[source_country]['id']['redirected_list'], 'sharedContent', depth='complete')
     old_redirected_campaigns = redirected_campaigns_shared_list['contentHtml']
     old_redirected_campaigns = old_redirected_campaigns.split(',')
 

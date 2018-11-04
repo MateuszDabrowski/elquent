@@ -139,9 +139,10 @@ def create_landing_page():
         '''
 
         if choice == 3:  # Gets code from clipboard and validates if it is HTML page
-            lp_id = api.get_asset_id('LP')
+            lp_id = api.get_asset_id('landingPage')
             if lp_id:
-                lp_code = (api.eloqua_asset_get(lp_id, asset_type='LP'))[1]
+                lp_code = (api.eloqua_asset_get(
+                    lp_id, asset_type='landingPage'))[1]
             else:
                 while True:
                     lp_code = pyperclip.paste()
@@ -239,9 +240,9 @@ def create_form():
         '''
         Returns validated form code form clipboard
         '''
-        form_id = api.get_asset_id('Form')
+        form_id = api.get_asset_id('form')
         if form_id:
-            form_code = (api.eloqua_asset_get(form_id, asset_type='Form'))[1]
+            form_code = (api.eloqua_asset_get(form_id, asset_type='form'))[1]
         else:
             while True:
                 code = pyperclip.paste()

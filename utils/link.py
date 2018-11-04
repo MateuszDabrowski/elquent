@@ -78,10 +78,10 @@ def get_code():
     Returns code to be cleaned
     » code: long str
     '''
-    email_id = api.get_asset_id('Mail')
+    email_id = api.get_asset_id('mail')
     if email_id:
         try:
-            email = api.eloqua_asset_get(email_id, asset_type='Mail')
+            email = api.eloqua_asset_get(email_id, asset_type='mail')
         except KeyError:
             print(f'  {ERROR}Cannot clean drag & drop e-mail')
     else:
