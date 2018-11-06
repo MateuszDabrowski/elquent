@@ -162,9 +162,9 @@ def put_modified_lp(completed_campaigns):
             landing_pages = api.eloqua_get_assets(
                 search_query, asset_type='landingPage', page=page)
 
-            if not landing_pages:
+            if not landing_pages['elements']:
                 print(
-                    f'{Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] » {Fore.YELLOW}Landing Page not found')
+                    f'  {Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] » {Fore.YELLOW}Landing Page not found')
                 # Write modifier outcome to csv file
                 with open(file('outcome-csv', f'redirected-campaigns'), 'a', encoding='utf-8') as f:
                     writer = csv.writer(f)
@@ -174,7 +174,7 @@ def put_modified_lp(completed_campaigns):
 
             for landing_page in landing_pages['elements']:
                 landing_page_ending = landing_page.get("name").split('_')[-1]
-                print(f'{Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] {Fore.YELLOW}» '
+                print(f'  {Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] {Fore.YELLOW}» '
                       f'{Fore.WHITE}ID: {landing_page.get("id")} {Fore.YELLOW}› '
                       f'{Fore.WHITE}_{landing_page_ending}', end=' ')
                 # Builds valid redirect link string

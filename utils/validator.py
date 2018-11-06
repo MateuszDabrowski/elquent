@@ -30,6 +30,7 @@ init(autoreset=True)
 naming = None
 source_country = None
 campaign_name = None
+search_query = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -153,13 +154,13 @@ def campaign_decision_validator(campaign_data, campaign_json, decision_type):
         if element['type'] == f'Campaign{decision_type}Rule':
             # Gathers basic data on decision
             if 'email' in decision_type.lower():
-                decision_list.append(element.get(f'emailId'))
+                decision_list.append(element.get('emailId'))
             elif 'form' in decision_type.lower():
-                decision_list.append(element.get(f'formId'))
+                decision_list.append(element.get('formId'))
             elif 'filter' in decision_type.lower():
-                decision_list.append(element.get(f'filterId'))
+                decision_list.append(element.get('filterId'))
             elif 'list' in decision_type.lower():
-                decision_list.append(element.get(f'listId'))
+                decision_list.append(element.get('listId'))
 
             # Validates whether decision step is set to asset from that campaign
             if decision_type in ['EmailOpened', 'EmailClickthrough', 'EmailSent']\
@@ -185,6 +186,21 @@ def campaign_decision_validator(campaign_data, campaign_json, decision_type):
                       f'{Fore.RED}There is no evaluation period.')
 
     return decision_list
+
+
+def campaign_email_validator(email_json_list):
+    '''
+    Requires list with e-mail jsons from API response
+    '''
+    email_id_list = []
+    # Iterate over all e-mails connected with campaign
+    for email in email_json_list:
+        # Adds e-mail ID to email_id_list
+        email_id_list.append(email.get('id'))
+
+        # TODO: e-mail validation logic
+
+    return email_id_list
 
 
 def campaign_data_getter():
@@ -240,6 +256,7 @@ def campaign_data_getter():
         campaign_data[decision] = decision_id_list
 
     # Building search query to find assets connected with campaign
+    global search_query
     search_query = campaign_name.split('_')
     search_query = ('_').join(search_query[0:-1]) + '*'
 
