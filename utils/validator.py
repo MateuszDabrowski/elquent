@@ -30,7 +30,9 @@ init(autoreset=True)
 naming = None
 source_country = None
 campaign_name = None
+campaign_name_base = None
 search_query = None
+validation_errors = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
@@ -114,8 +116,20 @@ def campaign_field_validator(campaign_data):
     for field in ['Region', 'Type', 'PSP', 'VSP']:
         if not campaign_data.get(field):
             print(f'{ERROR}Campaign field {field} is not filled!')
+            validation_errors.append([
+                field,
+                '',
+                '',
+                'Campaign field not filled'
+            ])
         elif campaign_data.get(field) not in campaign_name:
             print(f'{ERROR}Campaign field {field} has incorrect value!')
+            validation_errors.append([
+                field,
+                '',
+                campaign_data.get(field),
+                'Campaign field has incorrect value'
+            ])
 
     return
 
@@ -137,7 +151,13 @@ def campaign_asset_validator(campaign_json, asset_type):
             if not element.get('outputTerminals') and\
                     campaign_json['campaignCategory'] == 'multistep':
                 print(f'{WARNING}{element.get("name")} '
-                      f'{Fore.YELLOW} » no output routes!')
+                      f'{Fore.YELLOW}» no output routes!')
+                validation_errors.append([
+                    element.get('name'),
+                    element.get(f'{asset_type}Id'),
+                    '',
+                    'No output routes on canvas'
+                ])
 
     return asset_list
 
@@ -164,26 +184,63 @@ def campaign_decision_validator(campaign_data, campaign_json, decision_type):
 
             # Validates whether decision step is set to asset from that campaign
             if decision_type in ['EmailOpened', 'EmailClickthrough', 'EmailSent']\
-                    and decision_list[-1] not in campaign_data['Email']\
-                    or decision_type is 'SubmitForm'\
+                    and decision_list[-1] not in campaign_data['Email']:
+                connected_asset_name, _ = api.eloqua_asset_get(
+                    decision_list[-1], 'email', depth='minimal')
+                if campaign_name_base not in connected_asset_name:
+                    print(f'{WARNING}{element.get("name")} ',
+                          f'{Fore.YELLOW}» asset not used in this camapign.')
+                    validation_errors.append([
+                        element.get('name'),
+                        decision_list[-1],
+                        '',
+                        'Connected to asset from different campaign'
+                    ])
+            elif decision_type is 'SubmitForm'\
                     and decision_list[-1] not in campaign_data['Form']:
-                print(f'{WARNING}{element.get("name")} ',
-                      f'{Fore.YELLOW}» asset not used in this camapign.')
-                # TODO: Check if name is from this campaign (as it may be TECH EML)
+                connected_asset_name, _ = api.eloqua_asset_get(
+                    decision_list[-1], 'form', depth='minimal')
+                if campaign_name_base not in connected_asset_name:
+                    print(f'{WARNING}{element.get("name")} ',
+                          f'{Fore.YELLOW}» asset not used in this camapign.')
+                    validation_errors.append([
+                        element.get('name'),
+                        decision_list[-1],
+                        '',
+                        'Connected to asset from different campaign'
+                    ])
 
             # Validates whether there are defined outputs
             if not element.get('outputTerminals'):
                 print(f'{ERROR}{element.get("name")} '
                       f'{Fore.YELLOW}» no output routes!')
+                validation_errors.append([
+                    element.get('name'),
+                    decision_list[-1],
+                    '',
+                    'No output routes on canvas'
+                ])
             elif len(element['outputTerminals']) == 1:
                 print(
                     f'{WARNING}{element.get("name")} '
                     f'{Fore.YELLOW}» only one output route.')
+                validation_errors.append([
+                    element.get('name'),
+                    decision_list[-1],
+                    '',
+                    'Only one output route on canvas'
+                ])
 
             # Validates whether there is correct evaluation period
             if element.get('evaluateNoAfter') == '0':
                 print(f'{ERROR}{element.get("name")} '
                       f'{Fore.RED}There is no evaluation period.')
+                validation_errors.append([
+                    element.get('name'),
+                    decision_list[-1],
+                    '',
+                    'There is no evaluation period set'
+                ])
 
     return decision_list
 
@@ -214,8 +271,14 @@ def campaign_data_getter():
     '''
     # Gets name of the campaign that should be validated
     global campaign_name
+    global campaign_name_base
     campaign_name = helper.campaign_name_getter()
+    campaign_name_base = '_'.join(campaign_name[:-1])
     campaign_name = '_'.join(campaign_name)
+
+    # Creates list to group all errors and warnings ['Name','ID','Value','ErrorDescription']
+    global validation_errors
+    validation_errors = []
 
     # Searches Eloqua for a campaign with above acquired name
     campaign_json = api.eloqua_get_assets(campaign_name, asset_type='campaign')
@@ -274,7 +337,7 @@ def campaign_data_getter():
             if not assets_partial:
                 print(
                     f'{Fore.WHITE}[{Fore.YELLOW}{asset}{Fore.WHITE}] » '
-                    f'{Fore.YELLOW} not found for {campaign_name}')
+                    f'{Fore.YELLOW}Not found for {campaign_name}')
                 break
 
             # Add existing to a list
@@ -294,6 +357,10 @@ def campaign_data_getter():
 
         # Add all assets to all_campaign_assets dict
         all_campaign_assets[asset_type] = assets
+
+    print(f'\n{Fore.RED}» Errors:')
+    for error in validation_errors:
+        print(error)
 
     # TODO: Validate campaign elements
     # TODO: Validate names of all assets
@@ -421,7 +488,7 @@ def campaign_lifespan():
     '''
 
     # Builds search query for API
-    search_query = f"name='WK{source_country}*'"
+    campaign_query = f"name='WK{source_country}*'"
 
     # Iterates over pages of outcomes
     page = 1
@@ -429,7 +496,7 @@ def campaign_lifespan():
           end='', flush=True)
     while True:
         campaigns = api.eloqua_get_assets(
-            search_query, asset_type='campaign', page=page, depth='minimal')
+            campaign_query, asset_type='campaign', page=page, depth='minimal')
 
         # Adds active campaigns to a list
         for campaign in campaigns['elements']:

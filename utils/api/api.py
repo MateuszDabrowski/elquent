@@ -171,7 +171,7 @@ def get_asset_id(asset):
 
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset}{Fore.WHITE}]',
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}{asset.capitalize()}{Fore.WHITE}]',
             f'{Fore.WHITE}Write or copypaste {asset} ID or copy the code and click [Enter]', end='')
         asset_id = input(' ')
         if not asset_id:
@@ -310,14 +310,14 @@ def eloqua_asset_get(asset_id, asset_type, depth=''):
 
     # Gets name and code of the asset
     name = asset_response['name']
-    if asset_type in ['landingPage', 'mail']:
+    if asset_type in ['landingPage', 'email']:
         code = asset_response['htmlContent']['html']
     elif asset_type == 'form':
         code = asset_response['html']
     elif asset_type == 'sharedContent':
         code = asset_response['contentHtml']
 
-    if asset_type in ['landingPage', 'mail', 'form']:
+    if asset_type in ['landingPage', 'email', 'form']:
         return (name, code)
     else:
         return name
@@ -376,7 +376,7 @@ def get_eloqua_auth(country):
     asset_names = {
         'landingPage': 'landingPage',
         'form': 'form',
-        'mail': 'email',
+        'email': 'email',
         'campaign': 'campaign',
         'program': 'program',
         'sharedFilter': 'contact/filter',
@@ -454,7 +454,7 @@ def eloqua_create_sharedlist(export, choice):
     '''
     Creates shared list for contacts
     Requires 'export' dict with webinars and conctacts in format:
-    {'listName': ['mail', 'mail']}
+    {'listName': ['email', 'email']}
     '''
     outcome = []
     print(f'\n{Fore.BLUE}Saving to shared list:', end='')
@@ -1209,7 +1209,7 @@ def eloqua_create_email(name, code):
     '''
 
     # Checks if there already is E-mail with that name
-    eloqua_asset_exist(name, asset='mail')
+    eloqua_asset_exist(name, asset='email')
 
     # Cleans technical comments
     code = code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
@@ -1262,7 +1262,7 @@ def eloqua_update_email(email_id, code):
     Returns E-mail ID
     '''
     # Gets current data of e-mail to update
-    old_data = eloqua_asset_get(email_id, asset_type='mail', depth='complete')
+    old_data = eloqua_asset_get(email_id, asset_type='email', depth='complete')
     code = code.replace('"', '\"')
     data = {
         'type': 'Email',

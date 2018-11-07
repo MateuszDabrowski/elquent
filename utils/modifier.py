@@ -173,6 +173,10 @@ def put_modified_lp(completed_campaigns):
                 break
 
             for landing_page in landing_pages['elements']:
+                # Skips adding redirection if there is one already
+                if 'window.location.replace' in landing_page['htmlContent'].get('html'):
+                    continue
+
                 landing_page_ending = landing_page.get("name").split('_')[-1]
                 print(f'  {Fore.WHITE}[{Fore.YELLOW}LP{Fore.WHITE}] {Fore.YELLOW}» '
                       f'{Fore.WHITE}ID: {landing_page.get("id")} {Fore.YELLOW}› '
