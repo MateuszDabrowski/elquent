@@ -104,35 +104,15 @@ def file(file_path, name='LP'):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
-        'jquery': find_data_file('WKCORP_jquery.txt'),
-        'blindform': find_data_file(f'WK{source_country}_blindform.json'),
-        'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
-        'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
-        'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
-        'simple-campaign': find_data_file(f'WK{source_country}_simple-campaign.json'),
-        'basic-campaign': find_data_file(f'WK{source_country}_basic-campaign.json'),
-        'content-campaign': find_data_file(f'WK{source_country}_content-campaign.json'),
-        'asset-eml': find_data_file(f'WK{source_country}_asset-eml.txt'),
-        'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
-        'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
-        'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
-        'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
-        'ty-lp': find_data_file(f'WK{source_country}_ty-lp.txt'),
-        'confirmation-lp': find_data_file(f'WK{source_country}_confirmation-lp.txt'),
-        'confirmation-ty-lp': find_data_file(f'WK{source_country}_confirmation-ty-lp.txt'),
-        'showhide-css': find_data_file(f'WK{source_country}_showhide-css.txt'),
-        'marketing-optin': find_data_file(f'WK{source_country}_marketing-optin.txt'),
-        'email-optin': find_data_file(f'WK{source_country}_email-optin.txt'),
-        'phone-optin': find_data_file(f'WK{source_country}_phone-optin.txt'),
-        'tracking-optin': find_data_file(f'WK{source_country}_tracking-optin.txt'),
-        'gdpr-info': find_data_file(f'WK{source_country}_gdpr-info.txt'),
-        'submit-button': find_data_file(f'WKCORP_submit-button.txt'),
-        'validation-body': find_data_file('WKCORP_validation-body.txt'),
-        'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
-        'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
-        'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
-        'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
-        'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
+        'jquery': find_data_file('WKCORP_LP_jquery.txt'),
+        'simple-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_simple.json'),
+        'basic-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_basic.json'),
+        'ebook-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_ebook.json'),
+        'code-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_code.json'),
+        'webinar-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_webinar.json'),
+        'asset-eml': find_data_file(f'WK{source_country}_EML_asset.txt'),
+        'lp-template': find_data_file(f'WK{source_country}_LP_template.txt'),
+        'ty-lp': find_data_file(f'WK{source_country}_LP_thank-you.txt'),
         'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', directory='outcomes')
     }
 
@@ -224,7 +204,7 @@ def campaign_main_page():
     print(
         f'\n{Fore.WHITE}» [{Fore.YELLOW}REQUIRED{Fore.WHITE}] Form for main LP', end='')
     file_name = (('_').join(campaign_name[1:4]) + '_LP')
-    with open(file('two-column-lp'), 'r', encoding='utf-8') as f:
+    with open(file('lp-template'), 'r', encoding='utf-8') as f:
         code = f.read()
     form, required = page.create_form()
     code = page.swap_form(code, form)
@@ -254,195 +234,36 @@ def campaign_main_page():
     return (main_lp_id, main_lp_url, main_form_id)
 
 
-def campaign_ty_page(lead_or_contact_form):
+def campaign_ty_page(asset_name):
     '''
     Builds one or two thank you pages after filling main form
     '''
-    def create_ty_page(lp_type=''):
-        '''
-        Modifies code of selected type of thank you page
-        '''
-        if lp_type == 'lead':
-            file_name = (('_').join(campaign_name[1:4]) + '_lead-TY-LP')
-            with open(file('conversion-lead'), 'r', encoding='utf-8') as f:
-                conversion_script = f.read()
-        if lp_type == 'contact':
-            file_name = (('_').join(campaign_name[1:4]) + '_contact-TY-LP')
-            with open(file('conversion-contact'), 'r', encoding='utf-8') as f:
-                conversion_script = f.read()
-
-        # Modify TY LP code
-        regex_conversion_script = re.compile(r'(</body>)', re.UNICODE)
-        ty_lp = regex_conversion_script.sub(conversion_script, code)
-        ty_lp = regex_gtm.sub(f'WK{source_country}_{file_name}', ty_lp)
-        for i in range(len(naming[source_country]['converter']['Placeholders'])):
-            placeholder = naming[source_country]['converter']['Placeholders'][i]
-            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-            converter_value = naming[source_country]['converter'][converter_choice][i]
-            ty_lp = regex_converter.sub(rf'{converter_value}', ty_lp)
-
-        # Adds information about presentation for lead TY Page
-        if lp_type == 'lead':
-            ty_lp = ty_lp.replace(
-                '<!-- PRESENTATION -->', naming[source_country]['converter']['Presentation'])
-
-        # Saves to Outcomes file
-        print(
-            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
-        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-            f.write(ty_lp)
-
-        # Saves to Eloqua
-        api.eloqua_create_landingpage(file_name, ty_lp)
-
-        return
+    file_name = ('_').join(campaign_name[1:4]) + '_TY-LP'
 
     # Gets and prepares general TY LP structure
     with open(file('ty-lp'), 'r', encoding='utf-8') as f:
-        code = f.read()
-    code = regex_product_name.sub(product_name, code)
-    code = regex_header_text.sub(header_text, code)
+        ty_lp_code = f.read()
+    ty_lp_code = regex_product_name.sub(product_name, ty_lp_code)
+    ty_lp_code = regex_header_text.sub(header_text, ty_lp_code)
+    ty_lp_code = regex_asset_name.sub(asset_name, ty_lp_code)
+    ty_lp_code = regex_gtm.sub(f'WK{source_country}_{file_name}', ty_lp_code)
 
-    if lead_or_contact_form == 0 or lead_or_contact_form == 1:
-        create_ty_page(lp_type='lead')
-    if lead_or_contact_form == 0 or lead_or_contact_form == 2:
-        create_ty_page(lp_type='contact')
-
-    return
-
-
-def campaign_create_blindform():
-    '''
-    Creates blindform in Eloqua
-    Returns code, id, html name and json file of that blindform
-    '''
-    blindform_folder_id = naming[source_country]['id']['form'].get(
-        campaign_name[1])
-
-    blindform_name = (('_').join(
-        campaign_name[0:4]) + '_confirmation-blindFORM')
-    blindform_html_name = api.eloqua_asset_html_name(blindform_name)
-
-    # Loads json data for blindform creation and fills it with name and html_name
-    with open(file('blindform'), 'r', encoding='utf-8') as f:
-        blindform_json = json.load(f)
-        blindform_json['name'] = blindform_name
-        blindform_json['htmlName'] = blindform_html_name
-        blindform_json['folderId'] = blindform_folder_id
-
-    # Creates form with given data
-    blindform_id, blindform_json = api.eloqua_create_form(
-        blindform_name, blindform_json)
-
-    # Prepares HTML Code of the form
-    with open(file('blindform-html'), 'r', encoding='utf-8') as f:
-        blindform_html = f.read()
-        blindform_html = blindform_html\
-            .replace('\\', '')\
-            .replace('FORM_ID', blindform_id)\
-            .replace('HTML_NAME', blindform_html_name)
-
-    return (blindform_html, blindform_id, blindform_json, blindform_html_name)
-
-
-def campaign_confirmation_page(blindform_html):
-    '''
-    Builds confirmation landing page in Eloqua
-    '''
-    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-LP')
-    with open(file('confirmation-lp'), 'r', encoding='utf-8') as f:
-        code = f.read()
-    code = page.swap_form(code, blindform_html)
-    code = page.javascript(code, required=None)
-    code = regex_product_name.sub(product_name, code)
-    code = regex_header_text.sub(header_text, code)
-    code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
-        code = regex_converter.sub(rf'{converter_value}', code)
+        ty_lp_code = regex_converter.sub(rf'{converter_value}', ty_lp_code)
 
     # Saves to Outcomes file
     print(
         f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-        f.write(code)
+        f.write(ty_lp_code)
 
     # Saves to Eloqua
-    confirmation_lp_url = api.eloqua_create_landingpage(file_name, code)[2]
+    ty_lp_id, _, _ = api.eloqua_create_landingpage(file_name, ty_lp_code)
 
-    return confirmation_lp_url
-
-
-def campaign_confirmation_mail(blindform_html_name, asset_name, confirmation_lp_url):
-    '''
-    Creates set of conifrmation mails in Eloqua
-    Returns confirmation reminder email id
-    '''
-    # Builds code of e-mail
-    with open(file('confirmation-eml'), 'r', encoding='utf-8') as f:
-        confirmation_code = f.read()
-    confirmation_code = regex_product_name.sub(product_name, confirmation_code)
-    confirmation_code = regex_asset_name.sub(asset_name, confirmation_code)
-    confirmation_code = regex_blindform_html_name.sub(
-        blindform_html_name, confirmation_code)
-    for i in range(len(naming[source_country]['converter']['Placeholders'])):
-        placeholder = naming[source_country]['converter']['Placeholders'][i]
-        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming[source_country]['converter'][converter_choice][i]
-        confirmation_code = regex_converter.sub(
-            rf'{converter_value}', confirmation_code)
-
-    # Saves standard + reminder
-    for mail_name in ['_confirmation-TECH-EML', '_confirmation-reminder-TECH-EML']:
-        file_name = (('_').join(campaign_name[1:4]) + mail_name)
-
-        if mail_name == '_confirmation-REM-EML':
-            links = re.findall(r'href="(.*?)"', confirmation_code)
-            for code in set(links):
-                if blindform_html_name in code:
-                    confirmation_code = confirmation_code.replace(
-                        code, confirmation_lp_url + '/<span class=eloquaemail >PURL_NAME1</span>')
-
-        # Saves to Outcomes file
-        print(
-            f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
-        with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-            f.write(confirmation_code)
-
-        # Saves to Eloqua -> first id is overwritten by reminder ID and only second is returned
-        confirmation_reminder_mail_id = api.eloqua_create_email(
-            f'WK{source_country}_{file_name}', confirmation_code)
-
-    return confirmation_reminder_mail_id
-
-
-def confirmation_ty_page():
-    '''
-    Builds in Eloqua confirmation thank you page
-    Returns it's eloqua id
-    '''
-    file_name = (('_').join(campaign_name[1:4]) + '_confirmation-TY-LP')
-    with open(file('confirmation-ty-lp'), 'r', encoding='utf-8') as f:
-        code = f.read()
-    code = regex_product_name.sub(product_name, code)
-    code = regex_header_text.sub(header_text, code)
-    code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
-    for i in range(len(naming[source_country]['converter']['Placeholders'])):
-        placeholder = naming[source_country]['converter']['Placeholders'][i]
-        regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
-        converter_value = naming[source_country]['converter'][converter_choice][i]
-        code = regex_converter.sub(rf'{converter_value}', code)
-    # Saves to Outcomes file
-    print(
-        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
-    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-        f.write(code)
-    # Saves to Eloqua
-    confirmation_ty_lp_id = api.eloqua_create_landingpage(file_name, code)[0]
-
-    return confirmation_ty_lp_id
+    return ty_lp_id
 
 
 def campaign_asset_mail(asset_name, asset_url):
@@ -452,64 +273,28 @@ def campaign_asset_mail(asset_name, asset_url):
     '''
     file_name = (('_').join(campaign_name[1:4]) + '_asset-TECH-EML')
     with open(file('asset-eml'), 'r', encoding='utf-8') as f:
-        asset_code = f.read()
-    asset_code = regex_product_name.sub(product_name, asset_code)
-    asset_code = regex_asset_name.sub(asset_name, asset_code)
-    asset_code = regex_asset_url.sub(asset_url, asset_code)
+        asset_mail_code = f.read()
+    asset_mail_code = regex_product_name.sub(product_name, asset_mail_code)
+    asset_mail_code = regex_asset_name.sub(asset_name, asset_mail_code)
+    asset_mail_code = regex_asset_url.sub(asset_url, asset_mail_code)
     for i in range(len(naming[source_country]['converter']['Placeholders'])):
         placeholder = naming[source_country]['converter']['Placeholders'][i]
         regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
         converter_value = naming[source_country]['converter'][converter_choice][i]
-        asset_code = regex_converter.sub(rf'{converter_value}', asset_code)
+        asset_mail_code = regex_converter.sub(
+            rf'{converter_value}', asset_mail_code)
 
     # Saves to Outcomes file
     print(
         f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
     with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
-        f.write(asset_code)
+        f.write(asset_mail_code)
 
     # Saves to Eloqua
     asset_mail_id = api.eloqua_create_email(
-        f'WK{source_country}_{file_name}', asset_code)
+        f'WK{source_country}_{file_name}', asset_mail_code)
 
     return asset_mail_id
-
-
-def campaign_update_blindform(blindform_html, blindform_id, blindform_json, asset_mail_id, confirmation_ty_lp_id):
-    '''
-    Updates confirmation blindform with asset id's
-    '''
-    # Gets CSS Code of the form
-    with open(file('blindform-css'), 'r', encoding='utf-8') as f:
-        blindform_css = f.read()
-
-    for field in blindform_json['elements']:
-        if field['htmlName'] == 'emailAddress':
-            email_field_id = field['id']
-        if field['htmlName'] == 'confirmation':
-            confirm_field_id = field['id']
-
-    # Gets and prepares processing steps json of the form
-    with open(file('blindform-processing'), 'r', encoding='utf-8') as f:
-        blindform_processing = json.load(f)
-        # Change to string for easy replacing
-        blindform_string = json.dumps(blindform_processing)
-        blindform_string = blindform_string\
-            .replace('EMAIL_FIELD_ID', email_field_id)\
-            .replace('SEND_EMAIL_ID', asset_mail_id)\
-            .replace('TY_LP_ID', confirmation_ty_lp_id)\
-            .replace('CONFIRM_FIELD_ID', confirm_field_id)
-        # Change back to json for API call
-        blindform_processing = json.loads(blindform_string)
-
-    api.eloqua_update_form(
-        blindform_id,
-        css=blindform_css,
-        html=blindform_html,
-        processing=blindform_processing['processingSteps']
-    )
-
-    return
 
 
 '''
@@ -599,7 +384,7 @@ def simple_campaign():
 
 '''
 =================================================================================
-                                BASIC CANVAS CAMPAIGN FLOW
+                                BASIC CAMPAIGN FLOW
 =================================================================================
 '''
 
@@ -663,14 +448,14 @@ def basic_campaign():
 
 '''
 =================================================================================
-                                ASSET CAMPAIGN FLOW
+                                CONTENT CAMPAIGN FLOW
 =================================================================================
 '''
 
 
 def content_campaign():
     '''
-    Main flow for content campaign
+    Main flow for e-book campaign (doi)
     Creates filled up campaign in Eloqua along with assets
     Saves multiple html codes as backup to outcome folder
     '''
@@ -678,22 +463,17 @@ def content_campaign():
     global converter_choice
     global product_name
     global header_text
-    lead_or_contact_form = helper.campaign_type_getter()
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
     asset_url = helper.asset_link_getter()
     product_name = helper.product_name_getter(campaign_name)
     header_text = helper.header_text_getter()
 
     '''
-    =================================================== Campaign specific regex compiles
-    '''
-    global regex_blindform_html_name
-    regex_blindform_html_name = re.compile('HTML_FORM_NAME', re.UNICODE)
-
-    '''
     =================================================== Builds campaign assets
     '''
 
+    # TODO: Ask if there is external LP or eloqua one to be created
+    # TODO: Ask if there is prepared Form or it needs to be created
     # Create main page with selected form
     main_lp_id, main_lp_url, main_form_id = campaign_main_page()
 
@@ -707,27 +487,10 @@ def content_campaign():
             return False
 
     # Create one or two thank you pages depending on previous user input
-    campaign_ty_page(lead_or_contact_form)
-
-    # Create confirmation blindform for confirmation e-mail and landing page
-    blindform_html, blindform_id, blindform_json, blindform_html_name = campaign_create_blindform()
-
-    # Create confirmation landing page
-    confirmation_lp_url = campaign_confirmation_page(blindform_html)
-
-    # Create set of confirmation mails
-    confirmation_reminder_mail_id = campaign_confirmation_mail(
-        blindform_html_name, asset_name, confirmation_lp_url)
-
-    # Create confirmation thank you page
-    confirmation_ty_lp_id = confirmation_ty_page()
+    ty_page_id = campaign_ty_page(asset_name)
 
     # Create asset mail
     asset_mail_id = campaign_asset_mail(asset_name, asset_url)
-
-    # Update confirmation blindform
-    campaign_update_blindform(
-        blindform_html, blindform_id, blindform_json, asset_mail_id, confirmation_ty_lp_id)
 
     '''
     =================================================== Create Campaign
@@ -743,8 +506,9 @@ def content_campaign():
             campaign_code.append(part)
     campaign_code = '-'.join(campaign_code)
 
+    # TODO: Different JSON based on whether it is e-book, recording, webinar or code
     # Loads json data for campaign canvas creation and fills it with data
-    with open(file('content-campaign'), 'r', encoding='utf-8') as f:
+    with open(file('ebook-campaign'), 'r', encoding='utf-8') as f:
         campaign_json = json.load(f)
         # Change to string for easy replacing
         campaign_string = json.dumps(campaign_json)
@@ -753,7 +517,6 @@ def content_campaign():
             .replace('REMINDER_EMAIL', reminder_id)\
             .replace('ASSET_TYPE', asset_type)\
             .replace('ASSET_EMAIL', asset_mail_id)\
-            .replace('CONFIRMATION_EMAIL', confirmation_reminder_mail_id)\
             .replace('FORM_ID', main_form_id)\
             .replace('LP_ID', main_lp_id)
         # Change back to json for API call
@@ -799,10 +562,10 @@ def campaign_module(country):
 
     # Campaign type chooser
     print(
-        f'\n{Fore.GREEN}ELQuent.campaign Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Email Campagin without canvas'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic{Fore.WHITE}] Campaign canvas with just e-mail and reminder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content{Fore.WHITE}] Campaign canvas with e-book/webinar/code/etc'
+        f'\n{Fore.GREEN}ELQuent.campaign Campaigns:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Perfect for newsletters and one-offs'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic Canvas{Fore.WHITE}] When you want to send e-mail with reminder'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For all campaigns with e-books, webinars, codes'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:

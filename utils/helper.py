@@ -119,26 +119,6 @@ def campaign_name_getter():
     return campaign_name
 
 
-def campaign_type_getter():
-    '''
-    Returns type of campaign (lead/contact/both) [int]
-    '''
-    print(f'\n{Fore.GREEN}After filling the form user is:',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}0{Fore.WHITE}] Either lead or not (depending on submission)',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}] Always lead',
-          f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}] Never lead')
-    while True:
-        print(f'{Fore.YELLOW}Enter number associated with your choice:', end=' ')
-        lead_or_contact_form = input('')
-        if lead_or_contact_form in ['0', '1', '2']:
-            lead_or_contact_form = int(lead_or_contact_form)
-            break
-        else:
-            print(f'{ERROR}Entered value does not belong to any choice!')
-
-    return lead_or_contact_form
-
-
 def date_swapper(date):
     '''
     Changes date format from DD-MM-YYYY to MM-DD-YYYY and the other way round

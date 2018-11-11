@@ -89,7 +89,7 @@ def file(file_path, name=''):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
-        'activity-export': find_data_file(f'WKCORP_activity_export.json', directory='templates'),
+        'activity-export': find_data_file(f'WKCORP_ACTIVITY_export.json', directory='templates'),
         'bounceback-def': find_data_file(f'WK{source_country}_bounceback_export.txt', directory='templates'),
         'pageview-def': find_data_file(f'WK{source_country}_pageview_export.txt', directory='templates'),
         'outcome-json': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes'),

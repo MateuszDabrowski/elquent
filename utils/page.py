@@ -87,34 +87,21 @@ def file(file_path, name='LP'):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
-        'jquery': find_data_file('WKCORP_jquery.txt'),
-        'blindform': find_data_file(f'WK{source_country}_blindform.json'),
-        'blindform-html': find_data_file(f'WK{source_country}_blindform-html.txt'),
-        'blindform-css': find_data_file(f'WK{source_country}_blindform-css.txt'),
-        'blindform-processing': find_data_file(f'WK{source_country}_blindform-processing.json'),
-        'content-campaign': find_data_file(f'WK{source_country}_content-campaign.json'),
-        'asset-eml': find_data_file(f'WK{source_country}_asset-eml.txt'),
-        'confirmation-eml': find_data_file(f'WK{source_country}_confirmation-eml.txt'),
-        'blank-lp': find_data_file(f'WK{source_country}_blank-lp.txt'),
-        'one-column-lp': find_data_file(f'WK{source_country}_one-column-lp.txt'),
-        'two-column-lp': find_data_file(f'WK{source_country}_two-column-lp.txt'),
-        'ty-lp': find_data_file(f'WK{source_country}_ty-lp.txt'),
-        'confirmation-lp': find_data_file(f'WK{source_country}_confirmation-lp.txt'),
-        'confirmation-ty-lp': find_data_file(f'WK{source_country}_confirmation-ty-lp.txt'),
-        'showhide-css': find_data_file(f'WK{source_country}_showhide-css.txt'),
-        'marketing-optin': find_data_file(f'WK{source_country}_marketing-optin.txt'),
-        'email-optin': find_data_file(f'WK{source_country}_email-optin.txt'),
-        'phone-optin': find_data_file(f'WK{source_country}_phone-optin.txt'),
-        'tracking-optin': find_data_file(f'WK{source_country}_tracking-optin.txt'),
-        'gdpr-info': find_data_file(f'WK{source_country}_gdpr-info.txt'),
-        'submit-button': find_data_file(f'WKCORP_submit-button.txt'),
-        'validation-body': find_data_file('WKCORP_validation-body.txt'),
-        'validation-element': find_data_file(f'WK{source_country}_validation-element.txt'),
-        'phone-required': find_data_file(f'WK{source_country}_required-phone-js.txt'),
-        'lead-by-phone': find_data_file(f'WK{source_country}_lead-by-phone.txt'),
-        'showhide-lead': find_data_file(f'WKCORP_showhide-lead.txt'),
-        'conversion-lead': find_data_file(f'WK{source_country}_conversion-lead.txt'),
-        'conversion-contact': find_data_file(f'WK{source_country}_conversion-contact.txt'),
+        'jquery': find_data_file('WKCORP_LP_jquery.txt'),
+        'blank-lp': find_data_file(f'WK{source_country}_LP_blank.txt'),
+        'lp-template': find_data_file(f'WK{source_country}_LP_template.txt'),
+        'ty-lp': find_data_file(f'WK{source_country}_LP_thank-you.txt'),
+        'showhide-css': find_data_file(f'WK{source_country}_LP_showhide-css.txt'),
+        'marketing-optin': find_data_file(f'WK{source_country}_FORM_marketing-optin.txt'),
+        'email-optin': find_data_file(f'WK{source_country}_FORM_email-optin.txt'),
+        'phone-optin': find_data_file(f'WK{source_country}_FORM_phone-optin.txt'),
+        'gdpr-info': find_data_file(f'WK{source_country}_FORM_gdpr-info.txt'),
+        'submit-button': find_data_file(f'WKCORP_FORM_submit-button.txt'),
+        'validation-body': find_data_file('WKCORP_FORM_validation-body.txt'),
+        'validation-element': find_data_file(f'WK{source_country}_FORM_field-validation.txt'),
+        'phone-required': find_data_file(f'WK{source_country}_FORM_required-phone-js.txt'),
+        'lead-by-phone': find_data_file(f'WK{source_country}_FORM_lead-by-phone.txt'),
+        'showhide-lead': find_data_file(f'WKCORP_LP_showhide-lead.txt'),
         'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', directory='outcomes')
     }
 
@@ -138,7 +125,7 @@ def create_landing_page():
         Returns Landing Page Code either form clipoard or from template
         '''
 
-        if choice == 3:  # Gets code from clipboard and validates if it is HTML page
+        if choice == 2:  # Gets code from clipboard and validates if it is HTML page
             lp_id = api.get_asset_id('landingPage')
             if lp_id:
                 lp_code = (api.eloqua_asset_get(
@@ -159,7 +146,7 @@ def create_landing_page():
             lp_code = add_showhide_css(lp_code)
 
         else:  # Gets code from template file
-            templates = ['blank-lp', 'one-column-lp', 'two-column-lp']
+            templates = ['blank-lp', 'lp-template']
             with open(file(templates[choice]), 'r', encoding='utf-8') as f:
                 lp_code = f.read()
 
@@ -194,9 +181,8 @@ def create_landing_page():
         return lp_code
 
     options = [
-        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Blank Landing Page with Form',
-        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create One Column Landing Page with Form',
-        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Two Column Landing Page with Form',
+        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Blank Page with Form for testing',
+        f'{Fore.WHITE}[{Fore.YELLOW}TEMPLATE{Fore.WHITE}] Create Landing Page with Form for campaign',
         f'{Fore.WHITE}[{Fore.YELLOW}EXISTING{Fore.WHITE}] Change form in existing Landing Page'
     ]
 

@@ -46,6 +46,7 @@ _ToDo:_
 
 - [ ] _Change from two (one and two column) LP templates to just one modular template_
 - [ ] _Add optional questions for template filling as in campaign flow_
+- [ ] _Automatically add thank you page based on data from first page_
 
 ---
 
@@ -53,19 +54,15 @@ _ToDo:_
 
 #### Builds Eloqua Campaigns
 
-- Built-in wizard creating all Landing Pages required for campaign
-- Creates blindform for confirmation-ty-lp and automatically impelements it
-- Creates confirmation (plus reminder) e-mail and fills it with gathered data
-- Creates asset name with link to the chosen asset
-- Updates confirmation form with asset e-mail and asset link
-- Creates campaign canvas filled with created content
-- Basic campaign canvas flow for mail+reminder sends
-- Simple Email Campaign without canvas flow
+- Built-in wizard creating campaign from scratch (LP, EML, Campaign)
+- Simple Email Campaign without canvas for newsletters and one-offs
+- Basic campaign canvas for mail+reminder flows
+- Content campaign canvas for e-book/webinar/code flows
 
 _ToDo:_
 
 - [ ] _Randomized subject & pre-header generator for technical e-mail_
-- [ ] _Update main form with confirmation e-mail ID and thank-you-page urls_
+- [ ] _Update main form with confirmation e-mail ID and thank-you-page id_
 - [ ] _When not recognized product name, try to find best matches from a list_
 
 ---
@@ -180,7 +177,6 @@ _ToDo:_
 #### Helper module for Eloqua conventions
 
 - Gets valid campaign name from user (according to predefined naming convention)
-- Gets type of campaign from user
 - Gets converting asset name for the campaign
 - Gets link to the asset
 - Gets promoted product name either from campaign name (via naming convention) or from user
@@ -193,4 +189,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.11_]
+[_Version: 1.8.12_]
