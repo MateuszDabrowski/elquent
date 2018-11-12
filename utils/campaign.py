@@ -38,7 +38,6 @@ regex_asset_name = None
 regex_asset_url = None
 regex_product_name = None
 regex_header_text = None
-regex_blindform_html_name = None
 regex_gtm = None
 
 # Predefined messege elements
@@ -113,6 +112,10 @@ def file(file_path, name='LP'):
         'asset-eml': find_data_file(f'WK{source_country}_EML_asset.txt'),
         'lp-template': find_data_file(f'WK{source_country}_LP_template.txt'),
         'ty-lp': find_data_file(f'WK{source_country}_LP_thank-you.txt'),
+        'form-design': find_data_file(f'WK{source_country}_FORM_design-template.json'),
+        'form-processing': find_data_file(f'WK{source_country}_FORM_processing-template.json'),
+        'form-html': find_data_file(f'WK{source_country}_FORM_html-template.txt'),
+        'form-css': find_data_file(f'WK{source_country}_FORM_css-template.txt'),
         'outcome-file': find_data_file(f'WK{source_country}_{name}.txt', directory='outcomes')
     }
 
@@ -196,18 +199,22 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
     return (mail_id, reminder_id)
 
 
-def campaign_main_page():
+def campaign_main_page(form_id=''):
     '''
     Builds main landing page with main form in Eloqua
     Returns main LP ID and main Form ID
     '''
-    print(
-        f'\n{Fore.WHITE}» [{Fore.YELLOW}REQUIRED{Fore.WHITE}] Form for main LP', end='')
+    # Creates form if there is no id from user
+    if not form_id:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}REQUIRED{Fore.WHITE}] Form for main LP', end='')
+    form_html, required = page.modify_form(form_id)
+
+    # Creates LP
     file_name = (('_').join(campaign_name[1:4]) + '_LP')
     with open(file('lp-template'), 'r', encoding='utf-8') as f:
         code = f.read()
-    form, required = page.create_form()
-    code = page.swap_form(code, form)
+    code = page.swap_form(code, form_html)
     code = page.javascript(code, required)
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
@@ -229,9 +236,136 @@ def campaign_main_page():
 
     # Gets main form id for future campaign canvas API calls
     form_id_regex = re.compile(r'id="form(\d+?)"', re.UNICODE)
-    main_form_id = form_id_regex.findall(form)[0]
+    main_form_id = form_id_regex.findall(form_html)[0]
 
     return (main_lp_id, main_lp_url, main_form_id)
+
+
+def campaign_main_form():
+    '''
+    Creates main campaign form in Eloqua
+    Returns code, id, and json file of that form
+    '''
+    form_folder_id = naming[source_country]['id']['form'].get(
+        campaign_name[1])
+
+    form_name = ('_').join(campaign_name[0:4]) + '_FORM'
+    form_html_name = api.eloqua_asset_html_name(form_name)
+
+    # Loads json data for blindform creation and fills it with name and html_name
+    with open(file('form-design'), 'r', encoding='utf-8') as f:
+        form_json = json.load(f)
+        form_json['name'] = form_name
+        form_json['htmlName'] = form_html_name
+        form_json['folderId'] = form_folder_id
+
+    # Creates form with given data
+    form_id, form_json = api.eloqua_create_form(form_name, form_json)
+
+    # Prepares HTML Code of the form
+    with open(file('form-html'), 'r', encoding='utf-8') as f:
+        form_html = f.read()
+        form_html = form_html.replace('FORM_ID', form_id)
+
+    # Updates form with HTML
+    form_id, form_json = api.eloqua_update_form(form_id, html=form_html)
+
+    return (form_html, form_id, form_json)
+
+
+def campaign_update_form(form_html, form_id, form_json, asset_mail_id, ty_page_id, from_a_form):
+    '''
+    Updates main form with asset_mail_id, ty_page_id, form_id, from_a_form, psp, lead_status
+    '''
+    # Gets CSS Code of the form
+    with open(file('form-css'), 'r', encoding='utf-8') as f:
+        form_css = f.read()
+
+    for field in form_json['elements']:
+        if field['htmlName'] == 'emailAddress':
+            email_field_id = field['id']
+        elif field['htmlName'] == 'firstName':
+            firstname_field_id = field['id']
+        elif field['htmlName'] == 'lastName':
+            lastname_field_id = field['id']
+        elif field['htmlName'] == 'jobTitleFreeText1':
+            jobtitle_field_id = field['id']
+        elif field['htmlName'] == 'company':
+            company_field_id = field['id']
+        elif field['htmlName'] == 'busPhone':
+            phone_field_id = field['id']
+        elif field['htmlName'] == 'utm_source':
+            source_field_id = field['id']
+        elif field['htmlName'] == 'utm_campaign':
+            detail_field_id = field['id']
+        elif field['htmlName'] == 'utm_medium':
+            medium_field_id = field['id']
+        elif field['htmlName'] == 'utm_content':
+            content_field_id = field['id']
+        elif field['htmlName'] == 'utm_term':
+            term_field_id = field['id']
+        elif field['htmlName'] == 'form_url':
+            url_field_id = field['id']
+        elif field['htmlName'] == 'directMailOptedIn1':
+            dataoptin_field_id = field['id']
+        elif field['htmlName'] == 'emailOptedIn1':
+            emailoptin_field_id = field['id']
+        elif field['htmlName'] == 'phoneOptedIn1':
+            phoneoptin_field_id = field['id']
+
+    # Gets PSP Cost from name
+    cost_code = campaign_name[3].split('-')
+    cost_code = ('-').join(cost_code[-2:])
+
+    # Gets lead-status for product
+    while True:
+        print(
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste {Fore.YELLOW}Lead Status{Fore.WHITE}.')
+        lead_status = input(' ')
+        if lead_status.startswith(f'WK{source_country}_Lead'):
+            break
+        else:
+            print(f'\n{ERROR}Incorrect Lead Status')
+
+    # Gets and prepares processing steps json of the form
+    with open(file('form-processing'), 'r', encoding='utf-8') as f:
+        form_processing = json.load(f)
+        # Change to string for easy replacing
+        form_string = json.dumps(form_processing)
+        form_string = form_string\
+            .replace('EMAIL_FIELD_ID', email_field_id)\
+            .replace('FIRSTNAME_FIELD_ID', firstname_field_id)\
+            .replace('LASTNAME_FIELD_ID', lastname_field_id)\
+            .replace('COMPANY_FIELD_ID', company_field_id)\
+            .replace('JOBTITLE_FIELD_ID', jobtitle_field_id)\
+            .replace('PHONE_FIELD_ID', phone_field_id)\
+            .replace('SOURCE_FIELD_ID', source_field_id)\
+            .replace('DETAIL_FIELD_ID', detail_field_id)\
+            .replace('MEDIUM_FIELD_ID', medium_field_id)\
+            .replace('CONTENT_FIELD_ID', content_field_id)\
+            .replace('TERM_FIELD_ID', term_field_id)\
+            .replace('URL_FIELD_ID', url_field_id)\
+            .replace('DATAOPTIN_FIELD_ID', dataoptin_field_id)\
+            .replace('EMAILOPTIN_FIELD_ID', emailoptin_field_id)\
+            .replace('PHONEOPTIN_FIELD_ID', phoneoptin_field_id)\
+            .replace('LEAD_STATUS', lead_status)\
+            .replace('COST_CODE', cost_code)\
+            .replace('CAMPAIGN_ELEMENT_ID', from_a_form)\
+            .replace('ASSET_EMAIL_ID', asset_mail_id)\
+            .replace('TY_LP_ID', ty_page_id)\
+            .replace('FORM_ID', form_id)
+        # Change back to json for API call
+        form_processing = json.loads(form_string)
+
+    api.eloqua_update_form(
+        form_id,
+        css=form_css,
+        html=form_html,
+        processing=form_processing['processingSteps'],
+        open_form=True
+    )
+
+    return
 
 
 def campaign_ty_page(asset_name):
@@ -466,16 +600,49 @@ def content_campaign():
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
     asset_url = helper.asset_link_getter()
     product_name = helper.product_name_getter(campaign_name)
-    header_text = helper.header_text_getter()
 
     '''
     =================================================== Builds campaign assets
     '''
 
-    # TODO: Ask if there is external LP or eloqua one to be created
-    # TODO: Ask if there is prepared Form or it needs to be created
-    # Create main page with selected form
-    main_lp_id, main_lp_url, main_form_id = campaign_main_page()
+    # Campaign type chooser
+    print(
+        f'\n{Fore.GREEN}What type of campaign do you want to create?'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from scratch{Fore.WHITE}]',
+        f'\n{Fore.WHITE}        Creates new Form and new Landing Page'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from form{Fore.WHITE}]',
+        f'\n{Fore.WHITE}        Creates new Landing Page with existing Form'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from landing page{Fore.WHITE}]',
+        f'\n{Fore.WHITE}        Creates new Form and updates existing Landing Page'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}Externally hosted{Fore.WHITE}]',
+        f'\n{Fore.WHITE}        Uses externally hosted Landing Page with Eloqua Form'
+    )
+
+    # Creates required assets based on chosen campaign type
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen approach:', end='')
+        campaign_choice = input(' ')
+        if campaign_choice == '1':
+            header_text = helper.header_text_getter()
+            form_html, form_id, form_json = campaign_main_form()
+            main_lp_id, main_lp_url, main_form_id = campaign_main_page(form_id)
+            break
+        elif campaign_choice == '2':
+            header_text = helper.header_text_getter()
+            main_lp_id, main_lp_url, main_form_id = campaign_main_page()
+            break
+        elif campaign_choice == '3':
+            form_html, main_form_id, form_json = campaign_main_form()
+            main_lp_id, main_lp_url = page.page_gen(
+                source_country, main_form_id)
+            break
+        elif campaign_choice == '4':
+            main_form_id = api.get_asset_id('form')
+            main_lp_url = helper.external_page_getter()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any approach!')
+            campaign_choice = ''
 
     # Creates main e-mail and reminder
     mail_id, reminder_id = '', ''
@@ -486,10 +653,10 @@ def content_campaign():
         if not mail_id:
             return False
 
-    # Create one or two thank you pages depending on previous user input
+    # Creates thank you page
     ty_page_id = campaign_ty_page(asset_name)
 
-    # Create asset mail
+    # Creates asset mail
     asset_mail_id = campaign_asset_mail(asset_name, asset_url)
 
     '''
@@ -529,11 +696,19 @@ def content_campaign():
         campaign_json['fieldValues'][0]['value'] = campaign_code
 
     # Creates campaign with given data
-    api.eloqua_create_campaign(campaign_name, campaign_json)
+    _, campaign_json = api.eloqua_create_campaign(campaign_name, campaign_json)
 
     '''
     =================================================== Finished :)
     '''
+    if campaign_choice in ['1', '3']:
+        for campaign_step in campaign_json['elements']:
+            if '(FaF)' in campaign_step['name']:
+                from_a_form = campaign_step['id']
+
+        # Update confirmation blindform
+        campaign_update_form(form_html, form_id, form_json,
+                             asset_mail_id, ty_page_id, from_a_form)
 
     print(f'\n{SUCCESS}Campaign prepared!',
           f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')

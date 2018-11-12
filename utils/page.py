@@ -217,18 +217,22 @@ def create_landing_page():
 '''
 
 
-def create_form():
+def modify_form(existing_form_id=''):
     '''
     Returns code of new Form
     '''
 
-    def get_form():
+    def get_form(form_id):
         '''
         Returns validated form code form clipboard
         '''
-        form_id = api.get_asset_id('form')
+        # If no ID given via parameters, gets it from user
+        if not form_id:
+            form_id = api.get_asset_id('form')
+        # If there was ID via parameters or given by user
         if form_id:
             form_code = (api.eloqua_asset_get(form_id, asset_type='form'))[1]
+        # If input is not valid id
         else:
             while True:
                 code = pyperclip.paste()
@@ -458,7 +462,7 @@ def create_form():
         return (form, required_checkbox)
 
     # Gets form and modifies it
-    form = get_form()
+    form = get_form(existing_form_id)
     if source_country == 'PL':
         form = gdpr_info(form)
         form = lead_phone(form)
@@ -631,7 +635,7 @@ def javascript(code, required, ):
 '''
 
 
-def page_gen(country):
+def page_gen(country, form_id=''):
     '''
     Main flow for single page creation
     Returns new Landing page code
@@ -650,7 +654,7 @@ def page_gen(country):
     code = create_landing_page()
     if not code:
         return False
-    form, required = create_form()
+    form, required = modify_form(form_id)
     code = swap_form(code, form)
     code = javascript(code, required)
     code = code.replace('http://images.go.wolterskluwer.com',

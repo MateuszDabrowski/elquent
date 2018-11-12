@@ -54,7 +54,7 @@ _ToDo:_
 
 #### Builds Eloqua Campaigns
 
-- Built-in wizard creating campaign from scratch (LP, EML, Campaign)
+- Built-in wizard creating campaigns from scratch (FORM, LP, EML, Campaign)
 - Simple Email Campaign without canvas for newsletters and one-offs
 - Basic campaign canvas for mail+reminder flows
 - Content campaign canvas for e-book/webinar/code flows
@@ -189,4 +189,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.12_]
+[_Version: 1.8.13_]

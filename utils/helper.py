@@ -169,14 +169,14 @@ def asset_name_getter():
     # Gets information about converter that is used in campaign
     print(f'\n{Fore.GREEN}After filling the form user receives:')
     converter_values = list(naming[source_country]['converter'].keys())
-    for i, converter in enumerate(converter_values[2:]):
+    for i, converter in enumerate(converter_values[1:]):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}] {converter}')
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         converter_choice = input(' ')
         if converter_choice in ['0', '1', '2', '3', '4', '5']:
-            converter_choice = converter_values[int(converter_choice) + 2]
+            converter_choice = converter_values[int(converter_choice) + 1]
             asset_type = converter_choice.split(' ')[0]
             print(
                 f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
@@ -218,6 +218,46 @@ def asset_link_getter():
             print(f'{ERROR}Entered value is not valid link!')
 
     return asset_url
+
+
+def external_page_getter():
+    '''
+    Returns link to external landing page [string]
+    '''
+    utm_script = ''
+    while True:
+        print(
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}URL{Fore.WHITE}] Enter link to the external landing page with the form')
+        external_url = input(' ')
+        if not external_url:
+            external_url = pyperclip.paste()
+        # Checks if input is a link
+        if external_url.startswith('http') or external_url.startswith('www'):
+            # Checks if there is utm already in the input
+            if 'utm' not in external_url:
+                while True:
+                    print(
+                        f'{Fore.WHITE}» Write or copypaste UTM tracking script and click [Enter]')
+                    utm_script = input(' ')
+                    if not utm_script:
+                        utm_script = pyperclip.paste()
+                    if '?' in external_url and utm_script.startswith('?utm'):
+                        external_url = external_url + '&' + utm_script[1:]
+                        break
+                    elif utm_script.startswith('?utm'):
+                        external_url = external_url + utm_script
+                        break
+                    print(f'{ERROR}Entered UTM tracking script is incorrect')
+            # Adds tracking to the link
+            if '?' in external_url and 'elqTrack' not in external_url:
+                external_url = external_url + '&elqTrack=true'
+            elif 'elqTrack' not in external_url:
+                external_url = external_url + '?elqTrack=true'
+            break
+        else:
+            print(f'{ERROR}Entered value is not valid link!')
+
+    return external_url
 
 
 def product_name_getter(campaign_name=''):

@@ -893,34 +893,41 @@ def eloqua_create_form(name, data):
     return (form_id, form)
 
 
-def eloqua_update_form(form_id, css='', html='', processing=''):
+def eloqua_update_form(form_id, css='', html='', processing='', open_form=False):
     '''
     Requires id and json data of the form to update it in Eloqua
-    Returns Form ID
+    Returns Form ID and Form JSON
     '''
     # Gets current data of form to update
     data = eloqua_asset_get(form_id, asset_type='form', depth='complete')
+    data['htmlName'] = form_id
     if css:
         data['customCSS'] = css
     if html:
+        if 'FORM_ID' in html:
+            html.replace('FORM_ID', form_id)
         data['html'] = html
     if processing:
         data['processingSteps'] = processing
+
+    print(data)
 
     # Creating a post call to Eloqua API and taking care of emoticons encoding
     root = f'{eloqua_rest}assets/form/{form_id}'
     response = api_request(
         root, call='put', data=json.dumps(data))
-    form = response.json()
+    form_json = response.json()
 
     # Open in new tab
-    form_id = form['id']
+
+    form_id = form_json['id']
     url = naming['root'] + '#forms&id=' + form_id
     print(
         f'{Fore.WHITE}» {SUCCESS}Updated Eloqua Form ID: {form_id}')
-    webbrowser.open(url, new=2, autoraise=False)
+    if open_form:
+        webbrowser.open(url, new=2, autoraise=False)
 
-    return form_id
+    return (form_id, form_json)
 
 
 '''
