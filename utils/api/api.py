@@ -166,7 +166,7 @@ def api_request(root, call='get', api='eloqua', params=None, debug=False, data=N
 
 def get_asset_id(asset):
     '''
-    Returns valid ID of chosen Eloqua asset
+    Returns valid ID of chosen Eloqua asset [integer]
     '''
 
     while True:
@@ -909,8 +909,6 @@ def eloqua_update_form(form_id, css='', html='', processing='', open_form=False)
         data['html'] = html
     if processing:
         data['processingSteps'] = processing
-
-    print(data)
 
     # Creating a post call to Eloqua API and taking care of emoticons encoding
     root = f'{eloqua_rest}assets/form/{form_id}'

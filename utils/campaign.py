@@ -110,6 +110,7 @@ def file(file_path, name='LP'):
         'code-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_code.json'),
         'webinar-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_webinar.json'),
         'asset-eml': find_data_file(f'WK{source_country}_EML_asset.txt'),
+        'before-webinar-eml': find_data_file(f'WK{source_country}_EML_before-webinar.txt'),
         'lp-template': find_data_file(f'WK{source_country}_LP_template.txt'),
         'ty-lp': find_data_file(f'WK{source_country}_LP_thank-you.txt'),
         'form-design': find_data_file(f'WK{source_country}_FORM_design-template.json'),
@@ -594,11 +595,92 @@ def content_campaign():
     Saves multiple html codes as backup to outcome folder
     '''
 
+    def ebook_campaign():
+        '''
+        Returns prepared campaign_json for e-book campaign
+        '''
+        with open(file('ebook-campaign'), 'r', encoding='utf-8') as f:
+            campaign_json = json.load(f)
+            # If form is externally hosted, delete LP reporting step from campaign
+            if campaign_choice == '4':
+                no_lp_elements = []
+                for element in campaign_json['elements']:
+                    if element['type'] != 'CampaignLandingPage':
+                        no_lp_elements.append(element)
+                campaign_json['elements'] = no_lp_elements
+            # Change to string for easy replacing
+            campaign_string = json.dumps(campaign_json)
+            campaign_string = campaign_string\
+                .replace('FIRST_EMAIL', mail_id)\
+                .replace('REMINDER_EMAIL', reminder_id)\
+                .replace('ASSET_TYPE', asset_type)\
+                .replace('ASSET_EMAIL', asset_mail_id)\
+                .replace('FORM_ID', main_form_id)\
+                .replace('LP_ID', main_lp_id)
+            # Change back to json for API call
+            campaign_json = json.loads(campaign_string)
+            campaign_json['name'] = '_'.join(campaign_name)
+            campaign_json['folderId'] = folder_id
+            campaign_json['region'] = campaign_name[0]
+            campaign_json['campaignType'] = campaign_name[2]
+            campaign_json['product'] = campaign_name[-1]
+            campaign_json['fieldValues'][0]['value'] = campaign_code
+
+        return campaign_json
+
+    def webinar_campaign():
+        '''
+        Returns prepared campaign_json for webinar campaign
+        '''
+        with open(file('webinar-campaign'), 'r', encoding='utf-8') as f:
+            campaign_json = json.load(f)
+            # If form is externally hosted, delete LP reporting step from campaign
+            if campaign_choice == '4':
+                no_lp_elements = []
+                for element in campaign_json['elements']:
+                    if element['type'] != 'CampaignLandingPage':
+                        no_lp_elements.append(element)
+                campaign_json['elements'] = no_lp_elements
+            # Change to string for easy replacing
+            campaign_string = json.dumps(campaign_json)
+            campaign_string = campaign_string\
+                .replace('FIRST_EMAIL', mail_id)\
+                .replace('REMINDER_EMAIL', reminder_id)\
+                .replace('ASSET_TYPE', asset_type)\
+                .replace('ASSET_EMAIL', asset_mail_id)\
+                .replace('FORM_ID', main_form_id)\
+                .replace('WEBINAR_DATE', str(webinar_epoch))\
+                .replace('DAY_BEFORE', str(webinar_epoch - 86400))\
+                .replace('DAY_END_BEFORE', str(webinar_epoch - 82800))\
+                .replace('HOUR_BEFORE', str(webinar_epoch - 3600))\
+                .replace('HOUR_END_BEFORE', str(webinar_epoch - 1800))\
+                .replace('DAY_BEFORE_EMAIL', 'todo')\
+                .replace('HOUR_BEFORE_EMAIL', 'todo')\
+                .replace('LP_ID', main_lp_id)
+            # TODO: update above
+            # Change back to json for API call
+            campaign_json = json.loads(campaign_string)
+            campaign_json['name'] = '_'.join(campaign_name)
+            campaign_json['folderId'] = folder_id
+            campaign_json['region'] = campaign_name[0]
+            campaign_json['campaignType'] = campaign_name[2]
+            campaign_json['product'] = campaign_name[-1]
+            campaign_json['fieldValues'][0]['value'] = campaign_code
+
+        return campaign_json
+
+    '''
+    =================================================== Content campaign globals
+    '''
+
     global converter_choice
     global product_name
     global header_text
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
     asset_url = helper.asset_link_getter()
+    if converter_choice == 'Webinar Access':
+        webinar_epoch = helper.epoch_getter()
+    header_text = helper.header_text_getter()
     product_name = helper.product_name_getter(campaign_name)
 
     '''
@@ -609,13 +691,13 @@ def content_campaign():
     print(
         f'\n{Fore.GREEN}What type of campaign do you want to create?'
         f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from scratch{Fore.WHITE}]',
-        f'\n{Fore.WHITE}        Creates new Form and new Landing Page'
+        f'\n{Fore.WHITE}           Creates new Form and new Landing Page'
         f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from form{Fore.WHITE}]',
-        f'\n{Fore.WHITE}        Creates new Landing Page with existing Form'
+        f'\n{Fore.WHITE}           Creates new Landing Page with existing Form'
         f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Eloqua from landing page{Fore.WHITE}]',
-        f'\n{Fore.WHITE}        Creates new Form and updates existing Landing Page'
+        f'\n{Fore.WHITE}           Creates new Form and updates existing Landing Page'
         f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}Externally hosted{Fore.WHITE}]',
-        f'\n{Fore.WHITE}        Uses externally hosted Landing Page with Eloqua Form'
+        f'\n{Fore.WHITE}           Uses externally hosted Landing Page with Eloqua Form'
     )
 
     # Creates required assets based on chosen campaign type
@@ -623,12 +705,10 @@ def content_campaign():
         print(f'{Fore.YELLOW}Enter number associated with chosen approach:', end='')
         campaign_choice = input(' ')
         if campaign_choice == '1':
-            header_text = helper.header_text_getter()
             form_html, form_id, form_json = campaign_main_form()
             main_lp_id, main_lp_url, main_form_id = campaign_main_page(form_id)
             break
         elif campaign_choice == '2':
-            header_text = helper.header_text_getter()
             main_lp_id, main_lp_url, main_form_id = campaign_main_page()
             break
         elif campaign_choice == '3':
@@ -637,8 +717,8 @@ def content_campaign():
                 source_country, main_form_id)
             break
         elif campaign_choice == '4':
-            main_form_id = api.get_asset_id('form')
-            main_lp_url = helper.external_page_getter()
+            main_form_id = str(api.get_asset_id('form'))
+            main_lp_url, main_lp_id = helper.external_page_getter()
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any approach!')
@@ -659,6 +739,9 @@ def content_campaign():
     # Creates asset mail
     asset_mail_id = campaign_asset_mail(asset_name, asset_url)
 
+    # TODO: Modify asset_mail for webinar access
+    # TODO: Create day-before & hour-before EML with before-webinar-eml
+
     '''
     =================================================== Create Campaign
     '''
@@ -673,27 +756,13 @@ def content_campaign():
             campaign_code.append(part)
     campaign_code = '-'.join(campaign_code)
 
-    # TODO: Different JSON based on whether it is e-book, recording, webinar or code
     # Loads json data for campaign canvas creation and fills it with data
-    with open(file('ebook-campaign'), 'r', encoding='utf-8') as f:
-        campaign_json = json.load(f)
-        # Change to string for easy replacing
-        campaign_string = json.dumps(campaign_json)
-        campaign_string = campaign_string\
-            .replace('FIRST_EMAIL', mail_id)\
-            .replace('REMINDER_EMAIL', reminder_id)\
-            .replace('ASSET_TYPE', asset_type)\
-            .replace('ASSET_EMAIL', asset_mail_id)\
-            .replace('FORM_ID', main_form_id)\
-            .replace('LP_ID', main_lp_id)
-        # Change back to json for API call
-        campaign_json = json.loads(campaign_string)
-        campaign_json['name'] = '_'.join(campaign_name)
-        campaign_json['folderId'] = folder_id
-        campaign_json['region'] = campaign_name[0]
-        campaign_json['campaignType'] = campaign_name[2]
-        campaign_json['product'] = campaign_name[-1]
-        campaign_json['fieldValues'][0]['value'] = campaign_code
+    if converter_choice in ['E-book', 'Webinar Recording']:
+        campaign_json = ebook_campaign()
+    elif converter_choice == 'Webinar Access':
+        campaign_json = webinar_campaign()
+    elif converter_choice in ['Test Access', 'Voucher Code']:
+        print('TODO')
 
     # Creates campaign with given data
     _, campaign_json = api.eloqua_create_campaign(campaign_name, campaign_json)
@@ -701,6 +770,7 @@ def content_campaign():
     '''
     =================================================== Finished :)
     '''
+
     if campaign_choice in ['1', '3']:
         for campaign_step in campaign_json['elements']:
             if '(FaF)' in campaign_step['name']:
@@ -740,7 +810,7 @@ def campaign_module(country):
         f'\n{Fore.GREEN}ELQuent.campaign Campaigns:'
         f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Perfect for newsletters and one-offs'
         f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic Canvas{Fore.WHITE}] When you want to send e-mail with reminder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For all campaigns with e-books, webinars, codes'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For campaigns with e-books, webinars, codes'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:

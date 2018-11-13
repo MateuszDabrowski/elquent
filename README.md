@@ -184,9 +184,11 @@ _ToDo:_
 - Gets users via api module
 - Changes date format from US to EU and the other way round
 - Converts epoch to readable date format
+- Convert readable date format to epoch
+- Gets date from user and return epoch
 
 ---
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.13_]
+[_Version: 1.8.14_]

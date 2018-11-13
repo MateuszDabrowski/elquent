@@ -30,6 +30,7 @@ source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 
 
@@ -142,6 +143,38 @@ def epoch_to_date(epoch):
         return readable_time
 
 
+def date_to_epoch(date):
+    '''
+    Converts datetime timestamp to epoch format [integer]
+    '''
+    if not date:
+        return False
+    else:
+        epoch = int(date.timestamp())
+
+        return epoch
+
+
+def epoch_getter():
+    '''
+    Gets date and time from user [DD-MM-YY hh-mm]
+    Returns date and time in epoch form [integer]
+    '''
+    while True:
+        # Gets datetime from user
+        print(f'\n{Fore.WHITE}» [{Fore.YELLOW}WEBINAR{Fore.WHITE}] ',
+              f'{Fore.WHITE}Enter webinar date (DD-MM-YYYY hh:mm) and click [Enter]')
+        user_date = input(' ')
+        # Tries to change it to epoch if valid
+        try:
+            webinar_date = datetime.strptime(user_date, '%d-%m-%Y %H:%M')
+            webinar_epoch = date_to_epoch(webinar_date)
+        except ValueError:
+            print(f'{ERROR}Incorrect date and time format!')
+
+    return webinar_epoch
+
+
 def user_getter(user_id):
     '''
     Returns data on Eloqua user with provided ID
@@ -175,7 +208,7 @@ def asset_name_getter():
     while True:
         print(f'{Fore.YELLOW}Enter number associated with your choice:', end='')
         converter_choice = input(' ')
-        if converter_choice in ['0', '1', '2', '3', '4', '5']:
+        if converter_choice in ['0', '1', '2', '3', '4']:
             converter_choice = converter_values[int(converter_choice) + 1]
             asset_type = converter_choice.split(' ')[0]
             print(
@@ -222,42 +255,26 @@ def asset_link_getter():
 
 def external_page_getter():
     '''
-    Returns link to external landing page [string]
+    Returns link to external landing page and null id [touple of strings]
     '''
-    utm_script = ''
     while True:
         print(
-            f'\n{Fore.WHITE}» [{Fore.YELLOW}URL{Fore.WHITE}] Enter link to the external landing page with the form')
+            f'\n{Fore.WHITE}» [{Fore.YELLOW}URL{Fore.WHITE}] ',
+            f'{Fore.WHITE}Enter link to the external landing page with the form')
         external_url = input(' ')
         if not external_url:
             external_url = pyperclip.paste()
         # Checks if input is a link
         if external_url.startswith('http') or external_url.startswith('www'):
             # Checks if there is utm already in the input
-            if 'utm' not in external_url:
-                while True:
-                    print(
-                        f'{Fore.WHITE}» Write or copypaste UTM tracking script and click [Enter]')
-                    utm_script = input(' ')
-                    if not utm_script:
-                        utm_script = pyperclip.paste()
-                    if '?' in external_url and utm_script.startswith('?utm'):
-                        external_url = external_url + '&' + utm_script[1:]
-                        break
-                    elif utm_script.startswith('?utm'):
-                        external_url = external_url + utm_script
-                        break
-                    print(f'{ERROR}Entered UTM tracking script is incorrect')
-            # Adds tracking to the link
-            if '?' in external_url and 'elqTrack' not in external_url:
-                external_url = external_url + '&elqTrack=true'
-            elif 'elqTrack' not in external_url:
-                external_url = external_url + '?elqTrack=true'
+            if 'utm' in external_url or 'elqTrack' in external_url:
+                print(f'{ERROR}Please enter link without tracking!')
+                continue
             break
         else:
             print(f'{ERROR}Entered value is not valid link!')
 
-    return external_url
+    return (external_url, '')
 
 
 def product_name_getter(campaign_name=''):
