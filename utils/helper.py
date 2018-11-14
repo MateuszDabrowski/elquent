@@ -132,13 +132,26 @@ def date_swapper(date):
 
 def epoch_to_date(epoch):
     '''
-    Converts epoch timestamp to readable datetime format DD-MM-YYYY
+    Converts epoch timestamp to readable date format DD-MM-YYYY
+    '''
+    if not epoch:
+        return False
+    else:
+        readable_date = datetime.fromtimestamp(int(epoch))
+        readable_date = readable_date.strftime('%d-%m-%Y')
+
+        return readable_date
+
+
+def epoch_to_time(epoch):
+    '''
+    Converts epoch timestamp to readable time format HH:MM
     '''
     if not epoch:
         return False
     else:
         readable_time = datetime.fromtimestamp(int(epoch))
-        readable_time = readable_time.strftime('%d-%m-%Y')
+        readable_time = readable_time.strftime('%H:%M')
 
         return readable_time
 
@@ -169,6 +182,7 @@ def epoch_getter():
         try:
             webinar_date = datetime.strptime(user_date, '%d-%m-%Y %H:%M')
             webinar_epoch = date_to_epoch(webinar_date)
+            break
         except ValueError:
             print(f'{ERROR}Incorrect date and time format!')
 

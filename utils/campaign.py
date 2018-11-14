@@ -32,6 +32,7 @@ naming = None
 source_country = None
 campaign_name = None
 converter_choice = None
+webinar_epoch = None
 product_name = None
 header_text = None
 regex_asset_name = None
@@ -409,6 +410,16 @@ def campaign_asset_mail(asset_name, asset_url):
     file_name = (('_').join(campaign_name[1:4]) + '_asset-TECH-EML')
     with open(file('asset-eml'), 'r', encoding='utf-8') as f:
         asset_mail_code = f.read()
+
+    if converter_choice == 'Webinar Access':
+        webinar_string = naming[source_country]['webinar']['dateText']
+        webinar_string = webinar_string\
+            .replace('INSERT_DATE', helper.epoch_to_date(webinar_epoch))\
+            .replace('INSERT_HOUR', helper.epoch_to_time(webinar_epoch))
+        asset_mail_code = asset_mail_code\
+            .replace('<em>"ASSET_NAME"</em>',
+                     '<em>"ASSET_NAME"</em>. ' + webinar_string)
+
     asset_mail_code = regex_product_name.sub(product_name, asset_mail_code)
     asset_mail_code = regex_asset_name.sub(asset_name, asset_mail_code)
     asset_mail_code = regex_asset_url.sub(asset_url, asset_mail_code)
@@ -430,6 +441,84 @@ def campaign_asset_mail(asset_name, asset_url):
         f'WK{source_country}_{file_name}', asset_mail_code)
 
     return asset_mail_id
+
+
+def campaign_webinar_mails(asset_name, asset_url):
+    '''
+    Creates day-before and hour-before e-mails in Eloqua
+    Returns mails ids
+    '''
+
+    def prepare_mail(before_mail_code):
+        '''
+        Returns filled e-mail code [string]
+        '''
+        before_mail_code = regex_product_name.sub(
+            product_name, before_mail_code)
+        before_mail_code = regex_asset_name.sub(asset_name, before_mail_code)
+        before_mail_code = regex_asset_url.sub(asset_url, before_mail_code)
+        for i in range(len(naming[source_country]['converter']['Placeholders'])):
+            placeholder = naming[source_country]['converter']['Placeholders'][i]
+            regex_converter = re.compile(rf'{placeholder}', re.UNICODE)
+            converter_value = naming[source_country]['converter'][converter_choice][i]
+            before_mail_code = regex_converter.sub(
+                rf'{converter_value}', before_mail_code)
+
+        return before_mail_code
+
+    # Gets the before mail template
+    with open(file('before-webinar-eml'), 'r', encoding='utf-8') as f:
+        before_mail_code = f.read()
+
+    '''
+    =================================================== Day Before EML
+    '''
+
+    # Creates day before mail
+    file_name = (('_').join(campaign_name[1:4]) + '_day-before-TECH-EML')
+    day_before_preheader = naming[source_country]['webinar']['dayBeforePre']
+    day_before_content = naming[source_country]['webinar']['dayBeforeContent']
+    day_before_mail_code = before_mail_code\
+        .replace('PREHEADER_TEXT', day_before_preheader)\
+        .replace('CONTENT_TEXT', day_before_content)\
+        .replace('INSERT_HOUR', helper.epoch_to_time(webinar_epoch))
+    day_before_mail_code = prepare_mail(day_before_mail_code)
+
+    # Saves day before mail to Outcomes file
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(day_before_mail_code)
+
+    # Saves day before mail to Eloqua
+    day_before_mail_id = api.eloqua_create_email(
+        f'WK{source_country}_{file_name}', day_before_mail_code)
+
+    '''
+    =================================================== Hour Before EML
+    '''
+
+    # Creates hour before mail
+    file_name = (('_').join(campaign_name[1:4]) + '_hour-before-TECH-EML')
+    day_before_preheader = naming[source_country]['webinar']['hourBeforePre']
+    day_before_content = naming[source_country]['webinar']['hourBeforeContent']
+    hour_before_mail_code = before_mail_code\
+        .replace('PREHEADER_TEXT', day_before_preheader)\
+        .replace('CONTENT_TEXT', day_before_content)\
+        .replace('INSERT_HOUR', helper.epoch_to_time(webinar_epoch))
+    hour_before_mail_code = prepare_mail(hour_before_mail_code)
+
+    # Saves hour before mail to Outcomes file
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(hour_before_mail_code)
+
+    # Saves hour before mail to Eloqua
+    hour_before_mail_id = api.eloqua_create_email(
+        f'WK{source_country}_{file_name}', hour_before_mail_code)
+
+    return (day_before_mail_id, hour_before_mail_id)
 
 
 '''
@@ -628,7 +717,7 @@ def content_campaign():
 
         return campaign_json
 
-    def webinar_campaign():
+    def webinar_campaign(day_before_mail_id, hour_before_mail_id):
         '''
         Returns prepared campaign_json for webinar campaign
         '''
@@ -648,16 +737,15 @@ def content_campaign():
                 .replace('REMINDER_EMAIL', reminder_id)\
                 .replace('ASSET_TYPE', asset_type)\
                 .replace('ASSET_EMAIL', asset_mail_id)\
+                .replace('DAY_BEFORE_EMAIL', day_before_mail_id)\
+                .replace('HOUR_BEFORE_EMAIL', hour_before_mail_id)\
                 .replace('FORM_ID', main_form_id)\
                 .replace('WEBINAR_DATE', str(webinar_epoch))\
                 .replace('DAY_BEFORE', str(webinar_epoch - 86400))\
                 .replace('DAY_END_BEFORE', str(webinar_epoch - 82800))\
                 .replace('HOUR_BEFORE', str(webinar_epoch - 3600))\
                 .replace('HOUR_END_BEFORE', str(webinar_epoch - 1800))\
-                .replace('DAY_BEFORE_EMAIL', 'todo')\
-                .replace('HOUR_BEFORE_EMAIL', 'todo')\
                 .replace('LP_ID', main_lp_id)
-            # TODO: update above
             # Change back to json for API call
             campaign_json = json.loads(campaign_string)
             campaign_json['name'] = '_'.join(campaign_name)
@@ -677,8 +765,13 @@ def content_campaign():
     global product_name
     global header_text
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
+    if converter_choice in ['Test Access', 'Voucher Code']:
+        print(f'{ERROR}Not yet completed, sorry!')
+        return False
     asset_url = helper.asset_link_getter()
+    # Gets date if campaign is promoting live webinar
     if converter_choice == 'Webinar Access':
+        global webinar_epoch
         webinar_epoch = helper.epoch_getter()
     header_text = helper.header_text_getter()
     product_name = helper.product_name_getter(campaign_name)
@@ -739,8 +832,10 @@ def content_campaign():
     # Creates asset mail
     asset_mail_id = campaign_asset_mail(asset_name, asset_url)
 
-    # TODO: Modify asset_mail for webinar access
-    # TODO: Create day-before & hour-before EML with before-webinar-eml
+    # Creates day-before and hour-before reminders for Webinar camapaign
+    if converter_choice == 'Webinar Access':
+        day_before_mail_id, hour_before_mail_id = campaign_webinar_mails(
+            asset_name, asset_url)
 
     '''
     =================================================== Create Campaign
@@ -760,9 +855,10 @@ def content_campaign():
     if converter_choice in ['E-book', 'Webinar Recording']:
         campaign_json = ebook_campaign()
     elif converter_choice == 'Webinar Access':
-        campaign_json = webinar_campaign()
+        campaign_json = webinar_campaign(
+            day_before_mail_id, hour_before_mail_id)
     elif converter_choice in ['Test Access', 'Voucher Code']:
-        print('TODO')
+        print('TODO')  # TODO
 
     # Creates campaign with given data
     _, campaign_json = api.eloqua_create_campaign(campaign_name, campaign_json)
