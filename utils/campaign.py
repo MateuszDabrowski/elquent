@@ -109,8 +109,12 @@ def file(file_path, name='LP'):
         'basic-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_basic.json'),
         'ebook-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_ebook.json'),
         'code-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_code.json'),
+        'demo-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_demo.json'),
         'webinar-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_webinar.json'),
+        'field-merge': find_data_file(f'WK{source_country}_VOUCHER_field-merge.json'),
         'asset-eml': find_data_file(f'WK{source_country}_EML_asset.txt'),
+        'demo-eml': find_data_file(f'WK{source_country}_EML_demo.txt'),
+        'code-eml': find_data_file(f'WK{source_country}_EML_code.txt'),
         'before-webinar-eml': find_data_file(f'WK{source_country}_EML_before-webinar.txt'),
         'lp-template': find_data_file(f'WK{source_country}_LP_template.txt'),
         'ty-lp': find_data_file(f'WK{source_country}_LP_thank-you.txt'),
@@ -165,7 +169,7 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
         return False, False
 
     # Create e-mail
-    mail_name = (('_').join(campaign_name[0:4]) + '_EML')
+    mail_name = ('_'.join(campaign_name[0:4]) + '_EML')
     mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     if not reminder:
@@ -195,7 +199,7 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
         reminder_html = mail_html
 
     # Create e-mail reminder
-    reminder_name = (('_').join(campaign_name[0:4]) + '_REM-EML')
+    reminder_name = ('_'.join(campaign_name[0:4]) + '_REM-EML')
     reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
 
     return (mail_id, reminder_id)
@@ -213,7 +217,7 @@ def campaign_main_page(form_id=''):
     form_html, required = page.modify_form(form_id)
 
     # Creates LP
-    file_name = (('_').join(campaign_name[1:4]) + '_LP')
+    file_name = ('_'.join(campaign_name[1:4]) + '_LP')
     with open(file('lp-template'), 'r', encoding='utf-8') as f:
         code = f.read()
     code = page.swap_form(code, form_html)
@@ -251,7 +255,7 @@ def campaign_main_form():
     form_folder_id = naming[source_country]['id']['form'].get(
         campaign_name[1])
 
-    form_name = ('_').join(campaign_name[0:4]) + '_FORM'
+    form_name = '_'.join(campaign_name[0:4]) + '_FORM'
     form_html_name = api.eloqua_asset_html_name(form_name)
 
     # Loads json data for blindform creation and fills it with name and html_name
@@ -317,7 +321,7 @@ def campaign_update_form(form_html, form_id, form_json, asset_mail_id, ty_page_i
 
     # Gets PSP Cost from name
     cost_code = campaign_name[3].split('-')
-    cost_code = ('-').join(cost_code[-2:])
+    cost_code = '-'.join(cost_code[-2:])
 
     # Gets lead-status for product
     while True:
@@ -374,7 +378,7 @@ def campaign_ty_page(asset_name):
     '''
     Builds one or two thank you pages after filling main form
     '''
-    file_name = ('_').join(campaign_name[1:4]) + '_TY-LP'
+    file_name = '_'.join(campaign_name[1:4]) + '_TY-LP'
 
     # Gets and prepares general TY LP structure
     with open(file('ty-lp'), 'r', encoding='utf-8') as f:
@@ -407,7 +411,7 @@ def campaign_asset_mail(asset_name, asset_url):
     Creates asset e-mail in Eloqua
     Returns asset mail id
     '''
-    file_name = (('_').join(campaign_name[1:4]) + '_asset-TECH-EML')
+    file_name = ('_'.join(campaign_name[1:4]) + '_asset-TECH-EML')
     with open(file('asset-eml'), 'r', encoding='utf-8') as f:
         asset_mail_code = f.read()
 
@@ -418,7 +422,7 @@ def campaign_asset_mail(asset_name, asset_url):
             .replace('INSERT_HOUR', helper.epoch_to_time(webinar_epoch))
         asset_mail_code = asset_mail_code\
             .replace('<em>"ASSET_NAME"</em>',
-                     '<em>"ASSET_NAME"</em>. ' + webinar_string)
+                     '<em>"ASSET_NAME"</em>.\n' + webinar_string)
 
     asset_mail_code = regex_product_name.sub(product_name, asset_mail_code)
     asset_mail_code = regex_asset_name.sub(asset_name, asset_mail_code)
@@ -475,7 +479,7 @@ def campaign_webinar_mails(asset_name, asset_url):
     '''
 
     # Creates day before mail
-    file_name = (('_').join(campaign_name[1:4]) + '_day-before-TECH-EML')
+    file_name = ('_'.join(campaign_name[1:4]) + '_day-before-TECH-EML')
     day_before_preheader = naming[source_country]['webinar']['dayBeforePre']
     day_before_content = naming[source_country]['webinar']['dayBeforeContent']
     day_before_mail_code = before_mail_code\
@@ -499,7 +503,7 @@ def campaign_webinar_mails(asset_name, asset_url):
     '''
 
     # Creates hour before mail
-    file_name = (('_').join(campaign_name[1:4]) + '_hour-before-TECH-EML')
+    file_name = ('_'.join(campaign_name[1:4]) + '_hour-before-TECH-EML')
     day_before_preheader = naming[source_country]['webinar']['hourBeforePre']
     day_before_content = naming[source_country]['webinar']['hourBeforeContent']
     hour_before_mail_code = before_mail_code\
@@ -521,6 +525,58 @@ def campaign_webinar_mails(asset_name, asset_url):
     return (day_before_mail_id, hour_before_mail_id)
 
 
+def campaign_demo_mail(asset_url):
+    '''
+    Creates demo e-mail in Eloqua
+    Returns demo mail id
+    '''
+    file_name = ('_'.join(campaign_name[1:4]) + '_demo-TECH-EML')
+    with open(file('demo-eml'), 'r', encoding='utf-8') as f:
+        demo_mail_code = f.read()
+
+    demo_mail_code = regex_product_name.sub(product_name, demo_mail_code)
+    demo_mail_code = regex_asset_url.sub(asset_url, demo_mail_code)
+
+    # Saves to Outcomes file
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(demo_mail_code)
+
+    # Saves to Eloqua
+    demo_mail_id = api.eloqua_create_email(
+        f'WK{source_country}_{file_name}', demo_mail_code)
+
+    return demo_mail_id
+
+
+def campaign_code_mail(asset_name, asset_url, code_fieldmerge):
+    '''
+    Creates code e-mail in Eloqua
+    Returns code mail id
+    '''
+    file_name = ('_'.join(campaign_name[1:4]) + '_code-TECH-EML')
+    with open(file('code-eml'), 'r', encoding='utf-8') as f:
+        code_mail_code = f.read()
+
+    code_mail_code = regex_product_name.sub(product_name, code_mail_code)
+    code_mail_code = regex_asset_name.sub(asset_name, code_mail_code)
+    code_mail_code = regex_asset_url.sub(asset_url, code_mail_code)
+    code_mail_code = code_mail_code.replace('FIELD_MERGE', code_fieldmerge)
+
+    # Saves to Outcomes file
+    print(
+        f'{Fore.WHITE}» [{Fore.YELLOW}SAVING{Fore.WHITE}] WK{source_country}_{file_name}')
+    with open(file('outcome-file', file_name), 'w', encoding='utf-8') as f:
+        f.write(code_mail_code)
+
+    # Saves to Eloqua
+    code_mail_id = api.eloqua_create_email(
+        f'WK{source_country}_{file_name}', code_mail_code)
+
+    return code_mail_id
+
+
 '''
 =================================================================================
                                 SIMPLE EMAIL CAMPAIGN FLOW
@@ -536,7 +592,7 @@ def simple_campaign():
     '''
 
     # Checks if campaign is built with externally generated HTML
-    alert_name = ('_').join([campaign_name[2], campaign_name[3].split('-')[0]])
+    alert_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
     generated_mail = True if alert_name.startswith('RET_LA') else False
 
     # Creates main e-mail for simple campaign
@@ -757,6 +813,44 @@ def content_campaign():
 
         return campaign_json
 
+    def code_campaign():
+        '''
+        Returns prepared campaign_json for code/test campaign
+        '''
+        # Gets either test template or code template based on user input
+        if converter_choice == 'Test Access':
+            with open(file('demo-campaign'), 'r', encoding='utf-8') as f:
+                campaign_json = json.load(f)
+        elif converter_choice == 'Voucher Code':
+            with open(file('code-campaign'), 'r', encoding='utf-8') as f:
+                campaign_json = json.load(f)
+        # If form is externally hosted, delete LP reporting step from campaign
+        if campaign_choice == '4':
+            no_lp_elements = []
+            for element in campaign_json['elements']:
+                if element['type'] != 'CampaignLandingPage':
+                    no_lp_elements.append(element)
+            campaign_json['elements'] = no_lp_elements
+        # Change to string for easy replacing
+        campaign_string = json.dumps(campaign_json)
+        campaign_string = campaign_string\
+            .replace('FIRST_EMAIL', mail_id)\
+            .replace('REMINDER_EMAIL', reminder_id)\
+            .replace('ASSET_TYPE', asset_type)\
+            .replace('CODE_EMAIL', asset_mail_id)\
+            .replace('FORM_ID', main_form_id)\
+            .replace('LP_ID', main_lp_id)
+        # Change back to json for API call
+        campaign_json = json.loads(campaign_string)
+        campaign_json['name'] = '_'.join(campaign_name)
+        campaign_json['folderId'] = folder_id
+        campaign_json['region'] = campaign_name[0]
+        campaign_json['campaignType'] = campaign_name[2]
+        campaign_json['product'] = campaign_name[-1]
+        campaign_json['fieldValues'][0]['value'] = campaign_code
+
+        return campaign_json
+
     '''
     =================================================== Content campaign globals
     '''
@@ -766,15 +860,27 @@ def content_campaign():
     global header_text
     converter_choice, asset_type, asset_name = helper.asset_name_getter()
     if converter_choice in ['Test Access', 'Voucher Code']:
-        print(f'{ERROR}Not yet completed, sorry!')
-        return False
-    asset_url = helper.asset_link_getter()
+        fieldmerge_name = f'{source_country}_Voucher_{campaign_name[3]}'
+        with open(file('field-merge'), 'r', encoding='utf-8') as f:
+            fieldmerge_json = json.load(f)
+            fieldmerge_json['name'] = fieldmerge_name
+            fieldmerge_json['fieldConditions'][0]['condition']['value'] = '_'.join(
+                campaign_name)
+        code_fieldmerge = api.eloqua_create_fieldmerge(
+            fieldmerge_name, fieldmerge_json)
+    if converter_choice == 'Test Access':
+        asset_url = naming[source_country]['mail']['product_link'] + \
+            f'<span%20class=eloquaemail>{code_fieldmerge}</span>'
+    else:
+        asset_url = helper.asset_link_getter()
     # Gets date if campaign is promoting live webinar
     if converter_choice == 'Webinar Access':
         global webinar_epoch
         webinar_epoch = helper.epoch_getter()
     header_text = helper.header_text_getter()
     product_name = helper.product_name_getter(campaign_name)
+    if converter_choice == 'Test Access':
+        asset_name = product_name
 
     '''
     =================================================== Builds campaign assets
@@ -830,7 +936,13 @@ def content_campaign():
     ty_page_id = campaign_ty_page(asset_name)
 
     # Creates asset mail
-    asset_mail_id = campaign_asset_mail(asset_name, asset_url)
+    if converter_choice not in ['Test Access', 'Voucher Code']:
+        asset_mail_id = campaign_asset_mail(asset_name, asset_url)
+    elif converter_choice == 'Test Access':
+        asset_mail_id = campaign_demo_mail(asset_url)
+    elif converter_choice == 'Voucher Code':
+        asset_mail_id = campaign_code_mail(
+            asset_name, asset_url, code_fieldmerge)
 
     # Creates day-before and hour-before reminders for Webinar camapaign
     if converter_choice == 'Webinar Access':
@@ -858,7 +970,7 @@ def content_campaign():
         campaign_json = webinar_campaign(
             day_before_mail_id, hour_before_mail_id)
     elif converter_choice in ['Test Access', 'Voucher Code']:
-        print('TODO')  # TODO
+        campaign_json = code_campaign()
 
     # Creates campaign with given data
     _, campaign_json = api.eloqua_create_campaign(campaign_name, campaign_json)
@@ -876,8 +988,19 @@ def content_campaign():
         campaign_update_form(form_html, form_id, form_json,
                              asset_mail_id, ty_page_id, from_a_form)
 
-    print(f'\n{SUCCESS}Campaign prepared!',
-          f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    print(f'\n{SUCCESS}Campaign prepared!')
+    if converter_choice in ['Test Access', 'Voucher Code']:
+        print(f'\n{Fore.WHITE}[{Fore.YELLOW}TODO{Fore.WHITE}] Your next steps:',
+              f'\n  {Fore.YELLOW}› {Fore.WHITE}Add codes to Code App step',
+              f'\n  {Fore.YELLOW}› {Fore.WHITE}Change campaign_name in Voucher Error Notification step',
+              f'\n  {Fore.YELLOW}› {Fore.WHITE}Change campaign_name in Submit Code to CDO step')
+        if converter_choice == 'Voucher Code':
+            print(
+                f'  {Fore.YELLOW}› {Fore.WHITE}Update placeholder code-TECH-EML content')
+        if converter_choice == 'Test Access':
+            print(
+                f'  {Fore.YELLOW}› {Fore.WHITE}Update static data in Submit ClickedForm step')
+    print(f'{Fore.WHITE}» Click [Enter] to continue.')
     input(' ')
 
     return

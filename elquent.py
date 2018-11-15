@@ -31,7 +31,7 @@ import utils.database as database
 import utils.export as export
 import utils.validator as validator
 import utils.modifier as modifier
-import utils.corp as corp
+import utils.admin as admin
 import utils.api.api as api
 
 # Initialize colorama
@@ -259,7 +259,7 @@ def menu(choice=''):
         'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
-        'mail_groups': (corp.email_groups, f'Admin{Fore.WHITE}] Build GDPR Email Group Programs')
+        'mail_groups': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
     }
 
     # Access to all utils for admin

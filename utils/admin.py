@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 '''
-ELQuent.corp
+ELQuent.admin
 ELQuent helpers for central team
 
 Mateusz Dąbrowski
@@ -99,12 +99,12 @@ def file(file_path, name=''):
 
 '''
 =================================================================================
-                            Email Groups Program
+                            Email Groups Program Creator
 =================================================================================
 '''
 
 
-def email_groups(country):
+def email_groups():
     '''
     Creates shared lists and forms for email group corp program
     '''
@@ -256,9 +256,6 @@ def email_groups(country):
         # Save to outcome json file
         assets_created['Program'].append([program_name, program_id])
 
-    # Create global source_country and load json file with naming convention
-    country_naming_setter(country)
-
     # Loads json file with email groups
     with open(file('email-groups'), 'r', encoding='utf-8') as f:
         countries = json.load(f)
@@ -286,7 +283,7 @@ def email_groups(country):
             print(f'{Fore.RED}Please enter numeric value!')
             choice = ''
             continue
-        if 0 <= choice < len(country):
+        if 0 <= choice < len(source_country):
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any country!')
@@ -312,6 +309,113 @@ def email_groups(country):
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
-        email_groups(country)
+        email_groups()
+
+    return
+
+
+'''
+=================================================================================
+                                Form Processing Reporter
+=================================================================================
+'''
+
+
+def form_processings():
+    '''
+    Gets data on form processing steps related to GCR via API
+    '''
+
+    '''
+    TODO:
+    - get query string to limit forms obtained (complete view)
+    - get forms based on search query (not limited to WKCORP_ startswith)
+    - after each part of GET, go through each form and create structure with:
+        - formname, formid
+        - every "displayType": "checkbox" with: emailGroupId, htmlName, id, name, useGlobalSubscriptionStatus, fieldMergeId
+         (question - why not all checkboxes and then limit them based on processing steps?)
+        - every processing step "type": "FormStepGroupSubscription" || "type": "FormStepGlobalUnsubscribe" || "type": "FormStepGlobalSubscribe":
+            "execute": "always",
+            ||
+            "execute": "conditional",
+            "condition": {
+            "type": "ProcessingStepCondition",
+            "conditionalFieldCriteria": [
+            {
+                "type": "FormFieldComparisonCriteria",
+                "id": "237273",
+                "condition": {
+                "type": "FormTextValueCondition",
+                "operator": "equal",
+                "value": "on",
+                "valueType": "constant"
+                },
+                "fieldId": "42449"
+            }
+            ],
+            "isConditionallyNegated": "False"
+            },
+            &&
+            "emailGroupId": {
+                "constantValue": "402",
+            },
+            &&
+            "isSubscribing": {
+                "constantValue": "true",
+                "valueType": "constant"
+            }
+            ||
+            "isSubscribing": {
+                "formFieldId": "29631",
+                "valueType": "formField"
+            }
+            &&
+            "type": "FormStepCreateUpdateContact"
+            if "sharedContactUpdateRuleSet": {
+                "type": "ContactUpdateRuleSet",
+                "id": "1865",
+                with Form Shared Update Rule based on name
+            ??
+            also WK_Contact_Upload_Trigger_Date?
+    - export to json
+    '''
+
+    return
+
+
+'''
+=================================================================================
+                                Admin module menu
+=================================================================================
+'''
+
+
+def admin_module(country):
+    '''
+    Lets user choose which link module utility he wants to use
+    '''
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+
+    print(
+        f'\n{Fore.GREEN}ELQuent.link Utilites:'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}EmailGroups{Fore.WHITE}] Creates e-mail group program canvas flows related to GCR'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}FormProcessing{Fore.WHITE}] Gets data on form processing steps related to GCR'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
+    )
+    while True:
+        print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
+        choice = input(' ')
+        if choice.lower() == 'q':
+            break
+        elif choice == '1':
+            email_groups()
+            break
+        elif choice == '2':
+            form_processings()
+            break
+        else:
+            print(f'{Fore.RED}Entered value does not belong to any utility!')
+            choice = ''
 
     return

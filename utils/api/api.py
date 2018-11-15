@@ -384,7 +384,8 @@ def get_eloqua_auth(country):
         'image': 'image',
         'file': 'importedFile',
         'sharedContent': 'contentSection',
-        'dynamicContent': 'dynamicContent'
+        'dynamicContent': 'dynamicContent',
+        'fieldMerge': 'fieldMerge'
     }
 
     # Gets data from naming.json
@@ -1556,6 +1557,34 @@ def eloqua_put_sharedcontent(sc_id, data):
         return False
 
     return True
+
+
+'''
+=================================================================================
+                                Field Merge API
+=================================================================================
+'''
+
+
+def eloqua_create_fieldmerge(name, data):
+    '''
+    Requires name and json data of the field merge to create it in Eloqua
+    Returns fieldmerge htmlName ('syntax')
+    '''
+    # Checks if there already is Form with that name
+    eloqua_asset_exist(name, asset='fieldMerge')
+
+    # Creating a post call to Eloqua API
+    root = f'{eloqua_rest}assets/fieldMerge'
+    response = api_request(
+        root, call='post', data=json.dumps(data))
+    fieldmerge = response.json()
+
+    # Open in new tab
+    fieldmerge_htmlname = fieldmerge['syntax']
+    print(f'\n{Fore.WHITE}» {SUCCESS}Created Field Merge: {fieldmerge_htmlname}')
+
+    return fieldmerge_htmlname
 
 
 '''

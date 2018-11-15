@@ -42,12 +42,6 @@ Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Au
 - Adds lead by phone mechanism with conditional validation
 - Cleans code, appends snippets, changes form code
 
-_ToDo:_
-
-- [ ] _Change from two (one and two column) LP templates to just one modular template_
-- [ ] _Add optional questions for template filling as in campaign flow_
-- [ ] _Automatically add thank you page based on data from first page_
-
 ---
 
 ### [ELQuent.campaign](utils/campaign.py)
@@ -62,7 +56,6 @@ _ToDo:_
 _ToDo:_
 
 - [ ] _Randomized subject & pre-header generator for technical e-mail_
-- [ ] _Update main form with confirmation e-mail ID and thank-you-page id_
 - [ ] _When not recognized product name, try to find best matches from a list_
 
 ---
@@ -132,12 +125,13 @@ _ToDo:_
 
 ---
 
-### [ELQuent.corp](utils/corp.py)
+### [ELQuent.admin](utils/admin.py)
 
 #### Specialized utils for core admins made on demand
 
 - Creates forms and shared lists for e-mail group control based on country splitted json file
 - Creates program canvas and automatically adds above assets to program steps
+- Creates report on subscription related processings steps within eloqua forms
 
 ---
 
@@ -169,6 +163,7 @@ _ToDo:_
 - Gets user data
 - Gets dynamic content
 - Gets and updates shared content
+- Gets and creates field merges
 
 ---
 
@@ -191,4 +186,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.8.15_]
+[_Version: 1.9.0_]

@@ -94,7 +94,7 @@ def file(file_path, name=''):
 
 def campaign_name_getter():
     '''
-    Returns valid campaign name [string]
+    Returns valid campaign name [list]
     '''
     while True:
         print(
@@ -225,18 +225,22 @@ def asset_name_getter():
         if converter_choice in ['0', '1', '2', '3', '4']:
             converter_choice = converter_values[int(converter_choice) + 1]
             asset_type = converter_choice.split(' ')[0]
-            print(
-                f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
-            asset_name = input(' ')
-            if not asset_name:
-                asset_name = pyperclip.paste()
+            if converter_choice == 'Test Access':
+                asset_name = ''
+                break
+            else:
+                print(
+                    f'\n{Fore.WHITE}» [{Fore.YELLOW}ASSET{Fore.WHITE}] Enter title of the {asset_type}')
+                asset_name = input(' ')
                 if not asset_name:
-                    print(f'\n{ERROR}Title can not be blank')
+                    asset_name = pyperclip.paste()
+                    if not asset_name:
+                        print(f'\n{ERROR}Title can not be blank')
+                        continue
+                elif len(asset_name) > 200:
+                    print(f'\n{ERROR}Title is over 200 characters long')
                     continue
-            elif len(asset_name) > 200:
-                print(f'\n{ERROR}Title is over 200 characters long')
-                continue
-            break
+                break
         else:
             print(f'{ERROR}Entered value does not belong to any choice!')
 
