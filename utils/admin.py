@@ -15,6 +15,7 @@ import os
 import sys
 import json
 from collections import defaultdict
+import pyperclip
 from colorama import Fore, Style, init
 
 # ELQuent imports
@@ -321,55 +322,122 @@ def email_groups():
 '''
 
 
-def form_processings():
+def form_data():
     '''
     Gets data on form processing steps related to GCR via API
     '''
 
+    # Get query string from the user
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste API call {Fore.YELLOW}query string',
+          f'{Fore.WHITE}and click [Enter]')
+    search_query = input(' ')
+    if not search_query:
+        search_query = pyperclip.paste()
+    search_query = '*' + search_query + '*'
+
+    # Get json of all froms based on query
+    page = 1
+    count = 50
+    forms = []
+    while True:
+        # Gets full data on first part of assets connected with campaign
+        assets_partial = api.eloqua_get_assets(
+            search_query, 'form', count=count, page=page)
+
+        # Add existing to a list
+        for single_asset in assets_partial['elements']:
+            forms.append(single_asset)
+
+        # Stops iteration when full list is obtained
+        if assets_partial['total'] - page * count < 0:
+            break
+
+        # Else increments page to get next part of outcomes
+        page += 1
+
+        # Every ten batches draws hyphen for better readability
+        if page % 10 == 0:
+            print(f'{Fore.YELLOW}-', end='', flush=True)
+
+    # Create dict with selected data from the forms
+    forms_dict = {}  # Dict with structure {formID:formData}
+    for form in forms:
+        form_id = form.get('id')
+        form_name = form.get('name')
+        form_html_name = form.get('htmlName')
+        form_fields = []
+        for field in form['elements']:
+            if field['displayType'] == 'checkbox':
+                field_id = field.get('id')
+                field_name = field.get('name')
+                field_html_name = field.get('htmlName')
+                field_email_group = field.get('emailGroupId')
+                field_merge_id = field.get('fieldMergeId')
+                field_global_subscription = field.get(
+                    'useGlobalSubscriptionStatus')
+                form_fields.append({
+                    'id': field_id,
+                    'name': field_name,
+                    'htmlName': field_html_name,
+                    'fieldMergeId': field_merge_id,
+                    'emailGroup': field_email_group,
+                    'globalSubscription': field_global_subscription
+                })
+        form_processing_steps = []
+        for processing_step in form['processingSteps']:
+            if processing_step['type'] in [
+                    'FormStepGroupSubscription',
+                    'FormStepGlobalUnsubscribe',
+                    'FormStepGlobalSubscribe'
+            ]:
+                step_type = processing_step.get('type')
+                step_execute = processing_step.get('execute')
+                try:
+                    if step_execute == 'conditional':
+                        step_condition = processing_step.get('condition')
+                    else:
+                        step_condition = ''
+                except KeyError:
+                    step_condition = ''
+                try:
+                    step_email_group = [
+                        processing_step['emailGroupId']['valueType'],
+                        processing_step['emailGroupId']['formFieldId']
+                    ]
+                except KeyError:
+                    step_email_group = ''
+                try:
+                    step_subscription = [
+                        processing_step['isSubscribing']['valueType'],
+                        processing_step['isSubscribing']['formFieldId']
+                    ]
+                except KeyError:
+                    step_subscription = ''
+
+                form_processing_steps.append({
+                    'type': step_type,
+                    'execute': step_execute,
+                    'condition': step_condition,
+                    'emailGroup': step_email_group,
+                    'isSubscribing': step_subscription
+                })
+            else:
+                continue
+
+        forms_dict[form_id] = {
+            'id': form_id,
+            'name': form_name,
+            'htmlName': form_html_name,
+            'formFields': form_fields,
+            'formProcessingSteps': form_processing_steps
+        }
+
+    print(forms_dict)
+
     '''
     TODO:
-    - get query string to limit forms obtained (complete view)
-    - get forms based on search query (not limited to WKCORP_ startswith)
-    - after each part of GET, go through each form and create structure with:
-        - formname, formid
-        - every "displayType": "checkbox" with: emailGroupId, htmlName, id, name, useGlobalSubscriptionStatus, fieldMergeId
-         (question - why not all checkboxes and then limit them based on processing steps?)
-        - every processing step "type": "FormStepGroupSubscription" || "type": "FormStepGlobalUnsubscribe" || "type": "FormStepGlobalSubscribe":
-            "execute": "always",
-            ||
-            "execute": "conditional",
-            "condition": {
-            "type": "ProcessingStepCondition",
-            "conditionalFieldCriteria": [
-            {
-                "type": "FormFieldComparisonCriteria",
-                "id": "237273",
-                "condition": {
-                "type": "FormTextValueCondition",
-                "operator": "equal",
-                "value": "on",
-                "valueType": "constant"
-                },
-                "fieldId": "42449"
-            }
-            ],
-            "isConditionallyNegated": "False"
-            },
-            &&
-            "emailGroupId": {
-                "constantValue": "402",
-            },
-            &&
-            "isSubscribing": {
-                "constantValue": "true",
-                "valueType": "constant"
-            }
-            ||
-            "isSubscribing": {
-                "formFieldId": "29631",
-                "valueType": "formField"
-            }
-            &&
+        - limit checkboxes based on processing steps?
+        - add:
             "type": "FormStepCreateUpdateContact"
             if "sharedContactUpdateRuleSet": {
                 "type": "ContactUpdateRuleSet",
@@ -399,8 +467,8 @@ def admin_module(country):
 
     print(
         f'\n{Fore.GREEN}ELQuent.link Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}EmailGroups{Fore.WHITE}] Creates e-mail group program canvas flows related to GCR'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}FormProcessing{Fore.WHITE}] Gets data on form processing steps related to GCR'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}EmailGroups{Fore.WHITE}] Create e-mail group program canvas related to GCR'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}FormProcessing{Fore.WHITE}] Get data on form processing steps related to GCR'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -412,7 +480,7 @@ def admin_module(country):
             email_groups()
             break
         elif choice == '2':
-            form_processings()
+            form_data()
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
