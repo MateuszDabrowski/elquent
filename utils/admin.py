@@ -19,6 +19,7 @@ import pyperclip
 from colorama import Fore, Style, init
 
 # ELQuent imports
+import utils.helper as helper
 import utils.api.api as api
 
 # Initialize colorama
@@ -328,12 +329,14 @@ def form_data():
     '''
 
     # Get query string from the user
-    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste API call {Fore.YELLOW}query string',
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste search {Fore.YELLOW}query string',
           f'{Fore.WHITE}and click [Enter]')
     search_query = input(' ')
     if not search_query:
         search_query = pyperclip.paste()
-    search_query = '*' + search_query + '*'
+        if not search_query:
+            search_query = '*'
+    print(f'\n{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='')
 
     # Get json of all froms based on query
     page = 1
@@ -361,10 +364,13 @@ def form_data():
 
     # Create dict with selected data from the forms
     forms_dict = {}  # Dict with structure {formID:formData}
+    source_country_trigger_list = naming['sourceCountrySharedUpdate']
+    contact_update_trigger_list = naming['contactDataSharedUpdate']
     for form in forms:
         form_id = form.get('id')
         form_name = form.get('name')
         form_html_name = form.get('htmlName')
+        form_creation_date = helper.epoch_to_date(form.get('createdAt'))
         form_fields = []
         for field in form['elements']:
             if field['displayType'] == 'checkbox':
@@ -384,7 +390,21 @@ def form_data():
                     'globalSubscription': field_global_subscription
                 })
         form_processing_steps = []
+        source_country_trigger = []
+        contact_update_trigger = []
         for processing_step in form['processingSteps']:
+            # Catch shared update rule processing steps
+            if processing_step['type'] == 'FormStepCreateUpdateContact':
+                try:
+                    if processing_step['sharedContactUpdateRuleSet']['id'] in source_country_trigger_list:
+                        source_country_trigger.append(
+                            processing_step['sharedContactUpdateRuleSet']['name'])
+                    elif processing_step['sharedContactUpdateRuleSet']['id'] in contact_update_trigger_list:
+                        contact_update_trigger.append(True)
+                except KeyError:
+                    source_country_trigger.append(False)
+                    contact_update_trigger.append(False)
+            # Catch subscription based processing steps
             if processing_step['type'] in [
                     'FormStepGroupSubscription',
                     'FormStepGlobalUnsubscribe',
@@ -424,29 +444,33 @@ def form_data():
             else:
                 continue
 
+        source_country_trigger = [e for e in source_country_trigger if e]
+        if not source_country_trigger:
+            source_country_trigger = False
+        contact_update_trigger = True if contact_update_trigger else False
+
         forms_dict[form_id] = {
             'id': form_id,
             'name': form_name,
+            'creationDate': form_creation_date,
             'htmlName': form_html_name,
             'formFields': form_fields,
-            'formProcessingSteps': form_processing_steps
+            'formProcessingSteps': form_processing_steps,
+            'sharedSourceCountryUpdate': source_country_trigger,
+            'sharedContactUpdateTrigger': contact_update_trigger
         }
 
-    print(forms_dict)
+    with open(file('outcome-file', name=f'FormProcessing-{search_query}'), 'w', encoding='utf-8') as f:
+        json.dump(forms_dict, f)
 
-    '''
-    TODO:
-        - limit checkboxes based on processing steps?
-        - add:
-            "type": "FormStepCreateUpdateContact"
-            if "sharedContactUpdateRuleSet": {
-                "type": "ContactUpdateRuleSet",
-                "id": "1865",
-                with Form Shared Update Rule based on name
-            ??
-            also WK_Contact_Upload_Trigger_Date?
-    - export to json
-    '''
+    print(
+        f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] JSON of {search_query} forms saved to Outcomes folder')
+
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        form_data()
 
     return
 
