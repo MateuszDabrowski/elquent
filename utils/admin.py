@@ -13,6 +13,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 # Python imports
 import os
 import sys
+import csv
 import json
 from collections import defaultdict
 import pyperclip
@@ -20,6 +21,7 @@ from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.helper as helper
+import utils.modifier as modifier
 import utils.api.api as api
 
 # Initialize colorama
@@ -93,7 +95,8 @@ def file(file_path, name=''):
         'program-steps': find_data_file(f'WKCORP_program-steps.txt'),
         'program-last-step': find_data_file(f'WKCORP_program-last-step.txt'),
         'email-groups': find_data_file(f'WKCORP_email-groups.json'),
-        'outcome-file': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes')
+        'outcome-json': find_data_file(f'WK{source_country}_{name}.json', directory='outcomes'),
+        'outcome-csv': find_data_file(f'WK{source_country}_{name}.csv', directory='outcomes')
     }
 
     return file_paths.get(file_path)
@@ -301,7 +304,7 @@ def email_groups():
     sharedfilter_builder(countries, groups)
     program_builder(assets_created)
 
-    with open(file('outcome-file', name='GDPR-Email-Group-Assets'), 'w', encoding='utf-8') as f:
+    with open(file('outcome-json', name='GDPR-Email-Group-Assets'), 'w', encoding='utf-8') as f:
         json.dump(assets_created, f)
 
     print(
@@ -327,6 +330,30 @@ def form_data():
     '''
     Gets data on form processing steps related to GCR via API
     '''
+
+    def append_form_fields(field):
+        '''
+        Takes selected field data and append it to form_fields list of dicts
+        '''
+        field_id = field.get('id')
+        field_name = field.get('name')
+        field_html_name = field.get('htmlName')
+        field_email_group = field.get('emailGroupId')
+        field_merge_id = field.get('fieldMergeId')
+        field_option_list_id = field.get('optionListId')
+        field_global_subscription = field.get(
+            'useGlobalSubscriptionStatus')
+        form_fields.append({
+            'id': field_id,
+            'name': field_name,
+            'htmlName': field_html_name,
+            'fieldMergeId': field_merge_id,
+            'optionListId': field_option_list_id,
+            'emailGroup': field_email_group,
+            'globalSubscription': field_global_subscription
+        })
+
+        return
 
     # Get query string from the user
     print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste search {Fore.YELLOW}query string',
@@ -373,22 +400,18 @@ def form_data():
         form_creation_date = helper.epoch_to_date(form.get('createdAt'))
         form_fields = []
         for field in form['elements']:
-            if field['displayType'] == 'checkbox':
-                field_id = field.get('id')
-                field_name = field.get('name')
-                field_html_name = field.get('htmlName')
-                field_email_group = field.get('emailGroupId')
-                field_merge_id = field.get('fieldMergeId')
-                field_global_subscription = field.get(
-                    'useGlobalSubscriptionStatus')
-                form_fields.append({
-                    'id': field_id,
-                    'name': field_name,
-                    'htmlName': field_html_name,
-                    'fieldMergeId': field_merge_id,
-                    'emailGroup': field_email_group,
-                    'globalSubscription': field_global_subscription
-                })
+            if field['type'] in ['FormFieldGroup', 'ProgressiveProfile']:
+                if field.get('fields'):
+                    for subfield in field['fields']:
+                        if subfield['displayType'] == 'checkbox':
+                            append_form_fields(subfield)
+                elif field.get('stages'):
+                    for stage in field['stages']:
+                        for subfield in stage['fields']:
+                            if subfield['displayType'] == 'checkbox':
+                                append_form_fields(subfield)
+            elif field['displayType'] == 'checkbox':
+                append_form_fields(field)
         form_processing_steps = []
         source_country_trigger = []
         contact_update_trigger = []
@@ -460,13 +483,74 @@ def form_data():
             'sharedContactUpdateTrigger': contact_update_trigger
         }
 
-    with open(file('outcome-file', name=f'FormProcessing-{search_query}'), 'w', encoding='utf-8') as f:
+    with open(file('outcome-json', name=f'FormProcessing-{search_query}'), 'w', encoding='utf-8') as f:
         json.dump(forms_dict, f)
 
     print(
-        f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] JSON of {search_query} forms saved to Outcomes folder')
+        f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] JSON of {len(forms_dict.keys())}',
+        f'{Fore.YELLOW}{search_query}{Fore.WHITE} forms saved to Outcomes folder')
 
-    # Asks user if he would like to repeat
+    # Create list of completed campaigns
+    if 'WKPL' in search_query:
+        modifier.country_naming_setter(source_country)
+        completed_campaigns = modifier.get_completed_campaigns(
+            redirected_campaigns=[])
+        completed_campaigns_string = str(completed_campaigns)
+        print()
+
+    # Create list of forms that need a fix
+    no_shared_source_country_update = [('ID', 'Name')]
+    no_shared_contact_update_trigger = [('ID', 'Name')]
+    for form in forms_dict:
+        if not forms_dict[form]['sharedSourceCountryUpdate']:
+            no_shared_source_country_update.append(
+                (forms_dict[form]['id'], forms_dict[form]['name']))
+        if not forms_dict[form]['sharedContactUpdateTrigger']:
+            no_shared_contact_update_trigger.append(
+                (forms_dict[form]['id'], forms_dict[form]['name']))
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Found:')
+    print(f'{Fore.WHITE} › {Fore.YELLOW}{len(no_shared_source_country_update) - 1}'
+          f'{Fore.WHITE} forms without {Fore.YELLOW}shared Source Country Update Rule', end=' ')
+    if 'WKPL' in search_query:
+        uncompleted_source_country_errors = [('ID', 'Name')]
+        for form in no_shared_source_country_update[1:]:
+            form_base = ('_').join((form[1].split('_'))[0:4])
+            if form_base not in completed_campaigns_string:
+                uncompleted_source_country_errors.append(form)
+        print(
+            f'{Fore.WHITE}({Fore.YELLOW}{len(uncompleted_source_country_errors) - 1}'
+            f'{Fore.WHITE} in live campaigns)')
+    else:
+        print()
+    print(f'{Fore.WHITE} › {Fore.YELLOW}{len(no_shared_contact_update_trigger) - 1}'
+          f'{Fore.WHITE} forms without {Fore.YELLOW}shared Contact Update Trigger Date', end=' ')
+    if 'WKPL' in search_query:
+        uncompleted_contact_update_errors = [('ID', 'Name')]
+        for form in no_shared_contact_update_trigger[1:]:
+            form_base = ('_').join((form[1].split('_'))[0:4])
+            if form_base not in completed_campaigns_string:
+                uncompleted_contact_update_errors.append(form)
+        print(
+            f'{Fore.WHITE}({Fore.YELLOW}{len(uncompleted_contact_update_errors) - 1}'
+            f'{Fore.WHITE} in live campaigns)')
+    else:
+        print()
+    print(f'{Fore.YELLOW}» {Fore.WHITE}IDs saved to Outcomes folder')
+    with open(file('outcome-csv', name=f'FormProcessing-{search_query}-no-source-country-update'), 'w', encoding='utf-8') as f1:
+        writer = csv.writer(f1)
+        writer.writerows(no_shared_source_country_update)
+    with open(file('outcome-csv', name=f'FormProcessing-{search_query}-no-contact-update'), 'w', encoding='utf-8') as f2:
+        writer = csv.writer(f2)
+        writer.writerows(no_shared_contact_update_trigger)
+    if 'WKPL' in search_query:
+        with open(file('outcome-csv', name=f'FormProcessing-{search_query}-live-no-source-country-update'), 'w', encoding='utf-8') as f3:
+            writer = csv.writer(f3)
+            writer.writerows(uncompleted_source_country_errors)
+        with open(file('outcome-csv', name=f'FormProcessing-{search_query}-live-no-contact-update'), 'w', encoding='utf-8') as f4:
+            writer = csv.writer(f4)
+            writer.writerows(uncompleted_contact_update_errors)
+
+        # Asks user if he would like to repeat
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
