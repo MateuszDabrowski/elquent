@@ -96,6 +96,7 @@ def file(file_path, name=''):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
+        'email-groups': find_data_file(f'WKCORP_email-groups.json'),
         'outcome-csv': find_data_file(f'WK{source_country}_{name}.csv', directory='outcomes')
     }
 

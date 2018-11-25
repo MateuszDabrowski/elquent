@@ -12,6 +12,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 
 # Python imports
 import os
+import re
 import sys
 import csv
 import json
@@ -89,6 +90,7 @@ def file(file_path, name=''):
 
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
+        'emailgroups': find_data_file('emailgroups.json', directory='api'),
         'form': find_data_file(f'WKCORP_form-email-group.json'),
         'filter': find_data_file(f'WKCORP_filter-email-group.json'),
         'program-canvas': find_data_file(f'WKCORP_program-canvas.txt'),
@@ -333,25 +335,20 @@ def form_data():
 
     def append_form_fields(field):
         '''
-        Takes selected field data and append it to form_fields list of dicts
+        Takes selected field data and append it to form_fields dict of dicts
         '''
-        field_id = field.get('id')
-        field_name = field.get('name')
-        field_html_name = field.get('htmlName')
-        field_email_group = field.get('emailGroupId')
-        field_merge_id = field.get('fieldMergeId')
-        field_option_list_id = field.get('optionListId')
-        field_global_subscription = field.get(
-            'useGlobalSubscriptionStatus')
-        form_fields.append({
-            'id': field_id,
-            'name': field_name,
-            'htmlName': field_html_name,
-            'fieldMergeId': field_merge_id,
-            'optionListId': field_option_list_id,
-            'emailGroup': field_email_group,
-            'globalSubscription': field_global_subscription
-        })
+        form_fields[field['id']] = {
+            'id': field.get('id'),
+            'name': field.get('name'),
+            'htmlName': field.get('htmlName'),
+            'fromField': field.get('createdFromContactFieldId'),
+            'fieldMerge': field.get('fieldMergeId'),
+            'optionList': field.get('optionListId'),
+            'emailGroup': field.get('emailGroupId'),
+            'globalSubscription': field.get('useGlobalSubscriptionStatus'),
+            'dataType': field.get('dataType'),
+            'displayType': field.get('displayType')
+        }
 
         return
 
@@ -398,23 +395,24 @@ def form_data():
         form_name = form.get('name')
         form_html_name = form.get('htmlName')
         form_creation_date = helper.epoch_to_date(form.get('createdAt'))
-        form_fields = []
+        form_fields = {}
         for field in form['elements']:
             if field['type'] in ['FormFieldGroup', 'ProgressiveProfile']:
                 if field.get('fields'):
                     for subfield in field['fields']:
-                        if subfield['displayType'] == 'checkbox':
-                            append_form_fields(subfield)
+                        append_form_fields(subfield)
                 elif field.get('stages'):
                     for stage in field['stages']:
                         for subfield in stage['fields']:
-                            if subfield['displayType'] == 'checkbox':
-                                append_form_fields(subfield)
-            elif field['displayType'] == 'checkbox':
+                            append_form_fields(subfield)
+            else:
                 append_form_fields(field)
         form_processing_steps = []
         source_country_trigger = []
         contact_update_trigger = []
+        # Loads json file with naming convention
+        with open(file('emailgroups'), 'r', encoding='utf-8') as f:
+            email_groups_json = json.load(f)
         for processing_step in form['processingSteps']:
             # Catch shared update rule processing steps
             if processing_step['type'] == 'FormStepCreateUpdateContact':
@@ -422,10 +420,13 @@ def form_data():
                     if processing_step['sharedContactUpdateRuleSet']['id'] in source_country_trigger_list:
                         source_country_trigger.append(
                             processing_step['sharedContactUpdateRuleSet']['name'])
-                    elif processing_step['sharedContactUpdateRuleSet']['id'] in contact_update_trigger_list:
-                        contact_update_trigger.append(True)
+
                 except KeyError:
                     source_country_trigger.append(False)
+                try:
+                    if processing_step['sharedContactUpdateRuleSet']['id'] in contact_update_trigger_list:
+                        contact_update_trigger.append(True)
+                except KeyError:
                     contact_update_trigger.append(False)
             # Catch subscription based processing steps
             if processing_step['type'] in [
@@ -434,61 +435,86 @@ def form_data():
                     'FormStepGlobalSubscribe'
             ]:
                 step_type = processing_step.get('type')
+                step_description = processing_step.get('description')
                 step_execute = processing_step.get('execute')
                 try:
-                    if step_execute == 'conditional':
-                        step_condition = processing_step.get('condition')
-                    else:
-                        step_condition = ''
+                    step_condition = processing_step.get('condition')
                 except KeyError:
                     step_condition = ''
                 try:
-                    step_email_group = [
-                        processing_step['emailGroupId']['valueType'],
-                        processing_step['emailGroupId']['formFieldId']
-                    ]
+                    step_email_group = processing_step['emailGroupId']['constantValue']
                 except KeyError:
                     step_email_group = ''
                 try:
-                    step_subscription = [
-                        processing_step['isSubscribing']['valueType'],
+                    step_subscription = form_fields[
                         processing_step['isSubscribing']['formFieldId']
                     ]
                 except KeyError:
                     step_subscription = ''
 
-                form_processing_steps.append({
+                form_processing_dict = {
                     'type': step_type,
+                    'description': step_description,
                     'execute': step_execute,
                     'condition': step_condition,
                     'emailGroup': step_email_group,
                     'isSubscribing': step_subscription
-                })
+                }
+
+                # Appends form fields to conditional form processing steps
+                form_processing_string = str(form_processing_dict)
+                if "'fieldId'" in form_processing_string:
+                    field_ids = re.search(r"('fieldId': '(\d+)')",
+                                          form_processing_string)
+
+                    counter = 0
+                    for i in field_ids.groups():
+                        if counter % 2 == 0:
+                            field_line = i
+                        if counter % 2 != 0:
+                            field_id = i
+                            form_processing_string = form_processing_string\
+                                .replace(
+                                    field_line,
+                                    f"'fieldId': {str(form_fields[field_id])}"
+                                )\
+                                .replace(': None', ': null')
+                        counter += 1
+
+                    form_processing_json = form_processing_string\
+                        .replace("'", "\"")
+                    form_processing_dict = json.loads(form_processing_json)
+
+                form_processing_steps.append(form_processing_dict)
             else:
                 continue
 
+        # Simplifies output for end user
         source_country_trigger = [e for e in source_country_trigger if e]
         if not source_country_trigger:
             source_country_trigger = False
         contact_update_trigger = True if contact_update_trigger else False
 
+        # Appends obtained data to main dict
         forms_dict[form_id] = {
             'id': form_id,
             'name': form_name,
             'creationDate': form_creation_date,
             'htmlName': form_html_name,
-            'formFields': form_fields,
             'formProcessingSteps': form_processing_steps,
             'sharedSourceCountryUpdate': source_country_trigger,
             'sharedContactUpdateTrigger': contact_update_trigger
         }
 
+    # Change asteriks in search query to ^ to mitigate Windows limitations
+    search_query = search_query.replace('*', '^')
+
+    # Save full dict to Outcomes folder
     with open(file('outcome-json', name=f'FormProcessing-{search_query}'), 'w', encoding='utf-8') as f:
         json.dump(forms_dict, f)
-
-    print(
-        f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] JSON of {len(forms_dict.keys())}',
-        f'{Fore.YELLOW}{search_query}{Fore.WHITE} forms saved to Outcomes folder')
+    print(f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] JSON of',
+          f'{Fore.WHITE}{len(forms_dict.keys())} {Fore.YELLOW}{search_query}',
+          f'{Fore.WHITE}forms saved to Outcomes folder')
 
     # Create list of completed campaigns
     if 'WKPL' in search_query:
@@ -511,6 +537,7 @@ def form_data():
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Found:')
     print(f'{Fore.WHITE} › {Fore.YELLOW}{len(no_shared_source_country_update) - 1}'
           f'{Fore.WHITE} forms without {Fore.YELLOW}shared Source Country Update Rule', end=' ')
+    # Additional data on uncompleted campaign affected where possible
     if 'WKPL' in search_query:
         uncompleted_source_country_errors = [('ID', 'Name')]
         for form in no_shared_source_country_update[1:]:
@@ -524,6 +551,7 @@ def form_data():
         print()
     print(f'{Fore.WHITE} › {Fore.YELLOW}{len(no_shared_contact_update_trigger) - 1}'
           f'{Fore.WHITE} forms without {Fore.YELLOW}shared Contact Update Trigger Date', end=' ')
+    # Additional data on uncompleted campaign affected where possible
     if 'WKPL' in search_query:
         uncompleted_contact_update_errors = [('ID', 'Name')]
         for form in no_shared_contact_update_trigger[1:]:
@@ -535,6 +563,8 @@ def form_data():
             f'{Fore.WHITE} in live campaigns)')
     else:
         print()
+
+    # Saves action point outcomes to .csv files
     print(f'{Fore.YELLOW}» {Fore.WHITE}IDs saved to Outcomes folder')
     with open(file('outcome-csv', name=f'FormProcessing-{search_query}-no-source-country-update'), 'w', encoding='utf-8') as f1:
         writer = csv.writer(f1)
@@ -550,7 +580,9 @@ def form_data():
             writer = csv.writer(f4)
             writer.writerows(uncompleted_contact_update_errors)
 
-        # Asks user if he would like to repeat
+    # TODO: Add possibility to save all versions of optin htmlName/type per search_query
+
+    # Asks user if he would like to repeat
     print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
     choice = input(' ')
     if choice.lower() == 'y':
