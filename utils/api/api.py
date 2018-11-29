@@ -1589,6 +1589,54 @@ def eloqua_create_fieldmerge(name, data):
 
 '''
 =================================================================================
+                                Data Model API
+=================================================================================
+'''
+
+
+def eloqua_get_fields():
+    '''
+    Returns data model fields {'id':'name'}
+    '''
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/contact/fields'
+    response = api_request(root, data=json.dumps(
+        {'depth': 'minimal', 'count': 1000}))
+    datamodel_json = response.json()
+
+    datamodel = {}
+    for field in datamodel_json['elements']:
+        datamodel[field['id']] = field['name']
+
+    return datamodel
+
+
+'''
+=================================================================================
+                                E-mail Groups API
+=================================================================================
+'''
+
+
+def eloqua_get_emailgroups():
+    '''
+    Returns e-mail groups {'id':'name'}
+    '''
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/email/groups'
+    response = api_request(root, data=json.dumps(
+        {'depth': 'minimal', 'count': 1000}))
+    emailgroups_json = response.json()
+
+    emailgroups = {}
+    for field in emailgroups_json['elements']:
+        emailgroups[field['id']] = field['name']
+
+    return emailgroups
+
+
+'''
+=================================================================================
                                 Contact Upload API
 =================================================================================
 '''

@@ -362,6 +362,12 @@ def form_data():
             search_query = '*'
     print(f'\n{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='')
 
+    # Get datamodel fields via API
+    datamodel_data = api.eloqua_get_fields()
+
+    # Get e-mail groups via API
+    emailgroups_data = api.eloqua_get_emailgroups()
+
     # Get json of all froms based on query
     page = 1
     count = 50
@@ -410,9 +416,6 @@ def form_data():
         form_processing_steps = []
         source_country_trigger = []
         contact_update_trigger = []
-        # Loads json file with naming convention
-        with open(file('emailgroups'), 'r', encoding='utf-8') as f:
-            email_groups_json = json.load(f)
         for processing_step in form['processingSteps']:
             # Catch shared update rule processing steps
             if processing_step['type'] == 'FormStepCreateUpdateContact':
@@ -443,6 +446,8 @@ def form_data():
                     step_condition = ''
                 try:
                     step_email_group = processing_step['emailGroupId']['constantValue']
+                    step_email_group = [step_email_group,
+                                        emailgroups_data[step_email_group]]
                 except KeyError:
                     step_email_group = ''
                 try:
@@ -462,27 +467,26 @@ def form_data():
                 }
 
                 # Appends form fields to conditional form processing steps
-                form_processing_string = str(form_processing_dict)
-                if "'fieldId'" in form_processing_string:
-                    field_ids = re.search(r"('fieldId': '(\d+)')",
-                                          form_processing_string)
-
-                    counter = 0
-                    for i in field_ids.groups():
-                        if counter % 2 == 0:
-                            field_line = i
-                        if counter % 2 != 0:
-                            field_id = i
+                form_processing_string = json.dumps(form_processing_dict)
+                if '"fieldId"' in form_processing_string:
+                    field_ids = re.findall(r'("fieldId": "(\d+)")',
+                                           form_processing_string)
+                    for field in field_ids:
+                        if int(field[1]) > 100000:
                             form_processing_string = form_processing_string\
                                 .replace(
-                                    field_line,
-                                    f"'fieldId': {str(form_fields[field_id])}"
-                                )\
-                                .replace(': None', ': null')
-                        counter += 1
+                                    field[0],
+                                    f'"fieldId": ["{field[1]}", "{datamodel_data[field[1]]}"]'
+                                )
+                        else:
+                            form_processing_string = form_processing_string\
+                                .replace(
+                                    field[0],
+                                    f'"fieldId": {form_fields[field[1]]}'
+                                )
 
                     form_processing_json = form_processing_string\
-                        .replace("'", "\"")
+                        .replace("'", "\"").replace("d\"information", "d'information").replace(': None', ': null')
                     form_processing_dict = json.loads(form_processing_json)
 
                 form_processing_steps.append(form_processing_dict)
@@ -505,6 +509,18 @@ def form_data():
             'sharedSourceCountryUpdate': source_country_trigger,
             'sharedContactUpdateTrigger': contact_update_trigger
         }
+
+    forms_string = json.dumps(forms_dict)
+    email_groups_regex = re.findall(r'("emailGroup": "(\d+)")', forms_string)
+    for group in email_groups_regex:
+        if group[1] in emailgroups_data.keys():
+            forms_string = forms_string\
+                .replace(
+                    group[0],
+                    f'"emailGroup": [{group[1]}, "{emailgroups_data[group[1]]}"]'
+                )
+
+    forms_dict = json.loads(forms_string)
 
     # Change asteriks in search query to ^ to mitigate Windows limitations
     search_query = search_query.replace('*', '^')

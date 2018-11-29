@@ -164,6 +164,8 @@ _ToDo:_
 - Gets dynamic content
 - Gets and updates shared content
 - Gets and creates field merges
+- Gets data model fields
+- Gets email groups
 
 ---
 
@@ -186,4 +188,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.9.4_]
+[_Version: 1.9.5_]
