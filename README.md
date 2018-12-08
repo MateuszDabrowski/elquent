@@ -132,6 +132,7 @@ _ToDo:_
 - Creates forms and shared lists for e-mail group control based on country splitted json file
 - Creates program canvas and automatically adds above assets to program steps
 - Creates report on subscription related processings steps within eloqua forms
+- Creates report on asset dependencies
 
 ---
 
@@ -166,6 +167,7 @@ _ToDo:_
 - Gets and creates field merges
 - Gets data model fields
 - Gets email groups
+- Gets asset dependencies
 
 ---
 
@@ -188,4 +190,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.9.5_]
+[_Version: 1.9.6_]

@@ -323,6 +323,121 @@ def email_groups():
 
 '''
 =================================================================================
+                                Asset Dependency Reporter
+=================================================================================
+'''
+
+
+def asset_dependency():
+    '''
+    Gets data on dependecies for chosen assets in JSON format
+    '''
+
+    def asset_type_chooser():
+        '''
+        Gets type of asset for which to check dependency
+        '''
+
+        asset_names = [
+            'landingPage', 'form', 'email',
+            'campaign', 'program',
+            'sharedFilter', 'segment',
+            'image', 'file', 'sharedContent',
+            'dynamicContent', 'fieldMerge'
+        ]
+
+        print(f'\n{Fore.GREEN}Asset Types:')
+        for i, asset in enumerate(asset_names):
+            print(
+                f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{asset}{Fore.WHITE}]')
+        print(
+            f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
+
+        # Asks user to choose asset type
+        while True:
+            print(f'{Fore.YELLOW}Enter number associated with chosen asset:', end='')
+            choice = input(' ')
+            if choice.lower() == 'q':
+                return False
+            try:
+                choice = int(choice)
+            except (TypeError, ValueError):
+                print(f'{Fore.RED}Please enter numeric value!')
+                continue
+            if 0 <= choice < len(asset_names):
+                break
+            else:
+                print(f'{Fore.RED}Entered value does not belong to any utility!')
+
+        return asset_names[choice]
+
+    # Get asset for dependency checker
+    chosen_asset = asset_type_chooser()
+
+    # Get query string from the user
+    print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste search {Fore.YELLOW}query string',
+          f'{Fore.WHITE}and click [Enter]')
+    search_query = input(' ')
+    if not search_query:
+        search_query = pyperclip.paste()
+        if not search_query:
+            search_query = '*'
+
+    # Get json of all assets based on query
+    page = 1
+    count = 500
+    assets = []
+    while True:
+        # Gets full data on first part of assets
+        assets_partial = api.eloqua_get_assets(
+            search_query, chosen_asset, count=count, page=page, depth='minimal')
+
+        # Add existing to a list
+        for single_asset in assets_partial['elements']:
+            assets.append(single_asset)
+
+        # Stops iteration when full list is obtained
+        if assets_partial['total'] - page * count < 0:
+            break
+
+        # Else increments page to get next part of outcomes
+        page += 1
+
+        # Every ten batches draws hyphen for better readability
+        if page % 10 == 0:
+            print(f'{Fore.YELLOW}-', end='', flush=True)
+
+    # Get json of dependencies and create oytput dict
+    dependency_output = {}
+    for asset in assets:
+        dependecies_json = api.eloqua_get_dependencies(
+            asset.get('id'), chosen_asset)
+        dependency_output[asset['name']] = {
+            'id': asset.get('id'),
+            'createdAt': helper.epoch_to_date(asset.get('createdAt')),
+            'updatedAt': helper.epoch_to_date(asset.get('updatedAt')),
+            'dependencies': dependecies_json
+        }
+
+    # Change asteriks in search query to ^ to mitigate Windows limitations
+    search_query = search_query.replace('*', '^')
+
+    # Save outcome dict to file
+    with open(file('outcome-json', name=f'Dependencies-{chosen_asset}-{search_query}'), 'w', encoding='utf-8') as f:
+        json.dump(dependency_output, f)
+    print(f'\n{Fore.WHITE}[{Fore.GREEN}FINISHED{Fore.WHITE}] Dependencies for',
+          f'{Fore.YELLOW}{chosen_asset} {Fore.WHITE}[{Fore.YELLOW}{search_query}',
+          f'{Fore.WHITE}] saved to Outcomes folder')
+
+    # Asks user if he would like to repeat
+    print(f'\n{Fore.YELLOW}» {Fore.WHITE}Do you want to create another batch? {Fore.WHITE}({YES}/{NO}):', end=' ')
+    choice = input(' ')
+    if choice.lower() == 'y':
+        asset_dependency()
+
+
+'''
+=================================================================================
                                 Form Processing Reporter
 =================================================================================
 '''
@@ -373,7 +488,7 @@ def form_data():
     count = 50
     forms = []
     while True:
-        # Gets full data on first part of assets connected with campaign
+        # Gets full data on first part of assets
         assets_partial = api.eloqua_get_assets(
             search_query, 'form', count=count, page=page)
 
@@ -625,6 +740,7 @@ def admin_module(country):
         f'\n{Fore.GREEN}ELQuent.link Utilites:'
         f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}EmailGroups{Fore.WHITE}] Create e-mail group program canvas related to GCR'
         f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}FormProcessing{Fore.WHITE}] Get data on form processing steps related to GCR'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}AssetDependency{Fore.WHITE}] Get report for asset dependencies'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -637,6 +753,9 @@ def admin_module(country):
             break
         elif choice == '2':
             form_data()
+            break
+        elif choice == '3':
+            asset_dependency()
             break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')

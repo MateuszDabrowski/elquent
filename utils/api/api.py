@@ -356,6 +356,31 @@ def eloqua_get_assets(query, asset_type, count='', page='1', depth='complete'):
     return assets
 
 
+def eloqua_get_dependencies(asset_id, asset_type, depth='minimal'):
+    '''
+    Requires asset_id, asset_type and optionally count, pagination, depth
+    Returns partial list of dependencies and their full count
+    '''
+
+    # Gets required endpoint
+    endpoint = asset_names.get(asset_type) + '/' + asset_id + '/dependencies'
+
+    # Builds the API request
+    payload = {
+        'depth': depth,  # Sets required depth of data output
+    }
+
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}assets/{endpoint}'
+    response = api_request(root, params=payload)
+    try:
+        dependencies = response.json()
+    except json.decoder.JSONDecodeError:
+        dependencies = []
+
+    return dependencies
+
+
 '''
 =================================================================================
                                 Eloqua Authentication
