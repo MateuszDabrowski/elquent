@@ -279,6 +279,8 @@ def menu(choice=''):
         print(
             f'{Fore.WHITE}[{Fore.YELLOW}{i}{Fore.WHITE}]\t» [{Fore.YELLOW}{function[1]}')
     print(
+        f'{Fore.WHITE}[{Fore.YELLOW}K{Fore.WHITE}]\t» [{Fore.YELLOW}Key{Fore.WHITE}] Show my Eloqua API Key')
+    print(
         f'{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit{Fore.WHITE}]')
 
     # Asks user to choose utility
@@ -287,6 +289,11 @@ def menu(choice=''):
             print(
                 f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
             choice = input(' ')
+        if choice.lower() == 'k':
+            print(
+                f'\n{Fore.YELLOW}Key » {Fore.RESET}Basic {Fore.WHITE}{eloqua_key}\n')
+            choice = ''
+            continue
         if choice.lower() == 'q':
             print(f'\n{Fore.GREEN}Ahoj!')
             raise SystemExit
