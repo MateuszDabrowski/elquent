@@ -532,7 +532,7 @@ def eloqua_create_sharedlist(export, choice):
                     outcome = eloqua_create_sharedlist(new_export, '')
                     return outcome
 
-        uri = eloqua_import_definition(name, list_id)
+        uri = eloqua_import_contact_definition(name, list_id)
         count = eloqua_import_contacts(contacts, uri)
         status = eloqua_post_sync(uri)
         if status == 'success':
@@ -545,7 +545,7 @@ def eloqua_create_sharedlist(export, choice):
     return outcome
 
 
-def eloqua_import_definition(name, list_id):
+def eloqua_import_contact_definition(name, list_id):
     '''
     Request to obtain uri key for data upload
     Requires name of import and ID of shared list
@@ -580,6 +580,95 @@ def eloqua_import_contacts(contacts, uri):
     for user in contacts:
         record = {'SourceCountry': source_country,
                   'EmailAddress': user}
+        upload.append(record)
+        count += 1
+    root = eloqua_bulk + uri + '/data'
+    api_request(root, call='post', data=json.dumps(upload))
+
+    return count
+
+
+'''
+=================================================================================
+                    Upload External Activites API Flow
+=================================================================================
+'''
+
+
+def eloqua_create_webinar_activity(attendees, activities):
+    '''
+    Requires list of attendee e-mails and list of list containg activites in format:
+    [E-mail, CampaignId, AssetName, AssetType, AssetDate, ActivityType]
+    '''
+
+    # Upload contacts to shared list for correct CLS
+    print(f'\n{Fore.YELLOW}» Uploading attendees')
+    list_id = naming[source_country]['webinar']['activity_shared_list']
+    contact_uri = eloqua_import_contact_definition('WKPL_ELQuent_Webinar-attendees-upload', list_id)
+    eloqua_import_contacts(attendees, contact_uri)
+    contact_status = eloqua_post_sync(contact_uri)
+    if contact_status == 'success':
+        # Sync_id is syncedInstanceUri from sync response
+        import_id = (contact_uri.split('/'))[-1]
+        root = eloqua_bulk + f'contacts/imports/{import_id}'
+        api_request(root, call='delete')
+
+    # Upload external activities
+    print(f'\n{Fore.YELLOW}» Uploading activities')
+    activity_uri = eloqua_import_webinar_activity_definition()
+    eloqua_import_webinar_activity(activities, activity_uri)
+    activity_status = eloqua_post_sync(activity_uri)
+    if activity_status == 'success':
+        # Sync_id is syncedInstanceUri from sync response
+        import_id = (activity_uri.split('/'))[-1]
+        root = eloqua_bulk + f'contacts/imports/{import_id}'
+        api_request(root, call='delete')
+
+    return
+
+
+def eloqua_import_webinar_activity_definition():
+    '''
+    Returns uri key of import defininition needed for data upload
+    '''
+    data = {
+        'name': f'WK{source_country}_Webinar_ExternalActivityImport_ELQuent',
+        'fields': {
+            'C_EmailAddress': '{{Activity.Contact.Field(C_EmailAddress)}}',
+            'CampaignID': '{{Activity.Campaign.Id}}',
+            'AssetName': '{{Activity.Asset.Name}}',
+            'AssetType': '{{Activity.Asset.Type}}',
+            'AssetDate': '{{Activity.CreatedAt}}',
+            'ActivityType': '{{Activity.Type}}'
+        },
+        'updateRule': 'always',
+        'dataRetentionDuration': 'PT1H',
+    }
+    root = eloqua_bulk + 'activities/imports'
+    response = api_request(root, call='post', data=json.dumps(data))
+    import_eloqua = response.json()
+    uri = import_eloqua['uri'][1:]
+
+    return uri
+
+
+def eloqua_import_webinar_activity(activities, uri):
+    '''
+    Uploads contacts from ClickWebinar to Eloqua
+    Requires list of contacts for upload and uri key
+    Returns count of uploaded contacts
+    '''
+    count = 0
+    upload = []
+    for activity in activities:
+        record = {
+            'C_EmailAddress': activity[0],
+            'CampaignID': activity[1],
+            'AssetName': activity[2],
+            'AssetType': activity[3],
+            'AssetDate': activity[4],
+            'ActivityType': activity[5]
+        }
         upload.append(record)
         count += 1
     root = eloqua_bulk + uri + '/data'

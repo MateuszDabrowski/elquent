@@ -256,7 +256,7 @@ def menu(choice=''):
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'validator': (validator.validator_module, f'Validator{Fore.WHITE}] Test and validate assets and campaigns'),
         'modifier': (modifier.modifier_module, f'Modifier{Fore.WHITE}] Modify multiple assets at once'),
-        'webinar': (webinar.click_to_elq, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'mail_groups': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
@@ -356,7 +356,7 @@ elif sys.argv[1] == 'page':
 elif sys.argv[1] == 'campaign':
     campaign.campaign_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'web':
-    webinar.click_to_elq(SOURCE_COUNTRY)
+    webinar.webinar_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'base':
     database.contact_list(SOURCE_COUNTRY)
 elif sys.argv[1] == 'export':
@@ -365,8 +365,6 @@ elif sys.argv[1] == 'validate':
     validator.validator_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'modify':
     modifier.modifier_module(SOURCE_COUNTRY)
-elif sys.argv[1] == 'password':
-    print(f'{Fore.YELLOW}Key » {Fore.WHITE}{eloqua_key}')
 
 # Allows to cycle through options after first errand
 while True:

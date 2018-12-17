@@ -68,11 +68,7 @@ _ToDo:_
 - Allows user specify time range for webinar data import
 - Automatically gets all needed data via API and restructures it
 - Uploads contacts to Eloqua shared list via ELQuent.api module
-
-_ToDo:_
-
-- [ ] _Save date of last sync in shared content_
-- [ ] _Save data to external activity_
+- Uploads webinar attendance as External Activity
 
 ---
 
@@ -144,6 +140,7 @@ _ToDo:_
 
 - Authenticates user
 - Uploads contact database to Eloqua shared lists
+- Uploads external activities
 - Cleans import definition after successful upload to clean dependecies
 - Checks if LP, Form, Mail already exists on Eloqua instance
 - Uploads landing page to specified folder
@@ -190,4 +187,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.9.6_]
+[_Version: 1.9.7_]

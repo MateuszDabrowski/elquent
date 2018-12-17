@@ -4,7 +4,7 @@
         "clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "contacts",
         "webinar", "mail_groups", "export", "modifier", "cert", "validator"
     ],
-    "ADVANCED": ["contacts"],
+    "ADVANCED": ["contacts", "webinar"],
     "CORP": ["clean_folders", "change_links", "build_mail", "mail_groups", "export"],
     "AK": ["clean_folders", "change_links", "build_mail"],
     "BE": ["clean_folders", "change_links", "build_mail"],
@@ -15,6 +15,6 @@
     "HU": ["clean_folders", "change_links", "build_mail"],
     "IT": ["clean_folders", "change_links", "build_mail"],
     "NL": ["clean_folders", "change_links", "build_mail"],
-    "PL": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "webinar"],
+    "PL": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen"],
     "SK": ["clean_folders", "change_links", "build_mail"]
 }
