@@ -353,6 +353,8 @@ def click_to_elq():
     '''
     Gets attendees and users registered to ClickMeeting webinars
     and uploads them to Eloqua as a shared list
+
+    Legacy solution
     '''
 
     # Gets export timeframe from user
@@ -420,7 +422,7 @@ def click_to_activity(last_webinar_sync):
     =================================================== Get room data
     '''
 
-    print(f'\n{Fore.YELLOW}» Getting rooms from chosen timeframe')
+    print(f'\n{Fore.YELLOW}» Getting rooms since last sync')
     # Save active rooms
     active_ids = []
     active_names = []
@@ -443,7 +445,7 @@ def click_to_activity(last_webinar_sync):
         room_date = room['ends_at'][:10] + ' ' + room['ends_at'][11:16]
         room_datetime = datetime.datetime.strptime(room_date, '%Y-%m-%d %H:%M')
         # Skip rooms older then last sync
-        if room_datetime <= last_sync:
+        if room_datetime >= last_sync:
             inactive_ids.append(room['id'])
             inactive_names.append(room['name'])
     inactive_rooms = list(zip(inactive_ids, inactive_names))
@@ -484,8 +486,9 @@ def click_to_activity(last_webinar_sync):
     '''
 
     print(f'\n{Fore.YELLOW}» Getting attendees')
-    attendees = []
-    activites = []
+    sessions = 0
+    adresses = []
+    activities = []
     new_sessions_shared_list = []
     # Create list of attendees of each session in chosen period
     for key, value in click_sessions.items():
@@ -493,12 +496,12 @@ def click_to_activity(last_webinar_sync):
         session_id, session_start_date, session_end_date = key
         room_id, room_name = value
 
-        # Creating datetime version of session_date for EXPORT_TIME_RANGE
+        # Creating datetime version of session_date
         session_end_datetime = datetime.datetime.strptime(
             session_end_date, '%Y-%m-%d %H:%M')
 
         # Skip already sessions older then last sync
-        if session_end_datetime <= last_sync:
+        if session_end_datetime >= last_sync:
             root = f'{click_root}conferences/{room_id}/sessions/{session_id}/attendees'
             response = api.api_request(
                 root, api='click')
@@ -517,6 +520,9 @@ def click_to_activity(last_webinar_sync):
             attendees_list = [att for att in attendees_list if
                               '@wolterskluwer.' not in att.lower() and len(att) > 8]
 
+            # Add this sessions attendees to main attendees list
+            adresses.extend(attendees_list)
+
             # Modifying values for Eloqua naming convention
             room_name = room_name\
                 .replace(',', '')\
@@ -527,12 +533,15 @@ def click_to_activity(last_webinar_sync):
                 .replace('?', '')\
                 .replace('–', '')\
                 .replace(' ', '-')
-            room_name = room_name[:40] + '-' if len(room_name) > 40 \
-                else room_name + '-'
-            session_date = f'{session_date[2:4]}-{session_date[5:7]}-{session_date[8:10]}'
+            room_name = room_name[:40] if len(room_name) > 40 else room_name
+            while room_name.endswith('-'):
+                room_name = room_name[:-1]
+            while room_name.startswith('-'):
+                room_name = room_name[1:]
+            session_date = f'{session_start_date[2:4]}-{session_start_date[5:7]}-{session_start_date[8:10]}'
 
             # Naming convention for shared list of uploaded attendees
-            activity_name = f'WK{source_country}_{session_date}_{str(session_id)}-{room_name}_webinar'
+            activity_name = f'WK{source_country}_{session_date}_{room_name}-{str(session_id)}_webinar'
             while '--' in activity_name:
                 activity_name = activity_name.replace('--', '-')
 
@@ -540,21 +549,30 @@ def click_to_activity(last_webinar_sync):
             campaign_id = naming[source_country]['id']['campaign']['External_Activity']
             for attendee in attendees_list:
                 # [E-mail, CampaignId, AssetName, AssetType, AssetDate, ActivityType]
-                activites.append([
+                activities.append([
                     attendee, campaign_id,
-                    activity_name, 'Webinar',
+                    activity_name, 'WKPL_Webinar',
                     session_start_date, 'Attended'
                 ])
 
             # Update shared content with newly uploaded session_ids
-            new_sessions_shared_list.append(session_id)
-    print(f'{Fore.GREEN}» Imported {len(attendees_list)} attendees from {len(activites)} sessions')
+            new_sessions_shared_list.append(str(session_id))
+
+            # Increment sessions count
+            sessions += 1
+
+            print(f'{Fore.GREEN}|', end='', flush=True)
+        else:
+            print(f'{Fore.RED}|', end='', flush=True)
+
+    print(
+        f'\n{Fore.GREEN}» Imported {len(activities)} attendees from {sessions} sessions')
 
     '''
-    =================================================== Upload contacts & activites
+    =================================================== Upload contacts & activities
     '''
 
-    api.eloqua_create_webinar_activity(attendees_list, activites)
+    api.eloqua_create_webinar_activity(adresses, activities)
 
     '''
     =================================================== Update list of uploaded sessions
@@ -562,8 +580,10 @@ def click_to_activity(last_webinar_sync):
 
     print(f'\n{Fore.YELLOW}» Saving list of all uploaded webinar sessions')
     # Creates a string with id's of all uploaded webinar sessions
-    all_sessions_shared_list = (',').join(
-        old_sessions_shared_list + new_sessions_shared_list)
+    all_sessions_shared_list = \
+        (',').join(old_sessions_shared_list + new_sessions_shared_list)
+    if all_sessions_shared_list.startswith(','):  # in case of no old sessions
+        all_sessions_shared_list = all_sessions_shared_list[1:]
 
     # Build shared content data for updating the list of uploaded sessions
     data = {
@@ -625,8 +645,8 @@ def webinar_module(country):
     # Campaign type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.webinar Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Activities{Fore.WHITE}] Uploads webinar attendees to Eloqua'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Contacts{Fore.WHITE}] Uploads webinar attendees to Eloqua {Fore.YELLOW}(Legacy)'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Activities{Fore.WHITE}] Uploads attendees as External Activities'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Legacy{Fore.WHITE}] Uploads registrants and attendees to shared lists'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:

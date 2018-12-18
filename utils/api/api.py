@@ -590,14 +590,14 @@ def eloqua_import_contacts(contacts, uri):
 
 '''
 =================================================================================
-                    Upload External Activites API Flow
+                    Upload External Activities API Flow
 =================================================================================
 '''
 
 
 def eloqua_create_webinar_activity(attendees, activities):
     '''
-    Requires list of attendee e-mails and list of list containg activites in format:
+    Requires list of attendee e-mails and list of list containg activities in format:
     [E-mail, CampaignId, AssetName, AssetType, AssetDate, ActivityType]
     '''
 
