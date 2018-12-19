@@ -603,7 +603,7 @@ def eloqua_create_webinar_activity(attendees, activities):
 
     # Upload contacts to shared list for correct CLS
     print(f'\n{Fore.YELLOW}» Uploading attendees')
-    list_id = naming[source_country]['webinar']['activity_shared_list']
+    list_id = naming[source_country]['id']['activity_shared_list']
     contact_uri = eloqua_import_contact_definition('WKPL_ELQuent_Webinar-attendees-upload', list_id)
     eloqua_import_contacts(attendees, contact_uri)
     contact_status = eloqua_post_sync(contact_uri)

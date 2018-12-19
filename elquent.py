@@ -259,7 +259,7 @@ def menu(choice=''):
         'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
-        'mail_groups': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
+        'admin': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
     }
 
     # Access to all utils for admin
@@ -270,6 +270,8 @@ def menu(choice=''):
         utils_list = COUNTRY_UTILS[SOURCE_COUNTRY]
         if ELOQUA_USER.lower() in naming[SOURCE_COUNTRY]['advanced_users']:
             utils_list.extend(COUNTRY_UTILS['ADVANCED'])
+        elif ELOQUA_USER.lower() in naming[SOURCE_COUNTRY]['local_admin']:
+            utils_list.extend(COUNTRY_UTILS['ADMIN'])
         available_utils = {k: v for (k, v) in utils.items() if k in utils_list}
     util_names = list(available_utils.keys())
 

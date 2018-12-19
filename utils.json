@@ -1,11 +1,8 @@
 {
     "country": ["CORP", "AK", "BE", "CZ", "DE", "ES", "FR", "HU", "IT", "NL", "PL", "PT", "SK", "LSW"],
-    "ADMIN": [
-        "clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "contacts",
-        "webinar", "mail_groups", "export", "modifier", "cert", "validator"
-    ],
+    "ADMIN": ["contacts", "webinar", "export", "modifier", "cert", "validator"],
     "ADVANCED": ["contacts", "webinar"],
-    "CORP": ["clean_folders", "change_links", "build_mail", "mail_groups", "export"],
+    "CORP": ["clean_folders", "change_links", "build_mail", "admin", "export"],
     "AK": ["clean_folders", "change_links", "build_mail"],
     "BE": ["clean_folders", "change_links", "build_mail"],
     "CZ": ["clean_folders", "change_links", "build_mail"],

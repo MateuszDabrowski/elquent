@@ -65,10 +65,9 @@ _ToDo:_
 #### Add viewers to Eloqua
 
 - ClickMeeting API connector app
-- Allows user specify time range for webinar data import
 - Automatically gets all needed data via API and restructures it
-- Uploads contacts to Eloqua shared list via ELQuent.api module
-- Uploads webinar attendance as External Activity
+- Uploads contacts to Eloqua (shared list)
+- Uploads webinar attendance as Eloqua External Activity
 
 ---
 
@@ -99,7 +98,7 @@ _ToDo:_
 #### Module focused on validating assets & campaigns
 
 - Exports active multistep campaigns with member count, start and end dates
-- Basic campaign validation (fields, assets, steps)
+- Basic campaign validation (fields, assets, steps) » _Work in Progress_
 
 ---
 
@@ -187,4 +186,4 @@ _ToDo:_
 
 Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.9.8_]
+[_Version: 1.9.9_]

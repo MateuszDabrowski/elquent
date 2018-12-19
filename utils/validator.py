@@ -599,8 +599,8 @@ def validator_module(country):
     # Campaign type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.validator Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Campaign{Fore.WHITE}] Validates various elements of chosen campaign'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Lifespan{Fore.WHITE}] Exports time data of all active multistep campaigns'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Lifespan{Fore.WHITE}] Exports time data of all active multistep campaigns'
+        # f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Campaign{Fore.WHITE}] Validates various elements of chosen campaign'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -609,11 +609,11 @@ def validator_module(country):
         if choice.lower() == 'q':
             break
         elif choice == '1':
-            campaign_data_getter()
-            break
-        elif choice == '2':
             campaign_lifespan()
             break
+        # elif choice == '2':
+        #     campaign_data_getter()
+        #     break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
             choice = ''
