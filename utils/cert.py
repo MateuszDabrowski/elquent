@@ -14,6 +14,7 @@ linkedin.com/in/mateusz-dabrowski-marketing/
 # Python imports
 import os
 import io
+import re
 import sys
 import csv
 import json
@@ -24,6 +25,7 @@ from colorama import Fore, Style, init
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.colors import HexColor
 
 # ELQuent imports
 import utils.api.api as api
@@ -156,7 +158,26 @@ def set_font():
     return (font_type, int(font_size))
 
 
-def create_name_file(width, height, font, size, first_name, last_name, text_height=''):
+def set_color():
+    '''
+    Returns:
+    » font_color: string containing hex color
+    '''
+    # Font chooser
+    while True:
+        print(
+            f'\n{Fore.YELLOW}Please enter hex value of a color (example: #007ac3):', end='')
+        font_color = input(' ')
+        hex_match = re.search(r'^#(?:[0-9a-fA-F]{3}){1,2}$', font_color)
+        if hex_match:
+            break
+        else:
+            print(f'{Fore.RED}Entered value is not valid!')
+
+    return font_color
+
+
+def create_name_file(width, height, font, size, color, first_name, last_name, text_height=''):
     '''
     Requires:
     » width, height, size: integers
@@ -170,12 +191,13 @@ def create_name_file(width, height, font, size, first_name, last_name, text_heig
         print(
             f'\n{Fore.YELLOW}Please write y-axis value for first name (middle: {height/2}):', end=' ')
         text_height = input(' ')
-        text_height = int(text_height)
+        text_height = int(float(text_height))
 
     # Create a new PDF with Reportlab
     name_watermark = canvas.Canvas(packet)
     name_watermark.setPageSize((width, height))
     name_watermark.setFont(font, size)
+    name_watermark.setFillColor(HexColor(color))
     name_watermark.drawCentredString(width/2,
                                      text_height,
                                      first_name)
@@ -275,7 +297,8 @@ def cert_constructor(country):
     while True:
         print(
             f'\n{Fore.GREEN}Please add to Incomes folder:',
-            f'\n{Fore.YELLOW}» {Fore.WHITE}database.csv [Email Address, First Name, Last Name]',
+            f'\n{Fore.YELLOW}» {Fore.WHITE}database.csv comma-delimited with headers',
+            f'\n{Fore.WHITE}   [{Fore.YELLOW}Email Address, First Name, Last Name{Fore.WHITE}]',
             f'\n{Fore.YELLOW}» {Fore.WHITE}template.pdf',
             f'\n{Fore.WHITE}[{Fore.YELLOW}Enter{Fore.WHITE}] to continue when finished '
             f'{Fore.WHITE}or [{Fore.YELLOW}Q{Fore.WHITE}] to quit.', end='')
@@ -287,17 +310,15 @@ def cert_constructor(country):
         else:
             print(f'{ERROR}Cannot find files in Incomes folder!')
 
-    # Builds PyPDF2 template object and gets its size for correct watermark placing
-    template_pdf, width, height = get_template()
-
     # Gets font type and font size from user input
     font, size = set_font()
+    color = set_color()
 
     # Create sample certificate to test settings
     while True:
         template_pdf, width, height = get_template()
         name_pdf, text_position = create_name_file(
-            width, height, font, size, 'Mateusz', 'Dąbrowski')
+            width, height, font, size, color, 'Mateusz', 'Dąbrowski')
         cert_path = create_cert_file(
             template_pdf, name_pdf, 'Mateusz', 'Dąbrowski')
         print(f'\n{Fore.YELLOW}» {Fore.WHITE}Check sample certificate for Mateusz Dąbrowski in Outcomes folder!',
@@ -332,7 +353,7 @@ def cert_constructor(country):
         if len(users[0]) == 3 and '@' in users[1][0]:
             break
         else:
-            print(f'{ERROR}Incorrect structure of database.csv!'
+            print(f'{ERROR}Incorrect structure of database.csv! '
                   f'{Fore.YELLOW}Add csv with three columns [Email Address, First Name, Last Name] and click [Enter]')
             input('')
 
@@ -343,12 +364,12 @@ def cert_constructor(country):
     for user in users[1:]:
         email, first_name, last_name = (user[0], user[1], user[2])
 
-        # Gets clean template
+        # Builds PyPDF2 template object and gets its size for correct watermark placing
         template_pdf, width, height = get_template()
 
         # Creates name watermark with given data
         name_pdf, _ = create_name_file(
-            width, height, font, size, first_name, last_name, text_position)
+            width, height, font, size, color, first_name, last_name, text_position)
 
         # Creates certificate for the user
         cert_path = create_cert_file(
