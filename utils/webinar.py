@@ -295,6 +295,10 @@ def click_to_activity(last_webinar_sync):
         else:
             print(f'{Fore.RED}|', end='', flush=True)
 
+    if not activities:
+        print(f'\n{Fore.WHITE}» {Fore.RED}No attendees in given timeframe')
+        return
+
     print(
         f'\n{Fore.GREEN}» Imported {len(activities)} attendees from {sessions} sessions')
 
