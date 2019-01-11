@@ -83,6 +83,12 @@ def file(file_path, file_name='', folder_name=''):
             else:
                 datadir = os.path.dirname(os.path.dirname(__file__))
             return os.path.join(datadir, directory, filename)
+        elif directory == 'templates':  # For reading template files
+            if getattr(sys, 'frozen', False):
+                datadir = os.path.dirname(sys.executable)
+            else:
+                datadir = os.path.dirname(os.path.dirname(__file__))
+            return os.path.join(datadir, 'utils', directory, filename)
         elif directory == 'outcomes':  # For writing outcome files
             if getattr(sys, 'frozen', False):
                 datadir = os.path.dirname(sys.executable)
@@ -99,6 +105,8 @@ def file(file_path, file_name='', folder_name=''):
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
         'incomes': find_data_file('incomes', directory='main'),
+        'alert-renewal1': find_data_file(f'WK{source_country}_EML_alert-renewal1.txt', directory='templates'),
+        'alert-renewal2': find_data_file(f'WK{source_country}_EML_alert-renewal2.txt', directory='templates'),
         'package': find_data_file(f'{file_name}'),
         'package_file': find_data_file(f'{file_name}', directory='package', folder_name=folder_name),
         'mail_html': find_data_file(f'WK{source_country}_{file_name}.txt', directory='outcomes'),
@@ -385,6 +393,18 @@ def generator_constructor(country):
             f'"{link}"',
             f'"{new_link}"'
         )
+
+    # Adds renewal box to LEX Alert
+    if 'Zobacz nowości w Twoim systemie LEX' in mail_html:
+        with open(file('alert-renewal2'), 'r', encoding='utf-8') as f:
+            alert_renewal_content = f.read()
+        mail_html = mail_html.replace(
+            '<!-- Naglowek END -->', alert_renewal_content)
+    else:
+        with open(file('alert-renewal1'), 'r', encoding='utf-8') as f:
+            alert_renewal_content = f.read()
+        mail_html = mail_html.replace(
+            '<!-- Naglowek END -->', alert_renewal_content)
 
     # Beautify arrow links
     mail_html = mail_html.replace('>>', '»')

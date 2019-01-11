@@ -29,6 +29,7 @@ Combines multiple utilities automating tasks around Oracle's Eloqua Marketing Au
 - Adds elqTrack=true to all viable link (PURL excluded)
 - Swaps CDN URLs to SSL on the fly
 - Special campaign sub-flow for externally generated mails
+- Renewal offer dynamic content adder
 
 ---
 
@@ -184,6 +185,6 @@ _ToDo:_
 
 ---
 
-Copyright (c) 2018 Mateusz Dąbrowski [MIT License](LICENSE)
+Copyright (c) 2019 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.9.9_]
+[_Version: 1.10.0_]
