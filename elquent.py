@@ -17,8 +17,9 @@ import sys
 import json
 import shutil
 import pickle
+import datetime
 import requests
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.mail as mail
@@ -37,6 +38,12 @@ import utils.api.api as api
 # Initialize colorama
 init(autoreset=True)
 
+# Predefined messege elements
+ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
+SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 '''
 =================================================================================
@@ -256,7 +263,7 @@ def menu(choice=''):
         'contacts': (database.contact_list, f'Contacts{Fore.WHITE}] Create contact upload file with correct structure'),
         'validator': (validator.validator_module, f'Validator{Fore.WHITE}] Test and validate assets and campaigns'),
         'modifier': (modifier.modifier_module, f'Modifier{Fore.WHITE}] Modify multiple assets at once'),
-        'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar registered users and attendees'),
+        'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar attendees & activity'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'admin': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
@@ -274,6 +281,22 @@ def menu(choice=''):
             utils_list.extend(COUNTRY_UTILS['ADMIN'])
         available_utils = {k: v for (k, v) in utils.items() if k in utils_list}
     util_names = list(available_utils.keys())
+
+    # Gets date of last webinar sync
+    if SOURCE_COUNTRY == 'PL' and 'webinar' in util_names:
+        last_webinar_sync = api.eloqua_asset_get(
+            naming[SOURCE_COUNTRY]['id']['webinar_sync'], 'sharedContent', depth='complete')
+        last_webinar_sync = last_webinar_sync['contentHtml']
+        date_format = '%Y-%m-%d %H:%M'
+        sync_date = datetime.datetime.strptime(last_webinar_sync, date_format)
+        current_date = datetime.datetime.today()
+        sync_delta = current_date - sync_date
+        if sync_delta.days >= 3:
+            print(
+                f'\n{WARNING}{sync_delta.days} since last upload of webinar attendees')
+        elif sync_delta.days >= 7:
+            print(
+                f'\n{ERROR}{sync_delta.days} since last upload of webinar attendees')
 
     # Lists utils available to chosen user
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
