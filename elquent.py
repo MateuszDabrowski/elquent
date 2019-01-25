@@ -291,12 +291,12 @@ def menu(choice=''):
         sync_date = datetime.datetime.strptime(last_webinar_sync, date_format)
         current_date = datetime.datetime.today()
         sync_delta = current_date - sync_date
-        if sync_delta.days >= 3:
+        if sync_delta.days >= 7:
             print(
-                f'\n{WARNING}{sync_delta.days} since last upload of webinar attendees')
-        elif sync_delta.days >= 7:
+                f'\n{ERROR}{sync_delta.days} days since last upload of webinar attendees')
+        elif sync_delta.days >= 3:
             print(
-                f'\n{ERROR}{sync_delta.days} since last upload of webinar attendees')
+                f'\n{WARNING}{sync_delta.days} days since last upload of webinar attendees')
 
     # Lists utils available to chosen user
     print(f'\n{Fore.GREEN}ELQuent Utilites:')
