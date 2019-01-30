@@ -240,7 +240,9 @@ def modify_form(existing_form_id=''):
                 if is_html.findall(code):
                     print(f'  {SUCCESS}Code copied from clipboard')
                     break
-                print(f'  {ERROR}Copied code is not correct Form HTML')
+                print(
+                    f'  {ERROR}Copied code is not correct Form HTML, please copy again')
+                input()
 
         return form_code
 
