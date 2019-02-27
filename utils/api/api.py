@@ -1637,13 +1637,18 @@ def eloqua_post_file(imported_file):
     # Builds image_link
     file_link = file_info['trackedLink']
 
+    # Shortens the link to Unique elements
+    file_lid_regex = re.compile(r'(?<=lid=).*?(?=&elq)')
+    file_lids = file_lid_regex.findall(file_link)
+    file_lid = file_lids[0]
+
     # Moves file to correct image folder
     file_id = file_info['id']
     eloqua_move_file(file_id)
 
     print(f'{Fore.GREEN} › {Fore.WHITE}ELQ', end='', flush=True)
 
-    return file_link
+    return file_lid
 
 
 '''

@@ -403,7 +403,7 @@ def cert_constructor(country):
 
     # Upload all certificates to Eloqua
     upload_list = [['Source_Country', 'Email Address',
-                    'First Name', 'Last Name', 'Certificate Link']]
+                    'First Name', 'Last Name', 'Certificate ID']]
     for user in certified_users[1:]:
         print(f'\n   {Fore.YELLOW}› {Fore.WHITE}Adding '
               f'{Fore.WHITE}{user[2]} {user[3]} certificate to', end='')
