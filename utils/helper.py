@@ -198,7 +198,7 @@ def user_getter(user_id):
     user_dict = {
         'id': user['id'],
         'name': user['name'],
-        'mail': user['emailAddress'],
+        # 'mail': user['emailAddress'],
         'createdAt': datetime.utcfromtimestamp(
             int(user['createdAt'])).strftime('%Y-%m-%d %H:%M:%S')
     }
