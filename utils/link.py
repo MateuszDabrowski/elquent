@@ -172,6 +172,9 @@ def add_elqtrack(code):
         else:
             code = code.replace(link, (link[:-1] + '?elqTrack=true"'))
 
+    # Clean invalid tracking scripts
+    code = code.replace('"?elqTrack=true"', '""')
+
     # Swaps file storage links to unbranded SSL
     code = code.replace(
         'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
