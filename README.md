@@ -94,6 +94,15 @@ _ToDo:_
 
 ---
 
+### [ELQuent.report](utils/report.py)
+
+#### Module focused on reporting from Eloqua instance
+
+- Creates table with links to detailed reports for each of the queried e-mails
+- Creates report about links clicked in each of the queried e-mails » _Work in Progress_
+
+---
+
 ### [ELQuent.validator](utils/validator.py)
 
 #### Module focused on validating assets & campaigns
@@ -187,4 +196,4 @@ _ToDo:_
 
 Copyright (c) 2019 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.10.4_]
+[_Version: 1.10.5_]

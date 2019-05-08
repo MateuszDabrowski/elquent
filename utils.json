@@ -12,6 +12,6 @@
     "HU": ["clean_folders", "change_links", "build_mail"],
     "IT": ["clean_folders", "change_links", "build_mail"],
     "NL": ["clean_folders", "change_links", "build_mail"],
-    "PL": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen"],
+    "PL": ["clean_folders", "change_links", "build_mail", "page_gen", "campaign_gen", "report"],
     "SK": ["clean_folders", "change_links", "build_mail"]
 }

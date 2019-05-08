@@ -30,6 +30,7 @@ import utils.campaign as campaign
 import utils.webinar as webinar
 import utils.database as database
 import utils.export as export
+import utils.report as report
 import utils.validator as validator
 import utils.modifier as modifier
 import utils.admin as admin
@@ -265,6 +266,7 @@ def menu(choice=''):
         'modifier': (modifier.modifier_module, f'Modifier{Fore.WHITE}] Modify multiple assets at once'),
         'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar attendees & activity'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
+        'reporter': (report.report_module, f'Report{Fore.WHITE}] Creates reports on clicks in e-mails'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'admin': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
     }
