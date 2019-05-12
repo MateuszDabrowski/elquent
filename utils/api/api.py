@@ -1501,6 +1501,36 @@ def eloqua_get_user(user_id):
 
 '''
 =================================================================================
+                                Data API
+=================================================================================
+'''
+
+def eloqua_get_step_contacts(step_id, count=400, page=1):
+    '''
+    Requires step_id, and optionally count, pagination
+    Returns contacts staying on chosen step
+    '''
+
+    # Getting a correct view_id
+    view_id = naming[source_country]['id']['view_id']
+
+    # Builds the API request
+    payload = {
+        'count': count,  # Sets count of outcomes
+        'page': page  # Pagination of outcomes
+    }
+
+    # Creating a get call to Eloqua API
+    root = f'{eloqua_rest}data/contact/view/{view_id}/contacts/campaign/element/{step_id}'
+    response = api_request(root, params=payload)
+    contacts = response.json()
+    if contacts['total'] > count:
+        print(f'{Fore.GREEN}|', end='', flush=True)
+
+    return contacts
+
+'''
+=================================================================================
                                 Image Storage API
 =================================================================================
 '''

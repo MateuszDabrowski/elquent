@@ -284,12 +284,32 @@ def menu(choice=''):
         available_utils = {k: v for (k, v) in utils.items() if k in utils_list}
     util_names = list(available_utils.keys())
 
+    # Date format for last sync calculations
+    date_format = '%Y-%m-%d %H:%M'
+
+    # Validate Voucher App if old last sync
+    if SOURCE_COUNTRY == 'PL' and ELOQUA_USER.lower() in naming[SOURCE_COUNTRY]['local_admin']:
+        # Gets list of already uploaded voucher campaigns
+        validator.country_naming_setter(SOURCE_COUNTRY)
+        uploaded_voucher_shared_list = api.eloqua_asset_get(
+            naming[SOURCE_COUNTRY]['id']['voucher_campaigns'], 'sharedContent', depth='complete')
+        voucher_shared_txt = uploaded_voucher_shared_list['contentHtml']
+        if '&quot;' in voucher_shared_txt:
+            voucher_shared_txt = voucher_shared_txt.replace('&quot;', '"')
+        if voucher_shared_txt:
+            voucher_shared_dict = json.loads(voucher_shared_txt)
+        sync_date = datetime.datetime.strptime(
+            voucher_shared_dict['sync'], date_format)
+        current_date = datetime.datetime.today()
+        sync_delta = current_date - sync_date
+        if sync_delta.days >= 1:
+            validator.voucher_validation()
+
     # Gets date of last webinar sync
     if SOURCE_COUNTRY == 'PL' and 'webinar' in util_names:
         last_webinar_sync = api.eloqua_asset_get(
             naming[SOURCE_COUNTRY]['id']['webinar_sync'], 'sharedContent', depth='complete')
         last_webinar_sync = last_webinar_sync['contentHtml']
-        date_format = '%Y-%m-%d %H:%M'
         sync_date = datetime.datetime.strptime(last_webinar_sync, date_format)
         current_date = datetime.datetime.today()
         sync_delta = current_date - sync_date

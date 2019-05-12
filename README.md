@@ -108,6 +108,7 @@ _ToDo:_
 #### Module focused on validating assets & campaigns
 
 - Exports active multistep campaigns with member count, start and end dates
+- Validates whether Voucher Code App is working correctly on listed campaigns
 - Basic campaign validation (fields, assets, steps) » _Work in Progress_
 
 ---
@@ -174,6 +175,7 @@ _ToDo:_
 - Gets data model fields
 - Gets email groups
 - Gets asset dependencies
+- Gets canvas step contacts
 
 ---
 
@@ -196,4 +198,4 @@ _ToDo:_
 
 Copyright (c) 2019 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.10.5_]
+[_Version: 1.10.6_]
