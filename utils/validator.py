@@ -595,7 +595,8 @@ def voucher_validation_menu():
             f'\n{Fore.GREEN}ELQuent.validator Voucher Campaign Options:'
             f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}List{Fore.WHITE}] Show which campaigns are already in the checklist'
             f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Add{Fore.WHITE}] Adds new voucher campaign to the checklist'
-            f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Validate{Fore.WHITE}] Validates voucher campaign stored in the checklist'
+            f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Delete{Fore.WHITE}] Deletes voucher campaign from the checklist'
+            f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}Validate{Fore.WHITE}] Validates voucher campaign stored in the checklist'
             f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
         )
         print(f'{Fore.YELLOW}Enter number associated with chosen utility:', end='')
@@ -607,6 +608,8 @@ def voucher_validation_menu():
         elif choice == '2':
             voucher_list_update()
         elif choice == '3':
+            voucher_list_delete()
+        elif choice == '4':
             voucher_validation()
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
@@ -645,7 +648,7 @@ def voucher_list_print():
 
 def voucher_list_update():
     '''
-    Updates voucher campaign list
+    Adds voucher campaign to the list
     '''
 
     # Gets ID of campaign to be added to thje list
@@ -694,11 +697,11 @@ def voucher_list_update():
         # End if there is no step with default naming convention
         if not voucher_campaign_voucher_step:
             print(
-                f'\n{Fore.WHITE}» {Fore.RED}There is no App step called "Code Retriever 2.0 Action Service" on the canvas!')
+                f'\n{Fore.WHITE}» {ERROR}There is no App step called "Code Retriever 2.0 Action Service" on the canvas!')
             return False
         if not voucher_campaign_error_step:
             print(
-                f'\n{Fore.WHITE}» {Fore.YELLOW}There is no Wait step called "Voucher Error" on the canvas.')
+                f'\n{Fore.WHITE}» {WARNING}There is no Wait step called "Voucher Error" on the canvas.')
 
         old_voucher_shared_dict[voucher_campaign_id] = {
             'id': voucher_campaign_id,
@@ -722,6 +725,63 @@ def voucher_list_update():
 
         print(
             f'\n{SUCCESS}Campaign {Fore.YELLOW}{voucher_campaign_name}{Fore.WHITE} added to checklist!')
+
+        return True
+
+
+def voucher_list_delete():
+    '''
+    Deleted voucher campaign from the list
+    '''
+
+    # Gets ID of campaign to be added to thje list
+    while True:
+        print(
+            f'\n{Fore.YELLOW}Please enter ID of the campaign you want to delete from checklist:', end='')
+        campaign_id = input(' ')
+        if campaign_id.lower() == 'q':
+            return False
+        try:
+            int(campaign_id)
+        except (TypeError, ValueError):
+            print(f'{ERROR}Please enter numeric value!')
+            campaign_id = ''
+            continue
+        break
+
+    # Gets list of already uploaded voucher campaigns
+    uploaded_voucher_shared_list = api.eloqua_asset_get(
+        naming[source_country]['id']['voucher_campaigns'], 'sharedContent', depth='complete')
+    old_voucher_shared_txt = uploaded_voucher_shared_list['contentHtml']
+    if '&quot;' in old_voucher_shared_txt:
+        old_voucher_shared_txt = old_voucher_shared_txt.replace('&quot;', '"')
+    if old_voucher_shared_txt:
+        old_voucher_shared_dict = json.loads(old_voucher_shared_txt)
+    else:
+        old_voucher_shared_dict = {}
+
+    # Checks if the new ID is already in the list
+    if campaign_id not in old_voucher_shared_dict.keys():
+        print(f'\n{Fore.WHITE}» {Fore.RED}Entered campaign is not in the list!')
+        return False
+    else:
+        del old_voucher_shared_dict[campaign_id]
+
+        new_voucher_shared_txt = json.dumps(old_voucher_shared_dict)
+
+        # Build shared content data for updating the list of voucher campaigns
+        data = {
+            'id': uploaded_voucher_shared_list.get('id'),
+            'name': uploaded_voucher_shared_list.get('name'),
+            'contentHTML': new_voucher_shared_txt
+        }
+
+        # Updating list of voucher campaigns to shared content
+        api.eloqua_put_sharedcontent(
+            naming[source_country]['id']['voucher_campaigns'], data=data)
+
+        print(
+            f'\n{SUCCESS}Campaign ID {Fore.YELLOW}{campaign_id}{Fore.WHITE} deleted from checklist!')
 
         return True
 
@@ -755,6 +815,8 @@ def voucher_validation():
     for campaign in voucher_shared_dict.values():
         if isinstance(campaign, str):
             continue
+        print(f'{Fore.WHITE}» [ID: {Fore.YELLOW}{campaign["id"]}{Fore.WHITE}] '
+              f'{Fore.WHITE}{campaign["name"]}')
         step_contacts = api.eloqua_get_step_contacts(campaign['voucher_step'])
         step_entry = []
         if step_contacts['elements']:

@@ -266,7 +266,7 @@ def menu(choice=''):
         'modifier': (modifier.modifier_module, f'Modifier{Fore.WHITE}] Modify multiple assets at once'),
         'webinar': (webinar.webinar_module, f'Webinar{Fore.WHITE}] Upload Webinar attendees & activity'),
         'cert': (cert.cert_constructor, f'Certificate{Fore.WHITE}] Create certificates and upload with contacts'),
-        'reporter': (report.report_module, f'Report{Fore.WHITE}] Creates reports on clicks in e-mails'),
+        'report': (report.report_module, f'Report{Fore.WHITE}] Creates reports on clicks in e-mails'),
         'export': (export.export_module, f'Export{Fore.WHITE}] Export and save campaign or activity data'),
         'admin': (admin.admin_module, f'Admin{Fore.WHITE}] WKCORP flows')
     }
@@ -412,6 +412,8 @@ elif sys.argv[1] == 'validate':
     validator.validator_module(SOURCE_COUNTRY)
 elif sys.argv[1] == 'modify':
     modifier.modifier_module(SOURCE_COUNTRY)
+elif sys.argv[1] == 'report':
+    report.report_module()(SOURCE_COUNTRY)
 
 # Allows to cycle through options after first errand
 while True:

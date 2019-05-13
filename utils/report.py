@@ -176,52 +176,6 @@ def report_search_query():
 
 '''
 =================================================================================
-                                    Link Report
-=================================================================================
-'''
-
-
-def link_report():
-    '''
-    Creates report with the link clicks for chosen scope of e-mails
-    '''
-
-    # Gets confirmed search query from user
-    search_query, nameframe, report_start_date, report_end_date = report_search_query()
-
-    # Creates file to save outcomes
-    with open(file('outcome-csv', f'link-{nameframe}-{report_start_date}-{report_end_date}'), 'w', encoding='utf-8') as f:
-        fieldnames = ['Segment', 'Link',
-                      'Clickthroughs', 'Name', 'ID', 'CreatedAt']
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-
-    # To store e-mail data for report building
-    email_data = {}
-
-    page = 1
-    print(f'{Fore.WHITE}[{Fore.YELLOW}SYNC{Fore.WHITE}] ', end='', flush=True)
-    while True:
-        emails = api.eloqua_get_assets(
-            search_query, asset_type='email', page=page, depth='minimal')
-
-        # Creates list with data from API
-        for email in emails['elements']:
-            email_info = {
-                'Name': email['name'],
-                'ID': int(email['id']),
-                'CreatedAt': datetime.utcfromtimestamp(
-                    int(email['createdAt'])).strftime('%Y-%m-%d %H:%M:%S')
-            }
-
-            # Gets links clicked in that e-mail
-            # TODO
-
-    return
-
-
-'''
-=================================================================================
                                     Full Report
 =================================================================================
 '''
@@ -294,8 +248,7 @@ def report_module(country):
     # Report type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.report Utilites:'
-        # f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Links{Fore.WHITE}] Exports report on links clicked in e-mails'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Full{Fore.WHITE}] Exports full report URLs for e-mails'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Full{Fore.WHITE}] Exports full report URLs for e-mails'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -303,10 +256,7 @@ def report_module(country):
         choice = input(' ')
         if choice.lower() == 'q':
             break
-        # elif choice == '1':
-        #     link_report()
-        #     break
-        elif choice == '2':
+        elif choice == '1':
             full_report()
             break
         else:
