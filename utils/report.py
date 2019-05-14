@@ -110,7 +110,7 @@ def report_timeframe():
     # Get start date
     while True:
         print(
-            f'\n{Fore.WHITE}[{Fore.YELLOW}START{Fore.WHITE}] Enter export start date [DD-MM-YYYY] ', end='')
+            f'\n{Fore.WHITE}[{Fore.YELLOW}START{Fore.WHITE}] Enter export start date [DD-MM-YYYY]:', end='')
         report_start_date = input(' ')
         if valid_date.findall(report_start_date):
             report_start_epoch = int(
@@ -123,7 +123,7 @@ def report_timeframe():
     # Get end date
     while True:
         print(
-            f'{Fore.WHITE}[{Fore.YELLOW}END{Fore.WHITE}] Enter export end date [DD-MM-YYYY]', end='')
+            f'{Fore.WHITE}[{Fore.YELLOW}END{Fore.WHITE}] Enter export end date [DD-MM-YYYY]:', end='')
         report_end_date = input(' ')
         if valid_date.findall(report_end_date):
             report_end_epoch = int(
@@ -141,7 +141,7 @@ def report_nameframe():
     Returns nameframe for reporting scope
     '''
     print(
-        f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] Enter part of the e-mail name to report', end='')
+        f'\n{Fore.WHITE}[{Fore.YELLOW}NAME{Fore.WHITE}] Enter part of the e-mail name to report:', end='')
     report_asset_name = input(' ')
 
     return report_asset_name
@@ -216,7 +216,7 @@ def full_report():
 
             # Append batch of data to file
             with open(file('outcome-csv', f'full-{nameframe}-{report_start_date}-{report_end_date}'), 'a', encoding='utf-8') as f:
-                fieldnames = ['Name', 'ID', 'CreatedAt', 'Link']
+                fieldnames = ['Name', 'ID', 'CreatedAt', 'Report']
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerow(email_info)
 
@@ -226,6 +226,9 @@ def full_report():
         # Stops iteration when full list is obtained
         if emails['total'] - page * 500 < 0:
             break
+
+    print(f'\n\n{SUCCESS}E-mail Report for {Fore.YELLOW}{nameframe} {Fore.WHITE}({Fore.YELLOW}{report_start_date}'
+          f'{Fore.WHITE} - {Fore.YELLOW}{report_end_date}{Fore.WHITE}) saved to Outcomes folder')
 
     return
 
