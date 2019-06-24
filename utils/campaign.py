@@ -591,13 +591,24 @@ def simple_campaign():
     Saves html and mjml codes of e-mail as backup to outcome folder
     '''
 
-    # Checks if campaign is built with externally generated HTML
+    # Checks if campaign is built with externally generated alert HTML
     alert_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
-    generated_mail = True if alert_name.startswith('RET_LA') else False
+    alert_mail = True if alert_name.startswith('RET_LA') else False
+
+    # Checks if campaign is built with externally generated newsletter HTML
+    newsletter_name = '_'.join(
+        [campaign_name[2], campaign_name[3].split('-')[0]])
+    newsletter_mail = True if (
+        campaign_name[1] == 'MSG' and campaign_name[2] == 'NSL') else False
 
     # Creates main e-mail for simple campaign
-    if generated_mail:
-        mail_html = mail.generator_constructor(source_country)
+    if alert_mail:
+        mail_html = mail.alert_constructor(source_country)
+        mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
+        if not mail_id:
+            return False
+    elif newsletter_mail:
+        mail_html = mail.newsletter_constructor(source_country)
         mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
         if not mail_id:
             return False
@@ -623,15 +634,19 @@ def simple_campaign():
         # Change to string for easy replacing
         campaign_string = json.dumps(campaign_json)
         campaign_string = campaign_string.replace('MAIL_ID', mail_id)
-        if generated_mail:
-            # Create name structure for getting data from json
-            generated_type = campaign_name[2] + \
-                '_' + campaign_name[3].split('-')[0]
+        if alert_mail:
             # Capture specific folder
             folder_id = naming[source_country]['id']['campaign'].get(
                 alert_name)
             # Capture specific segment
-            segment_id = naming[source_country]['mail']['by_name'][generated_type]['segmentId']
+            segment_id = naming[source_country]['mail']['by_name'][alert_name]['segmentId']
+            campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
+        if newsletter_mail:
+            # Capture specific folder
+            folder_id = naming[source_country]['id']['campaign'].get(
+                newsletter_name)
+            # Capture specific segment
+            segment_id = naming[source_country]['mail']['by_name'][newsletter_name]['segmentId']
             campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
         else:
             # Capture generic folder for campaign type

@@ -105,6 +105,7 @@ def file(file_path, file_name='', folder_name=''):
     file_paths = {
         'naming': find_data_file('naming.json', directory='api'),
         'incomes': find_data_file('incomes', directory='main'),
+        'newsletter': find_data_file(f'WK{source_country}_EML_newsletter.txt', directory='templates'),
         'alert-renewal1': find_data_file(f'WK{source_country}_EML_alert-renewal1.txt', directory='templates'),
         'alert-renewal2': find_data_file(f'WK{source_country}_EML_alert-renewal2.txt', directory='templates'),
         'package': find_data_file(f'{file_name}'),
@@ -307,7 +308,7 @@ def output_method(html_code='', mjml_code=''):
 '''
 
 
-def generator_constructor(country):
+def alert_constructor(country):
     '''
     Gets, fixes and uploads alert mail code to Eloqua
     Returns eloqua mail id
@@ -414,6 +415,72 @@ def generator_constructor(country):
         'http://images.go.wolterskluwer.com', 'https://img06.en25.com')
 
     with open(file('mail_html', file_name=folder_name), 'w', encoding='utf-8') as f:
+        f.write(mail_html)
+
+    return mail_html
+
+
+'''
+=================================================================================
+                                Newsletter Mail Helper
+=================================================================================
+'''
+
+
+def newsletter_constructor(country):
+    '''
+    Gets, fixes and uploads newsletter mail code to Eloqua
+    Returns eloqua mail id
+    '''
+
+    # Create global source_country and load json file with naming convention
+    country_naming_setter(country)
+
+    '''
+    =================================================== Get HTML
+    '''
+
+    # Gets newsletter body
+    while True:
+        print(
+            f'\n{Fore.YELLOW}»{Fore.WHITE} Copy {Fore.YELLOW}Newsletter HTML{Fore.WHITE} and click [Enter]')
+        input()
+        newsletter_html = pyperclip.paste()
+        if newsletter_html.startswith('<table id="table"'):
+            print(f'  {SUCCESS}Code copied from clipboard')
+            break
+        print(
+            f'  {ERROR}Invalid HTML. Copy valid code and click [Enter]', end='')
+        input(' ')
+
+    '''
+    =================================================== Builds the e-mail from template
+    '''
+
+    # Gets newsletter template & puts the modified body in it
+    with open(file('newsletter'), 'r', encoding='utf-8') as f:
+        newsletter_template = f.read()
+    mail_html = newsletter_template.replace(
+        '<!-- BODY TABLE -->', newsletter_html)
+
+    '''
+    =================================================== Modify package
+    '''
+
+    # Changes dynamic/shared content placeholder into real eloqua span element
+    regex_elq_content = re.compile(r'<!-- ([\d]+?)-(\w\w) -->', re.UNICODE)
+    content_id = regex_elq_content.findall(mail_html)[0][0]
+    content_type = regex_elq_content.findall(mail_html)[0][1]
+    content_type = 'DynamicContent' if content_type.lower() == 'dc' else 'Section'
+    content_span = f'<span elqid="{content_id}" elqtype="{content_type}" class="remove-absolute" style="display: block"></span>'
+    mail_html = regex_elq_content.sub(content_span, mail_html)
+
+    # Clean HTML from comments
+    regex_comment = re.compile(r'<!-- .*? -->', re.UNICODE)
+    mail_html = regex_comment.sub('', mail_html)
+
+    # Save to Outcomes folder
+    with open(file('mail_html', file_name='newsletter'), 'w', encoding='utf-8') as f:
         f.write(mail_html)
 
     return mail_html
