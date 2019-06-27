@@ -16,7 +16,7 @@ import sys
 import json
 from datetime import datetime
 import pyperclip
-from colorama import Fore, init
+from colorama import Fore, Style, init
 
 # ELQuent imports
 import utils.api.api as api
@@ -32,6 +32,8 @@ source_country = None
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
 WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
+YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
+NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
 
 
 def country_naming_setter(country):
@@ -104,15 +106,30 @@ def campaign_name_getter():
         if not campaign_name:
             campaign_name = pyperclip.paste()
         campaign_name = campaign_name.split('_')
-        if len(campaign_name) != 5:
-            print(f'{ERROR}Expected 5 name elements, found {len(campaign_name)}')
-        elif campaign_name[0][:2] != 'WK':
+
+        # Structure check & vsp selector
+        if len(campaign_name) == 5 and '/' not in '_'.join(campaign_name):
+            print(f'\n{WARNING}This campaign name is build using old naming convention.',
+                  f'\n{Fore.WHITE}» {Fore.RED}Are you sure you want to continue? '
+                  f'{Fore.WHITE}({YES}/{NO}):', end=' ')
+            name_decision = input('')
+            if name_decision.lower() != 'y':
+                continue
+            vsp_element = campaign_name[4]
+        elif len(campaign_name) == 6 and '/' in '_'.join(campaign_name):
+            vsp_element = campaign_name[4].split('/')[0]
+        else:
+            print(f'{ERROR}Expected 6 name elements, found {len(campaign_name)}')
+            continue
+
+        # Value check
+        if campaign_name[0][:2] != 'WK':
             print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
         elif campaign_name[1] not in naming[source_country]['segment']:
             print(f'{ERROR}"{campaign_name[1]}" is not existing segment name')
         elif campaign_name[2] not in naming['campaign']:
             print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
-        elif campaign_name[4] not in naming['vsp']:
+        elif vsp_element not in naming['vsp']:
             print(f'{ERROR}"{campaign_name[4]}" is not existing VSP')
         else:
             break

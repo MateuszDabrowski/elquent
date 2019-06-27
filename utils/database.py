@@ -31,6 +31,7 @@ source_country = None
 
 # Predefined messege elements
 ERROR = f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}'
+WARNING = f'{Fore.WHITE}[{Fore.YELLOW}WARNING{Fore.WHITE}] '
 SUCCESS = f'{Fore.WHITE}[{Fore.GREEN}SUCCESS{Fore.WHITE}] '
 YES = f'{Style.BRIGHT}{Fore.GREEN}y{Fore.WHITE}{Style.NORMAL}'
 NO = f'{Style.BRIGHT}{Fore.RED}n{Fore.WHITE}{Style.NORMAL}'
@@ -168,13 +169,13 @@ def get_contacts():
 def upload_to_eloqua(contacts):
     '''
     Uploads contact list to Eloqua as a shared list
-    Returns campaign name
+    Returns sharedlist name
     '''
 
     # Gets campaign name from user
     print(
         f'\n{Fore.WHITE}» [{Fore.YELLOW}NAME{Fore.WHITE}] Write or copypaste name for the shared list and click [Enter]')
-    campaign_name = api.eloqua_asset_name()
+    sharedlist_name = api.eloqua_asset_name()
 
     # Cleans contact list from non-email elements
     contacts = [x for x in contacts if '@' in x and '.' in x]
@@ -182,21 +183,21 @@ def upload_to_eloqua(contacts):
     uploading = ''
     while uploading.lower() != 'y' and uploading.lower() != 'n':
         # Prepares dict for import
-        contacts_to_upload = {campaign_name: contacts}
+        contacts_to_upload = {sharedlist_name: contacts}
         # Confirms if everything is correct
         print(
             f'\n{Fore.YELLOW}» {Fore.WHITE}Import {Fore.YELLOW}{len(contacts)}{Fore.WHITE} contacts to',
-            f'{Fore.YELLOW}{campaign_name}{Fore.WHITE} shared list?',
+            f'{Fore.YELLOW}{sharedlist_name}{Fore.WHITE} shared list?',
             f'\n{Fore.WHITE}({YES}/{NO}',
             f'{Fore.WHITE}or {Fore.YELLOW}write{Fore.WHITE} new ending to change list name):', end='')
         uploading = input(' ')
         if len(uploading) > 1:
-            campaign_name = '_'.join(
-                (campaign_name.split('_'))[:-1] + [uploading])
+            sharedlist_name = '_'.join(
+                (sharedlist_name.split('_'))[:-1] + [uploading])
     if uploading.lower() == 'y':
         api.upload_contacts(contacts_to_upload, list_type='upload')
 
-    return campaign_name
+    return sharedlist_name
 
 
 '''

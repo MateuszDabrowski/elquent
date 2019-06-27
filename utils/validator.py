@@ -274,7 +274,11 @@ def campaign_data_getter():
     global campaign_name
     global campaign_name_base
     campaign_name = helper.campaign_name_getter()
-    campaign_name_base = '_'.join(campaign_name[:-1])
+    if '/' in campaign_name[4]:
+        vsp_element = campaign_name[4].split('/')[0]
+        campaign_name_base = '_'.join(campaign_name[:4]) + f'_{vsp_element}'
+    else:
+        campaign_name_base = '_'.join(campaign_name[:-1])
     campaign_name = '_'.join(campaign_name)
 
     # Creates list to group all errors and warnings ['Name','ID','Value','ErrorDescription']
@@ -321,8 +325,7 @@ def campaign_data_getter():
 
     # Building search query to find assets connected with campaign
     global search_query
-    search_query = campaign_name.split('_')
-    search_query = ('_').join(search_query[0:-1]) + '*'
+    search_query = campaign_name_base + '*'
 
     # Create dict containing full data on all assets conencted with campaign
     all_campaign_assets = {}

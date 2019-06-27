@@ -320,8 +320,12 @@ def campaign_update_form(form_html, form_id, form_json, asset_mail_id, ty_page_i
             phoneoptin_field_id = field['id']
 
     # Gets PSP Cost from name
-    cost_code = campaign_name[3].split('-')
-    cost_code = '-'.join(cost_code[-2:])
+    if '/' in campaign_name[4]:
+        psp_element = campaign_name[4].split('/')[1]
+        cost_code = f'{psp_element}_{campaign_name[5]}'
+    else:
+        cost_code = campaign_name[3].split('-')
+        cost_code = '-'.join(cost_code[-2:])
 
     # Gets lead-status for product
     while True:
@@ -623,10 +627,14 @@ def simple_campaign():
 
     # Gets campaign code out of the campaign name
     campaign_code = []
-    for part in campaign_name[3].split('-'):
-        if part.startswith(tuple(naming[source_country]['psp'])):
-            campaign_code.append(part)
-    campaign_code = '-'.join(campaign_code)
+    if '/' in campaign_name[4]:
+        psp_element = campaign_name[4].split('/')[1]
+        campaign_code = f'{psp_element}_{campaign_name[5]}'
+    else:
+        for part in campaign_name[3].split('-'):
+            if part.startswith(tuple(naming[source_country]['psp'])):
+                campaign_code.append(part)
+        campaign_code = '_'.join(campaign_code)
 
     # Loads json data for campaign canvas creation and fills it with data
     with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
@@ -660,7 +668,10 @@ def simple_campaign():
         campaign_json['folderId'] = folder_id
         campaign_json['region'] = campaign_name[0]
         campaign_json['campaignType'] = campaign_name[2]
-        campaign_json['product'] = campaign_name[-1]
+        if '/' in campaign_name[4]:
+            campaign_json['product'] = campaign_name[4].split('/')[0]
+        else:
+            campaign_json['product'] = campaign_name[-1]
         campaign_json['fieldValues'][0]['value'] = campaign_code
 
     # Creates campaign with given data
@@ -705,10 +716,14 @@ def basic_campaign():
 
     # Gets campaign code out of the campaign name
     campaign_code = []
-    for part in campaign_name[3].split('-'):
-        if part.startswith(tuple(naming[source_country]['psp'])):
-            campaign_code.append(part)
-    campaign_code = '-'.join(campaign_code)
+    if '/' in campaign_name[4]:
+        psp_element = campaign_name[4].split('/')[1]
+        campaign_code = f'{psp_element}_{campaign_name[5]}'
+    else:
+        for part in campaign_name[3].split('-'):
+            if part.startswith(tuple(naming[source_country]['psp'])):
+                campaign_code.append(part)
+        campaign_code = '_'.join(campaign_code)
 
     # Loads json data for campaign canvas creation and fills it with data
     with open(file('basic-campaign'), 'r', encoding='utf-8') as f:
@@ -724,7 +739,10 @@ def basic_campaign():
         campaign_json['folderId'] = folder_id
         campaign_json['region'] = campaign_name[0]
         campaign_json['campaignType'] = campaign_name[2]
-        campaign_json['product'] = campaign_name[-1]
+        if '/' in campaign_name[4]:
+            campaign_json['product'] = campaign_name[4].split('/')[0]
+        else:
+            campaign_json['product'] = campaign_name[-1]
         campaign_json['fieldValues'][0]['value'] = campaign_code
 
     # Creates campaign with given data
@@ -783,7 +801,10 @@ def content_campaign():
             campaign_json['folderId'] = folder_id
             campaign_json['region'] = campaign_name[0]
             campaign_json['campaignType'] = campaign_name[2]
-            campaign_json['product'] = campaign_name[-1]
+            if '/' in campaign_name[4]:
+                campaign_json['product'] = campaign_name[4].split('/')[0]
+            else:
+                campaign_json['product'] = campaign_name[-1]
             campaign_json['fieldValues'][0]['value'] = campaign_code
 
         return campaign_json
@@ -823,7 +844,10 @@ def content_campaign():
             campaign_json['folderId'] = folder_id
             campaign_json['region'] = campaign_name[0]
             campaign_json['campaignType'] = campaign_name[2]
-            campaign_json['product'] = campaign_name[-1]
+            if '/' in campaign_name[4]:
+                campaign_json['product'] = campaign_name[4].split('/')[0]
+            else:
+                campaign_json['product'] = campaign_name[-1]
             campaign_json['fieldValues'][0]['value'] = campaign_code
 
         return campaign_json
@@ -861,7 +885,10 @@ def content_campaign():
         campaign_json['folderId'] = folder_id
         campaign_json['region'] = campaign_name[0]
         campaign_json['campaignType'] = campaign_name[2]
-        campaign_json['product'] = campaign_name[-1]
+        if '/' in campaign_name[4]:
+            campaign_json['product'] = campaign_name[4].split('/')[0]
+        else:
+            campaign_json['product'] = campaign_name[-1]
         campaign_json['fieldValues'][0]['value'] = campaign_code
 
         return campaign_json
@@ -973,10 +1000,14 @@ def content_campaign():
 
     # Gets campaign code out of the campaign name
     campaign_code = []
-    for part in campaign_name[3].split('-'):
-        if part.startswith(tuple(naming[source_country]['psp'])):
-            campaign_code.append(part)
-    campaign_code = '-'.join(campaign_code)
+    if '/' in campaign_name[4]:
+        psp_element = campaign_name[4].split('/')[1]
+        campaign_code = f'{psp_element}_{campaign_name[5]}'
+    else:
+        for part in campaign_name[3].split('-'):
+            if part.startswith(tuple(naming[source_country]['psp'])):
+                campaign_code.append(part)
+        campaign_code = '_'.join(campaign_code)
 
     # Loads json data for campaign canvas creation and fills it with data
     if converter_choice in ['E-book', 'Webinar Recording']:

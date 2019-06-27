@@ -275,6 +275,9 @@ def eloqua_asset_name():
         if len(name_check) != 5:
             print(
                 f'{ERROR}Expected 5 name elements, found {len(name_check)}')
+        elif '/' in name:
+            print(
+                f'{ERROR}"/PSP" is expected only in the camapign name')
         elif name_check[0][:2] != 'WK':
             print(
                 f'{ERROR}"{name_check[0]}" is not existing country code')
