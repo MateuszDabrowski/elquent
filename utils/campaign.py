@@ -649,7 +649,7 @@ def simple_campaign():
             # Capture specific segment
             segment_id = naming[source_country]['mail']['by_name'][alert_name]['segmentId']
             campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
-        if newsletter_mail:
+        elif newsletter_mail:
             # Capture specific folder
             folder_id = naming[source_country]['id']['campaign'].get(
                 newsletter_name)
