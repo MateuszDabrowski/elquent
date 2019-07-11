@@ -153,7 +153,7 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
+def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', reminder=True):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
@@ -168,8 +168,12 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
     elif not mail_html and reminder:
         return False, False
 
+    # if there was not iterated campaign name provided, keep standard campaign name
+    if not camp_name:
+        camp_name = campaign_name
+
     # Create e-mail
-    mail_name = ('_'.join(campaign_name[0:4]) + '_EML')
+    mail_name = ('_'.join(camp_name[0:4]) + '_EML')
     mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     if not reminder:
@@ -199,7 +203,7 @@ def campaign_first_mail(main_lp_url='', mail_html='', reminder=True):
         reminder_html = mail_html
 
     # Create e-mail reminder
-    reminder_name = ('_'.join(campaign_name[0:4]) + '_REM-EML')
+    reminder_name = ('_'.join(camp_name[0:4]) + '_REM-EML')
     reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
 
     return (mail_id, reminder_id)
@@ -595,87 +599,115 @@ def simple_campaign():
     Saves html and mjml codes of e-mail as backup to outcome folder
     '''
 
+    # Get short part of campaign_name to differentiate type
+    diff_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
+
     # Checks if campaign is built with externally generated alert HTML
-    alert_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
-    alert_mail = True if alert_name.startswith('RET_LA') else False
+    alert_mail = True if diff_name.startswith('RET_LA') else False
 
     # Checks if campaign is built with externally generated newsletter HTML
-    newsletter_name = '_'.join(
-        [campaign_name[2], campaign_name[3].split('-')[0]])
     newsletter_mail = True if (
         campaign_name[1] == 'MSG' and campaign_name[2] == 'NSL') else False
 
-    # Creates main e-mail for simple campaign
+    # Sets iterations counter based on data from naming.json
+    if diff_name in naming[source_country]['mail']['multi_campaigns'].keys():
+        iterations = int(naming[source_country]['mail']['multi_campaigns'][diff_name])
+    else:
+        iterations = 1
+
+    # Gets main e-mail HTML for simple campaign
     if alert_mail:
         mail_html = mail.alert_constructor(source_country)
-        mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
-        if not mail_id:
-            return False
     elif newsletter_mail:
         mail_html = mail.newsletter_constructor(source_country)
-        mail_id = campaign_first_mail(mail_html=mail_html, reminder=False)
-        if not mail_id:
-            return False
-    else:
-        mail_id = campaign_first_mail(reminder=False)
-        if not mail_id:
-            return False
 
-    '''
-    =================================================== Create Campaign
-    '''
+    # Creates amount of campaigns as per iterations
+    for i in range(iterations):
 
-    # Gets campaign code out of the campaign name
-    campaign_code = []
-    if '/' in campaign_name[4]:
-        psp_element = campaign_name[4].split('/')[1]
-        campaign_code = f'{psp_element}_{campaign_name[5]}'
-    else:
-        for part in campaign_name[3].split('-'):
-            if part.startswith(tuple(naming[source_country]['psp'])):
-                campaign_code.append(part)
-        campaign_code = '_'.join(campaign_code)
+        # Create specific name if multiple iterations
+        if iterations > 1:
+            custom_name = campaign_name[3].split('-')
+            custom_name = custom_name[:1] + [str(i+1)] + custom_name[1:]
+            custom_name = '-'.join(custom_name)
+            iter_camp_name = campaign_name[:3] + \
+                [custom_name] + campaign_name[4:]
+        else:
+            iter_camp_name = campaign_name
 
-    # Loads json data for campaign canvas creation and fills it with data
-    with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
-        campaign_json = json.load(f)
-        # Change to string for easy replacing
-        campaign_string = json.dumps(campaign_json)
-        campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+        # Creates main e-mail for simple campaign
         if alert_mail:
-            # Capture specific folder
-            folder_id = naming[source_country]['id']['campaign'].get(
-                alert_name)
-            # Capture specific segment
-            segment_id = naming[source_country]['mail']['by_name'][alert_name]['segmentId']
-            campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
+            mail_id = campaign_first_mail(
+                mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
+            if not mail_id:
+                return False
         elif newsletter_mail:
-            # Capture specific folder
-            folder_id = naming[source_country]['id']['campaign'].get(
-                newsletter_name)
-            # Capture specific segment
-            segment_id = naming[source_country]['mail']['by_name'][newsletter_name]['segmentId']
-            campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
+            mail_id = campaign_first_mail(
+                mail_html=mail_html, camp_name=iter_camp_name,  reminder=False)
+            if not mail_id:
+                return False
         else:
-            # Capture generic folder for campaign type
-            folder_id = naming[source_country]['id']['campaign'].get(
-                campaign_name[1])
-            # Insert test segment
-            campaign_string = campaign_string.replace('SEGMENT_ID', '466')
-        # Change back to json for API call
-        campaign_json = json.loads(campaign_string)
-        campaign_json['name'] = '_'.join(campaign_name)
-        campaign_json['folderId'] = folder_id
-        campaign_json['region'] = campaign_name[0]
-        campaign_json['campaignType'] = campaign_name[2]
-        if '/' in campaign_name[4]:
-            campaign_json['product'] = campaign_name[4].split('/')[0]
-        else:
-            campaign_json['product'] = campaign_name[-1]
-        campaign_json['fieldValues'][0]['value'] = campaign_code
+            mail_id = campaign_first_mail(
+                camp_name=iter_camp_name, reminder=False)
+            if not mail_id:
+                return False
 
-    # Creates campaign with given data
-    api.eloqua_create_campaign(campaign_name, campaign_json)
+        '''
+        =================================================== Create Campaign
+        '''
+
+        # Gets campaign code out of the campaign name
+        campaign_code = []
+        if '/' in iter_camp_name[4]:
+            psp_element = iter_camp_name[4].split('/')[1]
+            campaign_code = f'{psp_element}_{iter_camp_name[5]}'
+        else:
+            for part in iter_camp_name[3].split('-'):
+                if part.startswith(tuple(naming[source_country]['psp'])):
+                    campaign_code.append(part)
+            campaign_code = '_'.join(campaign_code)
+
+        # Loads json data for campaign canvas creation and fills it with data
+        with open(file('simple-campaign'), 'r', encoding='utf-8') as f:
+            campaign_json = json.load(f)
+            # Change to string for easy replacing
+            campaign_string = json.dumps(campaign_json)
+            campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+            if alert_mail:
+                # Capture specific folder
+                folder_id = naming[source_country]['id']['campaign'].get(
+                    diff_name)
+                # Capture specific segment
+                segment_id = naming[source_country]['mail']['by_name'][diff_name]['segmentId'][i]
+                campaign_string = campaign_string.replace(
+                    'SEGMENT_ID', segment_id)
+            elif newsletter_mail:
+                # Capture specific folder
+                folder_id = naming[source_country]['id']['campaign'].get(
+                    diff_name)
+                # Capture specific segment
+                segment_id = naming[source_country]['mail']['by_name'][diff_name]['segmentId'][i]
+                campaign_string = campaign_string.replace(
+                    'SEGMENT_ID', segment_id)
+            else:
+                # Capture generic folder for campaign type
+                folder_id = naming[source_country]['id']['campaign'].get(
+                    iter_camp_name[1])
+                # Insert test segment
+                campaign_string = campaign_string.replace('SEGMENT_ID', '466')
+            # Change back to json for API call
+            campaign_json = json.loads(campaign_string)
+            campaign_json['name'] = '_'.join(iter_camp_name)
+            campaign_json['folderId'] = folder_id
+            campaign_json['region'] = iter_camp_name[0]
+            campaign_json['campaignType'] = iter_camp_name[2]
+            if '/' in iter_camp_name[4]:
+                campaign_json['product'] = iter_camp_name[4].split('/')[0]
+            else:
+                campaign_json['product'] = iter_camp_name[-1]
+            campaign_json['fieldValues'][0]['value'] = campaign_code
+
+        # Creates campaign with given data
+        api.eloqua_create_campaign(iter_camp_name, campaign_json)
 
     '''
     =================================================== Finished :)
