@@ -122,6 +122,10 @@ def campaign_name_getter():
             print(f'{ERROR}Expected 6 name elements, found {len(campaign_name)}')
             continue
 
+        # Get short part of campaign_name to differentiate type
+        diff_name = '_'.join(
+            [campaign_name[2], campaign_name[3].split('-')[0]])
+
         # Value check
         if campaign_name[0][:2] != 'WK':
             print(f'{ERROR}"{campaign_name[0]}" is not existing country code')
@@ -131,6 +135,11 @@ def campaign_name_getter():
             print(f'{ERROR}"{campaign_name[2]}" is not existing campaign type')
         elif vsp_element not in naming['vsp']:
             print(f'{ERROR}"{campaign_name[4]}" is not existing VSP')
+        elif diff_name.startswith('RET_LA') or (campaign_name[1] == 'MSG' and campaign_name[2] == 'NSL'):
+            if diff_name in naming[source_country]['mail']['by_name'].keys():
+                break
+            else:
+                print(f'{ERROR}"{diff_name}" is not correct campaign type')
         else:
             break
 

@@ -156,8 +156,7 @@ def new_version():
     current_main_version = ('').join(current_version[0].split('.')[:2])
     available_main_version = ('').join(available_version[0].split('.')[:2])
     if current_main_version < available_main_version:
-        print(
-            f'{Fore.WHITE}[{Fore.RED}ERROR{Fore.WHITE}] {Fore.YELLOW}Update ELQuent to newer version')
+        print(f'{ERROR}Update ELQuent to newer version')
         input('')
         raise SystemExit
 
