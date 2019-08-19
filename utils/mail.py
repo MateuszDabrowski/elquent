@@ -407,6 +407,18 @@ def alert_constructor(country):
         mail_html = mail_html.replace(
             '<!-- Naglowek END -->', alert_renewal_content)
 
+    # Adds personalized lead content to LEX Alert
+    if '<LEAD>' in mail_html:
+        while True:
+            print(
+                f'\n{Fore.WHITE}[{Fore.YELLOW}LEAD{Fore.WHITE}] » Write or copypaste lead text for personalized header:')
+            lead_text = input(' ')
+            if not lead_text:
+                lead_text = pyperclip.paste()
+            if lead_text:
+                break
+        mail_html = mail_html.replace('<LEAD>', lead_text)
+
     # Beautify arrow links
     mail_html = mail_html.replace('>>', '»')
 
