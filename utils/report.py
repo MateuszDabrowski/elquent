@@ -183,7 +183,7 @@ def report_search_query():
 
 def full_report():
     '''
-    Crates report with links to full Eloqua report for each e-mail in chosen scope
+    Crates list with links to  Eloqua report for each e-mail in chosen scope
     '''
 
     # Gets confirmed search query from user
@@ -251,7 +251,7 @@ def report_module(country):
     # Report type chooser
     print(
         f'\n{Fore.GREEN}ELQuent.report Utilites:'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Full{Fore.WHITE}] Exports full report URLs for e-mails'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Full{Fore.WHITE}] Exports links to e-mails reports'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:

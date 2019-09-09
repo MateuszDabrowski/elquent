@@ -607,7 +607,8 @@ def eloqua_create_webinar_activity(attendees, activities):
     # Upload contacts to shared list for correct CLS
     print(f'\n{Fore.YELLOW}» Uploading attendees')
     list_id = naming[source_country]['id']['activity_shared_list']
-    contact_uri = eloqua_import_contact_definition('WKPL_ELQuent_Webinar-attendees-upload', list_id)
+    contact_uri = eloqua_import_contact_definition(
+        'WKPL_ELQuent_Webinar-attendees-upload', list_id)
     eloqua_import_contacts(attendees, contact_uri)
     contact_status = eloqua_post_sync(contact_uri)
     if contact_status == 'success':
@@ -1336,6 +1337,7 @@ def eloqua_create_email(name, code):
 
     # Cleans technical comments
     code = code.replace('<!--pre-start-->', '').replace('<!--pre-end-->', '')
+    code = code.replace('<br>', '<br/>')
 
     # Gets required data for the API call
     data = eloqua_fill_mail_params(name)
@@ -1386,7 +1388,8 @@ def eloqua_update_email(email_id, code):
     '''
     # Gets current data of e-mail to update
     old_data = eloqua_asset_get(email_id, asset_type='email', depth='complete')
-    code = code.replace('"', '\"')
+    code = code.replace('"', '\"').replace('<br>', '<br/>')
+
     data = {
         'type': 'Email',
         'isTracked': 'true',
@@ -1508,6 +1511,7 @@ def eloqua_get_user(user_id):
 =================================================================================
 '''
 
+
 def eloqua_get_step_contacts(step_id, count=400, page=1):
     '''
     Requires step_id, and optionally count, pagination
@@ -1531,6 +1535,7 @@ def eloqua_get_step_contacts(step_id, count=400, page=1):
         print(f'{Fore.GREEN}|', end='', flush=True)
 
     return contacts
+
 
 '''
 =================================================================================

@@ -642,7 +642,7 @@ def simple_campaign():
                 return False
         elif newsletter_mail:
             mail_id = campaign_first_mail(
-                mail_html=mail_html, camp_name=iter_camp_name,  reminder=False)
+                mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
             if not mail_id:
                 return False
         else:

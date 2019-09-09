@@ -24,6 +24,7 @@ from colorama import Fore, Style, init
 # ELQuent imports
 import utils.mail as mail
 import utils.link as link
+import utils.minifier as minifier
 import utils.page as page
 import utils.cert as cert
 import utils.campaign as campaign
@@ -257,6 +258,7 @@ def menu(choice=''):
     utils = {
         'clean_folders': (clean_folders, f'Folder{Fore.WHITE}] Clean files in Income/Outcome folders'),
         'change_links': (link.link_module, f'Link{Fore.WHITE}] Change utm_track and elqTrack codes in e-mail links'),
+        'minify_code': (minifier.minifier_module, f'Minifier{Fore.WHITE}] Minify e-mail HTML code'),
         'build_mail': (mail.mail_constructor, f'Mail{Fore.WHITE}] Build e-mail from package in Incomes folder'),
         'page_gen': (page.page_gen, f'Page{Fore.WHITE}] Swap or Add Form to a single Landing Page'),
         'campaign_gen': (campaign.campaign_module, f'Campaign{Fore.WHITE}] Build various Eloqua campaigns'),

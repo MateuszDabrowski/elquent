@@ -198,4 +198,4 @@ _ToDo:_
 
 Copyright (c) 2019 Mateusz Dąbrowski [MIT License](LICENSE)
 
-[_Version: 1.12.2_]
+[_Version: 1.12.3_]
