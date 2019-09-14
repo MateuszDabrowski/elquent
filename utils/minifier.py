@@ -161,16 +161,19 @@ def email_minifier(code):
     '''
 
     # HTML Minifier
-    code = re.sub(r'\s*\n\s+<table', '<table', code)
-    code = re.sub(r'\s*\n\s+<tbody', '<tbody', code)
-    code = re.sub(r'\s*\n\s+<tr', '<tr', code)
-    code = re.sub(r'\s*\n\s+<td', '<td', code)
-    code = re.sub(r'</div>\s*\n\s*', '</div>', code)
-    code = re.sub(r'</td>\s*\n\s*', '</td>', code)
-    code = re.sub(r'</tr>\s*\n\s*', '</tr>', code)
-    code = re.sub(r'</tbody>\s*\n\s*', '</tbody>', code)
-    code = re.sub(r'</table>\s*\n\s*', '</table>', code)
+    html_attr = ['html', 'head', 'style', 'body',
+                 'table', 'tbody', 'tr', 'td', 'th', 'div']
+    for attr in html_attr:
+        code = re.sub(rf'{attr}>\s*\n\s*', f'{attr}>', code)
+        code = re.sub(rf'\s*\n\s+<{attr}', f'<{attr}', code)
     code = re.sub(r'"\n+\s*', '" ', code)
+    for attr in ['alt', 'title', 'data-class']:
+        code = re.sub(rf'{attr}=""', '', code)
+    code = re.sub(r'" />', '"/>', code)
+    code = re.sub(r'<!--.*?-->', '', code)
+    for attr in html_attr:
+        code = re.sub(rf'{attr}>\s*\n\s*', f'{attr}>', code)
+        code = re.sub(rf'\s*\n\s+<{attr}', f'<{attr}', code)
 
     # Conditional Comment Minifier
     code = re.sub(
@@ -187,8 +190,6 @@ def email_minifier(code):
     # Whitespace Minifier
     code = re.sub(r' {2,}', '', code)
     code = re.sub(r'\t', '', code)
-
-    # Return Minifier
     code = re.sub(r'\n+', ' ', code)
 
     return code
