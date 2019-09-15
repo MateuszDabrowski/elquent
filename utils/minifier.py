@@ -170,7 +170,7 @@ def email_minifier(code):
     for attr in ['alt', 'title', 'data-class']:
         code = re.sub(rf'{attr}=""', '', code)
     code = re.sub(r'" />', '"/>', code)
-    code = re.sub(r'<!--.*?-->', '', code)
+    code = re.sub(r'<!--[^\[\]]*?-->', '', code)
     for attr in html_attr:
         code = re.sub(rf'{attr}>\s*\n\s*', f'{attr}>', code)
         code = re.sub(rf'\s*\n\s+<{attr}', f'<{attr}', code)
