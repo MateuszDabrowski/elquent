@@ -188,9 +188,10 @@ def email_minifier(code):
     code = re.sub(r'}\n+', '} ', code)
 
     # Whitespace Minifier
-    code = re.sub(r' {2,}', '', code)
     code = re.sub(r'\t', '', code)
     code = re.sub(r'\n+', ' ', code)
+    while '  ' in code:
+        code = re.sub(r' {2,}', ' ', code)
 
     return code
 
