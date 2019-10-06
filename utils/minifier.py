@@ -193,6 +193,33 @@ def email_minifier(code):
     while '  ' in code:
         code = re.sub(r' {2,}', ' ', code)
 
+    # Trim lines to maximum of 500 characters
+    count = 0
+    newline_indexes = []
+    for i, letter in enumerate(code):
+        if count > 450:
+            if letter in ['>', ' ']:
+                newline_indexes.append(i)
+                count = 0
+        else:
+            count += 1
+
+    for index in reversed(newline_indexes):
+        output = code[:index+1] + '\n' + code[index+1:]
+        code = output
+
+    # Takes care of lengthy links that extends line over 500 characters
+    while True:
+        lengthy_lines_list = re.findall(r'^.{500,}$', code, re.MULTILINE)
+        if not lengthy_lines_list:
+            break
+
+        lengthy_link_regex = re.compile(r'href=\".{40,}?\"|src=\".{40,}?\"')
+        for line in lengthy_lines_list:
+            lengthy_link_list = re.findall(lengthy_link_regex, line)
+            code = code.replace(
+                lengthy_link_list[0], f'\n{lengthy_link_list[0]}')
+
     return code
 
 
