@@ -235,9 +235,9 @@ def modify_form(existing_form_id=''):
         # If input is not valid id
         else:
             while True:
-                code = pyperclip.paste()
+                form_code = pyperclip.paste()
                 is_html = re.compile(r'<form[\s\S\n]*?</script>', re.UNICODE)
-                if is_html.findall(code):
+                if is_html.findall(form_code):
                     print(f'  {SUCCESS}Code copied from clipboard')
                     break
                 print(
@@ -262,18 +262,18 @@ def modify_form(existing_form_id=''):
         Returns list of checkboxes in form of tuples (id, name)
         '''
 
-        # Gets formElement ID, input name and input type
+        # Gets formElement ID and input name
         regex_id_name = re.compile(
             r'formElement(.|..)"[\s\S]*?name="(.+?)"', re.UNICODE)
         id_name = regex_id_name.findall(form)
 
         # Gets input name and type
-        regex_name_type = re.compile(
-            r'name="(.*?)".*?type="(.*?)"', re.UNICODE)
-        name_type = regex_name_type.findall(form)
+        regex_type_name = re.compile(
+            r'type="(.*?)".*?name="(.*?)"', re.UNICODE)
+        type_name = regex_type_name.findall(form)
 
         # Builds list of checkboxes with formElement ID and input name
-        checkbox = [x for (x, y) in name_type if y == 'checkbox']
+        checkbox = [y for (x, y) in type_name if x == 'checkbox']
         checkbox = [(x, y) for (x, y) in id_name if y in checkbox]
 
         return checkbox
@@ -415,7 +415,12 @@ def modify_form(existing_form_id=''):
                 optin_text = f.read()
             # Create regex to swap opt-in in form code
             regex_optin = re.compile(
-                rf'<input name="{optin[1]}"[\s\S]*?<\/p>', re.UNICODE)
+                rf'<input.*?name="{optin[1]}"[\s\S]*?<\/label>', re.UNICODE)
+
+            # TODO: Save and pass id/for:
+            # <input type="checkbox" name="emailOptedIn1" id="fe_82993">
+            # <label class="checkbox-aligned elq-item-label" for="fe_82993">Wyrażam zgodę na otrzymywanie informacji handlowych
+            # </label>
 
             # Swaps HTML name of opt-in to language correct
             regex_language = re.compile(r'<INSERT_OPTIN>', re.UNICODE)
@@ -450,7 +455,7 @@ def modify_form(existing_form_id=''):
             if required.lower() == 'y':
                 required_checkbox += (checkbox,)
                 regex_req = re.compile(
-                    rf'(formElement{checkbox[0]}[\s\S]*?checkbox-label")( >)', re.UNICODE)
+                    rf'(formElement{checkbox[0]}[\s\S]*?<label class="checkbox.*?")(>)', re.UNICODE)
                 form = regex_req.sub(
                     r'\1 ><span class="required">*</span> ', form, 1)
                 print(f'\t{Fore.CYAN} » Adding {checkbox[1]} as required')
