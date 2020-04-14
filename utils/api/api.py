@@ -316,7 +316,7 @@ def eloqua_asset_get(asset_id, asset_type, depth=''):
     if asset_type in ['landingPage', 'email']:
         code = asset_response['htmlContent']['html']
     elif asset_type == 'form':
-        code = asset_response['html']
+        code = asset_response['customCSS'] + asset_response['html']
     elif asset_type == 'sharedContent':
         code = asset_response['contentHtml']
 

@@ -97,6 +97,7 @@ def file(file_path, name='LP'):
         'phone-optin': find_data_file(f'WK{source_country}_FORM_phone-optin.txt'),
         'gdpr-info': find_data_file(f'WK{source_country}_FORM_gdpr-info.txt'),
         'submit-button': find_data_file(f'WKCORP_FORM_submit-button.txt'),
+        'live-validation': find_data_file(f'WKCORP_FORM_live-validation.txt'),
         'validation-body': find_data_file('WKCORP_FORM_validation-body.txt'),
         'validation-element': find_data_file(f'WK{source_country}_FORM_field-validation.txt'),
         'phone-required': find_data_file(f'WK{source_country}_FORM_required-phone-js.txt'),
@@ -246,88 +247,61 @@ def modify_form(existing_form_id=''):
 
         return form_code
 
-    def get_form_fields(form):
-        '''
-        Returns code of each form field of the new Form
-        '''
-
-        form_field = re.compile(
-            r'(<div id="formElement[\s\S\n]*?([\s]*?</div>){3})', re.UNICODE)
-        form_fields = re.findall(form_field, form)
-
-        return form_fields
-
-    def get_checkboxes(form):
-        '''
-        Returns list of checkboxes in form of tuples (id, name)
-        '''
-
-        # Gets formElement ID and input name
-        regex_id_name = re.compile(
-            r'formElement(.|..)"[\s\S]*?name="(.+?)"', re.UNICODE)
-        id_name = regex_id_name.findall(form)
-
-        # Gets input name and type
-        regex_type_name = re.compile(
-            r'type="(.*?)".*?name="(.*?)"', re.UNICODE)
-        type_name = regex_type_name.findall(form)
-
-        # Builds list of checkboxes with formElement ID and input name
-        checkbox = [y for (x, y) in type_name if x == 'checkbox']
-        checkbox = [(x, y) for (x, y) in id_name if y in checkbox]
-
-        return checkbox
-
     def lead_phone(form):
         '''
         Returns code of the new Form with phone-based lead mechanism
         '''
 
-        phone_field = ''
-        # Gets the code of phone field
-        for field in get_form_fields(form):
-            if 'name="telefon"' in field[0] or 'name="busPhone"' in field[0]:
-                phone_field = field[0]
-                break
-        if not phone_field:
-            return form
-
-        # Gets id, name and value (field merge) of phone field
-        search_id_name = re.compile(
-            r'"formElement(.+?)"[\s\S\n]*?name="(.+?)"', re.UNICODE)
-        id_name = re.findall(search_id_name, phone_field)  # List of tuples
+        # Searches for phone field in form and if found, returns list of one tuple ("name", "id", "value"). Value might be empty, static or field merge
+        regex_phone_field = re.compile(
+            r'<input type="text".*?name="(busPhone|telefon)" id="(.+?)".*?value="(.*?)"', re.UNICODE)
+        # Tuple deconstructed from single item list
+        phone_field = regex_phone_field.findall(form)
 
         # Asks if phone field should be changed to lead mechanism
         swapping = ''
-        while swapping.lower() != 'y' and swapping.lower() != 'n':
-            print(
-                f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {Fore.WHITE}({YES}/{NO}):', end=' ')
-            swapping = input('')
+        if phone_field:
+            # Deconstruction from list of single element
+            phone_field = phone_field[0]
+            while swapping.lower() != 'y' and swapping.lower() != 'n':
+                print(
+                    f'\t{Fore.WHITE}Change phone field to lead-by-phone mechanism? {Fore.WHITE}({YES}/{NO}):', end=' ')
+                swapping = input('')
 
         if swapping.lower() == 'y':
             # Prepare lead-by-phone snippet with correct values
             with open(file('lead-by-phone'), 'r', encoding='utf-8') as f:
                 snippet = f.read()
-            regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
-            snippet = regex_id.sub(id_name[0][0], snippet)
-            regex_name = re.compile(r'(<FIELD_NAME>)', re.UNICODE)
-            snippet = regex_name.sub(id_name[0][1], snippet)
+            # Replace placeholder with correct name
+            snippet = snippet.replace('<FIELD_NAME>', phone_field[0])
+            # Replace placeholder with correct ID
+            snippet = snippet.replace('<FIELD_ID>', phone_field[1])
 
-            # Swap phone field with lead-by-phone mechanism
-            regex_phone_field = re.compile(
-                rf'((<div id="formElement{id_name[0][0]}"[\s\S\n]*?</p>))', re.UNICODE)
-            form = regex_phone_field.sub(snippet, form)
+            # Swap phone field with lead-by-phone mechanism, regex returns list of single tuple ('code', '</div>')
+            regex_phone_div = re.compile(
+                rf'(<label class="elq-label[| ]" for="{phone_field[1]}">[\s\S]*?(<\/div>[\s]*?){{4}})', re.UNICODE)
+            form = regex_phone_div.sub(snippet, form)
 
-            # Make phone field required for lead order
-            form = form.replace('type="submit"',
-                                'type="submit" onclick="leadPhoneRequired()"')
+            # Find phone validation and append logic for making it required on lead checkbox check: regex returns list of one string
+            regex_phone_validation = re.compile(
+                rf'(var {phone_field[1]} = new [\s\S]*?\);)', re.UNICODE)
+            phone_validation = regex_phone_validation.findall(
+                form)[0]  # Deconstruction from list of single element
+
+            # Open phone validation snippet
             with open(file('phone-required'), 'r', encoding='utf-8') as f:
-                phone_validation = f.read()
-                phone_validation = regex_id.sub(
-                    id_name[0][0], phone_validation)
-            validation_function = 'function handleFormSubmit(ele)'
-            form = form.replace(validation_function,
-                                phone_validation + validation_function)
+                phone_validation_snippet = f.read()
+                # Replace placeholder with correct ID
+                phone_validation_snippet = phone_validation_snippet.replace(
+                    '<FIELD_ID>', phone_field[1])
+
+            # Append extension to existing field validation
+            extended_phone_validation = phone_validation + \
+                '\n' + phone_validation_snippet
+
+            # Replace standard validation with extended one
+            form = form.replace(
+                phone_validation, extended_phone_validation)
 
             print(f'\t{Fore.CYAN} » Adding lead-by-phone mechanism')
 
@@ -346,47 +320,25 @@ def modify_form(existing_form_id=''):
             swapping = input('')
 
         if swapping.lower() == 'y':
-            # Gets place where GDPR info should be appended
-            search_checkbox = re.compile(r'type="checkbox"', re.UNICODE)
-            search_submit = re.compile(r'type="submit"', re.UNICODE)
-            search_id = re.compile(r'"formElement(.*?)"', re.UNICODE)
-            for field in get_form_fields(form):
-                if search_checkbox.findall(field[0]):
-                    form_number = (search_id.findall(field[0]))[0]
-                    break
-                elif search_submit.findall(field[0]):
-                    form_number = (search_id.findall(field[0]))[0]
-                    break
+            # Gets place where GDPR info should be appended: regex returns list of one tuple ('code', '</div>')
+            regex_submit = re.compile(
+                r'((<div class="row"(?:(?!<\/div>)[\s\S])*?"Submit"[\s\S]*?(<\/div>[\s]*?){8}))', re.UNICODE)
+            # tuple deconstructed from single array list
+            # Deconstruction from list of single element
+            submit_div = regex_submit.findall(form)[0]
 
-            # Prepare GDPR information with correct field id
+            # Prepare GDPR information
             with open(file('gdpr-info'), 'r', encoding='utf-8') as f:
                 snippet = f.read()
-            regex_id = re.compile(r'(<FIELD_ID>)', re.UNICODE)
-            snippet = regex_id.sub(form_number, snippet)
 
-            # Add GDPR information to form
-            regex_gdpr_info = re.compile(
-                rf'(<div id="formElement{form_number}")', re.UNICODE)
-            form = regex_gdpr_info.sub(snippet, form)
+            # Append GDPR information above submit button
+            form = form.replace(submit_div[0], submit_div[0] + snippet)
+
             print(f'\t{Fore.CYAN} » Adding information about data administrator')
 
         return form
 
-    def optin_version(form):
-        '''
-        Returns names of existing marketing, email, phone and tracking optins
-        '''
-        optins = {}
-        # Iterates over possible HTML names of opt-in form fields to save existing optins
-        for optin_type in naming[source_country]['optins']:
-            for optin_name in naming[source_country]['optins'][optin_type]:
-                optin_search = re.compile(rf'name="{optin_name}"', re.UNICODE)
-                if optin_search.findall(form):
-                    optins[f'{optin_type}'] = f'{optin_name}'
-
-        return optins
-
-    def swap_optins(form, optins):
+    def swap_optins(form):
         '''
         Returns code of new Form with correct opt ins text
         '''
@@ -394,89 +346,70 @@ def modify_form(existing_form_id=''):
             'Marketing': file('marketing-optin'),
             'Email': file('email-optin'),
             'Phone': file('phone-optin'),
-            'Tracking': file('tracking-optin')
+            'Tracking': file('tracking-optin')  # Currently not used
         }
 
-        # Creates dict of {(optin_type, optin_path): 'in_form_optin_name'}
-        form_optins = {}
-        for optin in naming[source_country]['optins']:
-            for name in optins.values():
-                if name in naming[source_country]['optins'][optin]:
-                    form_optins[optin] = name
+        # Finds all checkboxes and gets list of tuples ('code', 'name', 'id')
+        regex_checkboxes = re.compile(
+            r'(<input type="checkbox" name="(.+?)" id="(.+?)">[\s\S]*?<\/label>)', re.UNICODE)
+        checkboxes = regex_checkboxes.findall(form)
 
-        if len(form_optins) != len(optins):
-            error = f'\t{ERROR}Non standard HTML name of opt-in form field\n'
-            raise ValueError(error)
+        # Assigns values to the snippets and swaps them into form code
+        optins = naming[source_country]['optins']
+        for checkbox in checkboxes:
+            if checkbox[1] in optins['Marketing']:
+                with open(optin_paths['Marketing'], 'r', encoding='utf-8') as f:
+                    optin_text = f.read()
+                    # Replace placeholder with correct name
+                    optin_text = optin_text.replace(
+                        '<FIELD_NAME>', checkbox[1])
+                    # Replace placeholder with correct ID
+                    optin_text = optin_text.replace(
+                        '<FIELD_ID>', checkbox[2])
+                    print(
+                        f'\t{Fore.CYAN} » Expanding Marketing Opt-in ({checkbox[1]})')
+                    form = form.replace(checkbox[0], optin_text)
+                continue
+            elif checkbox[1] in optins['Email']:
+                with open(optin_paths['Email'], 'r', encoding='utf-8') as f:
+                    optin_text = f.read()
+                    # Replace placeholder with correct name
+                    optin_text = optin_text.replace(
+                        '<FIELD_NAME>', checkbox[1])
+                    # Replace placeholder with correct ID
+                    optin_text = optin_text.replace(
+                        '<FIELD_ID>', checkbox[2])
+                    print(
+                        f'\t{Fore.CYAN} » Expanding Email Opt-in ({checkbox[1]})')
+                    form = form.replace(checkbox[0], optin_text)
+                continue
+            elif checkbox[1] in optins['Phone']:
+                with open(optin_paths['Phone'], 'r', encoding='utf-8') as f:
+                    optin_text = f.read()
+                    # Replace placeholder with correct name
+                    optin_text = optin_text.replace(
+                        '<FIELD_NAME>', checkbox[1])
+                    # Replace placeholder with correct ID
+                    optin_text = optin_text.replace(
+                        '<FIELD_ID>', checkbox[2])
+                    print(
+                        f'\t{Fore.CYAN} » Expanding Phone Opt-in ({checkbox[1]})')
+                    form = form.replace(checkbox[0], optin_text)
+                continue
+            else:
+                form = form.replace(
+                    checkbox[0], f'<div class="checkbox-label">{checkbox[0]}</div>')
 
-        for optin in form_optins.items():
-            # Loads opt-in new code
-            file_path = optin_paths[optin[0]]
-            with open(file_path, 'r', encoding='utf-8') as f:
-                optin_text = f.read()
-            # Create regex to swap opt-in in form code
-            regex_optin = re.compile(
-                rf'<input.*?name="{optin[1]}"[\s\S]*?<\/label>', re.UNICODE)
-
-            # TODO: Save and pass id/for:
-            # <input type="checkbox" name="emailOptedIn1" id="fe_82993">
-            # <label class="checkbox-aligned elq-item-label" for="fe_82993">Wyrażam zgodę na otrzymywanie informacji handlowych
-            # </label>
-
-            # Swaps HTML name of opt-in to language correct
-            regex_language = re.compile(r'<INSERT_OPTIN>', re.UNICODE)
-            optin_text = regex_language.sub(rf'{optin[1]}', optin_text)
-
-            # Adds new opt-ins to form code
-            print(f'\t{Fore.CYAN} » Expanding {optin[0]} Opt-in ({optin[1]})')
-            form = regex_optin.sub(optin_text, form)
-
-        form, requiredOptins = required_checkboxes(
-            form, optins)
-
-        return (form, requiredOptins)
-
-    def required_checkboxes(form, optins):
-        '''
-        Returns full list of required checkboxes
-        '''
-
-        checkbox = get_checkboxes(form)
-        required_checkbox = []
-        unknown_checkbox = [(x, y)
-                            for (x, y) in checkbox if y not in optins.values()]
-
-        # Ask user which additional checkboxes are required
-        for checkbox in unknown_checkbox:
-            required = ''
-            while required.lower() != 'y' and required.lower() != 'n' and required.lower() != '0':
-                print(
-                    f'\t{Fore.WHITE}Is "{checkbox[1]}" checkbox required? {Fore.WHITE}({YES}/{NO}):', end=' ')
-                required = input('')
-            if required.lower() == 'y':
-                required_checkbox += (checkbox,)
-                regex_req = re.compile(
-                    rf'(formElement{checkbox[0]}[\s\S]*?<label class="checkbox.*?")(>)', re.UNICODE)
-                form = regex_req.sub(
-                    r'\1 ><span class="required">*</span> ', form, 1)
-                print(f'\t{Fore.CYAN} » Adding {checkbox[1]} as required')
-            elif required.lower() == 'n':
-                print(f'\t{Fore.CYAN} » Setting {checkbox[1]} as not required')
-            elif required == '0':
-                print(
-                    f'\t{Fore.CYAN} » Setting all left checkboxes as not required')
-                break
-
-        return (form, required_checkbox)
+        return form
 
     # Gets form and modifies it
     form = get_form(existing_form_id)
     if source_country == 'PL':
         form = gdpr_info(form)
         form = lead_phone(form)
-    optins = optin_version(form)
-    form, required = swap_optins(form, optins)
+    form = swap_optins(form)
 
-    return (form, required)
+    return form
 
 
 '''
@@ -494,11 +427,15 @@ def swap_form(code, form):
     regex_style = re.compile(
         r'<style type[\s\S]*?elq-form[\s\S]*?<\/style>', re.UNICODE)
     code = regex_style.sub('', code)
-    regex_form = re.compile(
-        r'<div>\s*?<form method[\s\S]*?dom0[\s\S]*?<\/script>\s*?<\/div>', re.UNICODE)
+    if '<div class="form">' in code:
+        regex_form = re.compile(
+            r'(<div class="form">[\s\S]*?<form method[\s\S]*?onsubmit[\s\S]*?function handleFormSubmit[\s\S]*?<\/script>[\s]*?<\/div>)', re.UNICODE)
+    else:
+        regex_form = re.compile(
+            r'(<form method[\s\S]*?onsubmit[\s\S]*?function handleFormSubmit[\s\S]*?<\/script>)', re.UNICODE)
     match = regex_form.findall(code)
     if len(match) == 1:
-        code = regex_form.sub(form, code)
+        code = code.replace(match[0], f'<div class="form">{form}</div>')
         print(f'\t{Fore.GREEN} » Swapping Form in Landing Page')
     elif not match:
         regex_placeholder = re.compile(r'INSERT_FORM')
@@ -524,13 +461,19 @@ def swap_form(code, form):
         submit_css = f.read()
     code = regex_submit_css.sub(submit_css, code)
 
-    # Appends Unicode arrow to button text
-    regex_submit_text = re.compile(
-        r'(?<=<input type="submit" value=)"(.*?)"', re.UNICODE)
-    if regex_submit_text.findall(code):
-        button_text = '"' + (4 * '&nbsp;&zwnj; ') + \
-            regex_submit_text.findall(code)[0] + '"'
-        code = regex_submit_text.sub(button_text, code)
+    # Fixes margin on checkboxes
+    code = code.replace(
+        'checkbox-aligned{margin-left:5px;', 'checkbox-aligned{margin-left:0px')
+
+    # Fixes padding on error message, regex returns one element array
+    regex_invalid_css = re.compile(r'(.LV_invalid {[\s\S]*?)}')
+    invalid_css = regex_invalid_css.findall(code)
+    if len(invalid_css) == 2 and 'padding-top' not in invalid_css[1]:
+        code = code.replace(
+            invalid_css[1], invalid_css[1] + 'padding-top: 10px;')
+    elif invalid_css and 'padding-top' not in invalid_css[0]:
+        code = code.replace(
+            invalid_css[0], invalid_css[0] + 'padding-top: 10px;')
 
     return code
 
@@ -542,7 +485,7 @@ def swap_form(code, form):
 '''
 
 
-def javascript(code, required, ):
+def javascript(code):
     '''
     Returns Landing Page code with proper checkbox js validation
     '''
@@ -565,42 +508,17 @@ def javascript(code, required, ):
         '''
         Returns LP code with jQuery import
         '''
-
+        # Looks whether there is already a JQuery and deletes it
         search_jquery = re.compile(r'(jquery)', re.UNICODE)
-        is_jquery = re.search(search_jquery, code)
-        if not is_jquery:
-            with open(file('jquery'), 'r', encoding='utf-8') as f:
-                jquery = f.read()
-            regex_jquery = re.compile(r'(<script)', re.UNICODE)
-            code = regex_jquery.sub(jquery, code, 1)
-            print(f'\t{Fore.GREEN} » Adding jQuery import')
+        if search_jquery.findall(code):
+            code = search_jquery.sub('', code)
 
-        return code
-
-    def add_validation_js(code, required):
-        '''
-        Returns LP code with new JavaScript checkbox validation
-        '''
-
-        # Adds checkbox validation body to LP code
-        with open(file('validation-body'), 'r', encoding='utf-8') as f:
-            validation_body = f.read()
-        regex_validation = re.compile(r'</body>', re.UNICODE)
-        code = regex_validation.sub(validation_body, code)
-
-        # Adds checkbox validation element to LP code
-        regex_element_id = re.compile(r'INSERT_ID', re.UNICODE)
-        regex_element_name = re.compile(r'INSERT_NAME', re.UNICODE)
-        regex_element_insert = re.compile(r'//requiredChecked', re.UNICODE)
-        for req in required:
-            with open(file('validation-element'), 'r', encoding='utf-8') as f:
-                validation_element = f.read()
-            validation_element = regex_element_id.sub(
-                req[0], validation_element)
-            validation_element = regex_element_name.sub(
-                req[1], validation_element)
-            code = regex_element_insert.sub(validation_element, code)
-        print(f'\t{Fore.GREEN} » Adding new Checkbox Validation')
+        # Adds new jquery import to make sure it is appropriate version and placed right
+        with open(file('jquery'), 'r', encoding='utf-8') as f:
+            jquery = f.read()
+        regex_jquery = re.compile(r'(<script)', re.UNICODE)
+        code = regex_jquery.sub(jquery, code, 1)
+        print(f'\t{Fore.GREEN} » Adding jQuery import')
 
         return code
 
@@ -608,23 +526,40 @@ def javascript(code, required, ):
         '''
         Returns Landing Page code with lead phone script appended
         '''
+        # Looks for old version of the script and deletes it
+        regex_old_phone_js = re.compile(
+            r'<script>(?:(?!<\/script>)[\s\S])+?#lead_div...toggle[\s\S]+?<\/script>', re.UNICODE)
+        if regex_old_phone_js.findall(code):
+            code = regex_old_phone_js.sub('', code)
 
-        # Checks if there already is that code
-        search_lead_script = re.compile(r'(#lead_input)', re.UNICODE)
-        is_lead_script = re.search(search_lead_script, code)
-        if not is_lead_script:
+        # Checks if the modern code is already in the page
+        if '("#lead_div").show' not in code:
             with open(file('showhide-lead'), 'r', encoding='utf-8') as f:
                 lead_script = f.read()
-            regex_lead_script = re.compile(r'(</body>)', re.UNICODE)
-            code = regex_lead_script.sub(lead_script, code)
+            code = code.replace('</body>', lead_script, 1)
 
         return code
 
-    # Takes care of checkbox validation scripts
+    def add_live_validation(code):
+        '''
+        Returns Landing Page code with live validation js added directly isntead of an import
+        '''
+
+        # Swaps Eloqua branded LiveValidation import to to direct code snippet
+        regex_validation = re.compile(
+            r'<script.+?livevalidation_standalone.compressed.js.+?</script>', re.UNICODE)
+        validation_import = regex_validation.findall(code)
+        if validation_import:
+            with open(file('live-validation'), 'r', encoding='utf-8') as f:
+                snippet = f.read()
+            code = code.replace(validation_import[0], snippet)
+
+        return code
+
+    # Takes care of validation and jquery
     code = del_validation_js(code)
     code = check_jquery(code)
-    if required:  # Add script only if there is at least one required
-        code = add_validation_js(code, required)
+    code = add_live_validation(code)
 
     # Checks if there is lead-by-phone mechanism
     search_lead_phone = re.compile(r'(name="lead_input")', re.UNICODE)
@@ -661,11 +596,16 @@ def page_gen(country, form_id=''):
     code = create_landing_page()
     if not code:
         return False
-    form, required = modify_form(form_id)
+    form = modify_form(form_id)
     code = swap_form(code, form)
-    code = javascript(code, required)
+    code = javascript(code)
+    # Swap URLs from non-secure to secure HTTPS by unbranding
     code = code.replace('http://images.go.wolterskluwer.com',
                         'https://img06.en25.com')
+    # Delete Custom CSS
+    regex_custom_css = re.compile(
+        r'<!-- StartFormCustomCSS -->[\s\S]*?<!-- EndFormCustomCSS -->')
+    code = regex_custom_css.sub('', code)
 
     # Two way return of new code
     pyperclip.copy(code)
@@ -673,6 +613,7 @@ def page_gen(country, form_id=''):
         f.write(code)
     print(
         f'\n{Fore.GREEN}» You can now paste new Landing Page to Eloqua [CTRL+V].',
+        f'\n{Fore.RED}» Remember to update placeholders (PRODUCT_NAME, CONVERTER_5) with correct values!'
         f'\n{Fore.WHITE}  (It is also saved as WK{source_country}_LP.txt in Outcomes folder)',
         f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')

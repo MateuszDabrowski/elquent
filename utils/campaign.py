@@ -1107,7 +1107,7 @@ def campaign_module(country):
         f'\n{Fore.GREEN}ELQuent.campaign Campaigns:'
         f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Perfect for newsletters and one-offs'
         f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic Canvas{Fore.WHITE}] When you want to send e-mail with reminder'
-        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For campaigns with e-books, webinars, codes'
+        # f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For campaigns with e-books, webinars, codes'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -1123,10 +1123,11 @@ def campaign_module(country):
             campaign_name = helper.campaign_name_getter()
             basic_campaign()
             break
-        elif choice == '3':
-            campaign_name = helper.campaign_name_getter()
-            content_campaign()
-            break
+        # Currently not available due to massive changes to form code & API
+        # elif choice == '3':
+        #     campaign_name = helper.campaign_name_getter()
+        #     content_campaign()
+        #     break
         else:
             print(f'{Fore.RED}Entered value does not belong to any utility!')
             choice = ''
