@@ -218,14 +218,14 @@ def campaign_main_page(form_id=''):
     if not form_id:
         print(
             f'\n{Fore.WHITE}» [{Fore.YELLOW}REQUIRED{Fore.WHITE}] Form for main LP', end='')
-    form_html, required = page.modify_form(form_id)
+    form_html = page.modify_form(form_id)
 
     # Creates LP
     file_name = ('_'.join(campaign_name[1:4]) + '_LP')
     with open(file('lp-template'), 'r', encoding='utf-8') as f:
         code = f.read()
     code = page.swap_form(code, form_html)
-    code = page.javascript(code, required)
+    code = page.javascript(code)
     code = regex_product_name.sub(product_name, code)
     code = regex_header_text.sub(header_text, code)
     code = regex_gtm.sub(f'WK{source_country}_{file_name}', code)
@@ -611,7 +611,8 @@ def simple_campaign():
 
     # Sets iterations counter based on data from naming.json
     if diff_name in naming[source_country]['mail']['multi_campaigns'].keys():
-        iterations = int(naming[source_country]['mail']['multi_campaigns'][diff_name])
+        iterations = int(naming[source_country]['mail']
+                         ['multi_campaigns'][diff_name])
     else:
         iterations = 1
 
