@@ -107,6 +107,7 @@ def file(file_path, name='LP'):
         'jquery': find_data_file('WKCORP_LP_jquery.txt'),
         'simple-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_simple.json'),
         'basic-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_basic.json'),
+        'alert-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_alert.json'),
         'ebook-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_ebook.json'),
         'code-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_code.json'),
         'demo-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_demo.json'),
@@ -723,6 +724,108 @@ def simple_campaign():
 
 '''
 =================================================================================
+                                ALERT EMAIL CAMPAIGN FLOW
+=================================================================================
+'''
+
+
+def alert_campaign():
+    '''
+    Main flow for alert email campaign (canvas version)
+    Creates filled up alert campaign from package
+    Saves html and mjml codes of e-mail as backup to outcome folder
+    '''
+
+    # Get short part of campaign_name to differentiate type
+    diff_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
+
+    # Checks if campaign is built with externally generated alert HTML
+    alert_mail = True if diff_name.startswith('RET_LA') else False
+
+    # Sets iterations counter based on data from naming.json
+    if diff_name in naming[source_country]['mail']['multi_campaigns'].keys():
+        iterations = int(naming[source_country]['mail']
+                         ['multi_campaigns'][diff_name])
+    else:
+        iterations = 1
+
+    # Gets main e-mail HTML for simple campaign
+    mail_html = mail.alert_constructor(source_country)
+
+    # Creates amount of campaigns as per iterations
+    for i in range(iterations):
+
+        # Create specific name if multiple iterations
+        if iterations > 1:
+            custom_name = campaign_name[3].split('-')
+            custom_name = custom_name[:1] + [str(i+1)] + custom_name[1:]
+            custom_name = '-'.join(custom_name)
+            iter_camp_name = campaign_name[:3] + \
+                [custom_name] + campaign_name[4:]
+        else:
+            iter_camp_name = campaign_name
+
+        # Creates main e-mail for simple campaign
+        mail_id = campaign_first_mail(
+            mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
+        if not mail_id:
+            return False
+
+        '''
+        =================================================== Create Campaign
+        '''
+
+        # Gets campaign code out of the campaign name
+        campaign_code = []
+        if '/' in iter_camp_name[4]:
+            psp_element = iter_camp_name[4].split('/')[1]
+            campaign_code = f'{psp_element}_{iter_camp_name[5]}'
+        else:
+            for part in iter_camp_name[3].split('-'):
+                if part.startswith(tuple(naming[source_country]['psp'])):
+                    campaign_code.append(part)
+            campaign_code = '_'.join(campaign_code)
+
+        # Loads json data for campaign canvas creation and fills it with data
+        with open(file('alert-campaign'), 'r', encoding='utf-8') as f:
+            campaign_json = json.load(f)
+            # Change to string for easy replacing
+            campaign_string = json.dumps(campaign_json)
+            campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+            # Capture specific folder
+            folder_id = naming[source_country]['id']['campaign'].get(diff_name)
+            # Capture specific segment
+            segment_id = naming[source_country]['mail']['by_name'][diff_name]['segmentId'][i]
+            campaign_string = campaign_string.replace('SEGMENT_ID', segment_id)
+            # Change back to json for API call
+            campaign_json = json.loads(campaign_string)
+            campaign_json['name'] = '_'.join(iter_camp_name)
+            campaign_json['folderId'] = folder_id
+            campaign_json['region'] = iter_camp_name[0]
+            campaign_json['campaignType'] = iter_camp_name[2]
+            if '/' in iter_camp_name[4]:
+                campaign_json['product'] = iter_camp_name[4].split('/')[0]
+            else:
+                campaign_json['product'] = iter_camp_name[-1]
+            campaign_json['fieldValues'][0]['value'] = campaign_code
+
+        # Creates campaign with given data
+        api.eloqua_create_campaign(iter_camp_name, campaign_json)
+
+    '''
+    =================================================== Finished :)
+    '''
+
+    print(f'\n{SUCCESS}Campaign prepared!',
+          f'\n{Fore.YELLOW}» Remember to update LEX Alert send time in two steps!',
+          f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
+    input(' ')
+
+    return
+
+
+'''
+=================================================================================
                                 BASIC CAMPAIGN FLOW
 =================================================================================
 '''
@@ -1108,7 +1211,8 @@ def campaign_module(country):
         f'\n{Fore.GREEN}ELQuent.campaign Campaigns:'
         f'\n{Fore.WHITE}[{Fore.YELLOW}1{Fore.WHITE}]\t» [{Fore.YELLOW}Simple{Fore.WHITE}] Perfect for newsletters and one-offs'
         f'\n{Fore.WHITE}[{Fore.YELLOW}2{Fore.WHITE}]\t» [{Fore.YELLOW}Basic Canvas{Fore.WHITE}] When you want to send e-mail with reminder'
-        # f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For campaigns with e-books, webinars, codes'
+        f'\n{Fore.WHITE}[{Fore.YELLOW}3{Fore.WHITE}]\t» [{Fore.YELLOW}Alert Canvas{Fore.WHITE}] When you want to send LEX Alert e-mail'
+        # f'\n{Fore.WHITE}[{Fore.YELLOW}4{Fore.WHITE}]\t» [{Fore.YELLOW}Content Canvas{Fore.WHITE}] For campaigns with e-books, webinars, codes'
         f'\n{Fore.WHITE}[{Fore.YELLOW}Q{Fore.WHITE}]\t» [{Fore.YELLOW}Quit to main menu{Fore.WHITE}]'
     )
     while True:
@@ -1124,8 +1228,12 @@ def campaign_module(country):
             campaign_name = helper.campaign_name_getter()
             basic_campaign()
             break
+        elif choice == '3':
+            campaign_name = helper.campaign_name_getter()
+            alert_campaign()
+            break
         # Currently not available due to massive changes to form code & API
-        # elif choice == '3':
+        # elif choice == '4':
         #     campaign_name = helper.campaign_name_getter()
         #     content_campaign()
         #     break
