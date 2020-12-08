@@ -108,6 +108,7 @@ def file(file_path, name='LP'):
         'simple-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_simple.json'),
         'basic-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_basic.json'),
         'alert-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_alert.json'),
+        'alert-ab-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_alert-ab.json'),
         'ebook-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_ebook.json'),
         'code-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_code.json'),
         'demo-campaign': find_data_file(f'WK{source_country}_CAMPAIGN_demo.json'),
@@ -154,7 +155,7 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', reminder=True):
+def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', abTest=False, reminder=True):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
@@ -174,37 +175,47 @@ def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', reminder=Tru
         camp_name = campaign_name
 
     # Create e-mail
-    mail_name = ('_'.join(camp_name[0:4]) + '_EML')
+    if abTest:
+        mail_name = ('_'.join(camp_name[0:4]) + '_A-EML')
+    else:
+        mail_name = ('_'.join(camp_name[0:4]) + '_EML')
     mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     if not reminder:
         return mail_id
 
-    regex_mail_preheader = re.compile(
-        r'<!--pre-start.*?pre-end-->', re.UNICODE)
-    while True:
-        print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
-              f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
-              f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
-        reminder_preheader = input(' ')
-        if not reminder_preheader:
-            reminder_preheader = pyperclip.paste()
-            if not reminder_preheader:
-                print(f'\n{ERROR}Pre-header can not be blank')
-                continue
-        elif len(reminder_preheader) > 140:
-            print(f'\n{ERROR}Pre-header is over 140 characters long')
-            continue
-        else:
-            break
-    if reminder_preheader.lower() != 's':
-        reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
-        reminder_html = regex_mail_preheader.sub(reminder_preheader, mail_html)
-    else:
+    if abTest:
         reminder_html = mail_html
+    else:
+        regex_mail_preheader = re.compile(
+            r'<!--pre-start.*?pre-end-->', re.UNICODE)
+        while True:
+            print(f'\n{Fore.YELLOW}»{Fore.WHITE} Write or copypaste {Fore.YELLOW}pre-header{Fore.WHITE} text for',
+                  f'{Fore.YELLOW}reminder{Fore.WHITE} e-mail and click [Enter]',
+                  f'\n{Fore.WHITE}[S]kip to keep the same pre-header as in main e-mail.')
+            reminder_preheader = input(' ')
+            if not reminder_preheader:
+                reminder_preheader = pyperclip.paste()
+                if not reminder_preheader:
+                    print(f'\n{ERROR}Pre-header can not be blank')
+                    continue
+            elif len(reminder_preheader) > 140:
+                print(f'\n{ERROR}Pre-header is over 140 characters long')
+                continue
+            else:
+                break
+        if reminder_preheader.lower() != 's':
+            reminder_preheader = '<!--pre-start-->' + reminder_preheader + '<!--pre-end-->'
+            reminder_html = regex_mail_preheader.sub(
+                reminder_preheader, mail_html)
+        else:
+            reminder_html = mail_html
 
     # Create e-mail reminder
-    reminder_name = ('_'.join(camp_name[0:4]) + '_REM-EML')
+    if abTest:
+        reminder_name = ('_'.join(camp_name[0:4]) + '_B-EML')
+    else:
+        reminder_name = ('_'.join(camp_name[0:4]) + '_REM-EML')
     reminder_id = api.eloqua_create_email(reminder_name, reminder_html)
 
     return (mail_id, reminder_id)
@@ -749,6 +760,12 @@ def alert_campaign():
     else:
         iterations = 1
 
+    # Asks whether campaign will implement A/B Testing
+    print(f'\n{Fore.YELLOW}» Do you want to A/B Test? '
+          f'{Fore.WHITE}({YES}/{NO}):', end='')
+    choice = input(' ')
+    abTest = True if choice.lower() == 'y' else False
+
     # Gets main e-mail HTML for simple campaign
     mail_html = mail.alert_constructor(source_country)
 
@@ -766,10 +783,14 @@ def alert_campaign():
             iter_camp_name = campaign_name
 
         # Creates main e-mail for simple campaign
-        mail_id = campaign_first_mail(
-            mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
-        if not mail_id:
-            return False
+        if abTest:
+            mail_id, reminder_id = campaign_first_mail(
+                mail_html=mail_html, camp_name=iter_camp_name, abTest=True)
+        else:
+            mail_id = campaign_first_mail(
+                mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
+            if not mail_id:
+                return False
 
         '''
         =================================================== Create Campaign
@@ -787,11 +808,16 @@ def alert_campaign():
             campaign_code = '_'.join(campaign_code)
 
         # Loads json data for campaign canvas creation and fills it with data
-        with open(file('alert-campaign'), 'r', encoding='utf-8') as f:
+        template_name = 'alert-ab-campaign' if abTest else 'alert-campaign'
+
+        with open(file(template_name), 'r', encoding='utf-8') as f:
             campaign_json = json.load(f)
             # Change to string for easy replacing
             campaign_string = json.dumps(campaign_json)
             campaign_string = campaign_string.replace('MAIL_ID', mail_id)
+            if abTest:
+                campaign_string = campaign_string.replace(
+                    'REMINDER_ID', reminder_id)
             # Capture specific folder
             folder_id = naming[source_country]['id']['campaign'].get(diff_name)
             # Capture specific segment
@@ -817,7 +843,6 @@ def alert_campaign():
     '''
 
     print(f'\n{SUCCESS}Campaign prepared!',
-          f'\n{Fore.YELLOW}» Remember to update LEX Alert send time in two steps!',
           f'\n{Fore.WHITE}» Click [Enter] to continue.', end='')
     input(' ')
 
