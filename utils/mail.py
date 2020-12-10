@@ -308,7 +308,7 @@ def output_method(html_code='', mjml_code=''):
 '''
 
 
-def alert_constructor(country):
+def alert_constructor(country, ab_test=False):
     '''
     Gets, fixes and uploads alert mail code to Eloqua
     Returns eloqua mail id
@@ -412,12 +412,17 @@ def alert_constructor(country):
         while True:
             print(
                 f'\n{Fore.WHITE}[{Fore.YELLOW}LEAD{Fore.WHITE}] » Write or copypaste lead text for personalized header:')
+            if ab_test:
+                print(
+                    f'{Fore.WHITE}» If you want to {Fore.YELLOW}A/B Test Lead text{Fore.WHITE},',
+                    f'{Fore.WHITE}provide both versions separated by: {Fore.YELLOW}&&')
             lead_text = input(' ')
             if not lead_text:
                 lead_text = pyperclip.paste()
             if lead_text:
                 break
-        mail_html = mail_html.replace('[LEAD_1]', lead_text)
+        mail_html = mail_html.replace(
+            '[LEAD_1]', f'<!-- Lead START --> {lead_text} <!-- Lead END -->')
 
     # Beautify arrow links
     mail_html = mail_html.replace('>>', '»')

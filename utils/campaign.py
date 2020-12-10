@@ -155,7 +155,7 @@ def campaign_compile_regex():
     return
 
 
-def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', abTest=False, reminder=True):
+def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', ab_test=False, reminder=True):
     '''
     Creates first mail and its reminder
     Returns eloqua id of both
@@ -175,18 +175,25 @@ def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', abTest=False
         camp_name = campaign_name
 
     # Create e-mail
-    if abTest:
+    if ab_test:
         mail_name = ('_'.join(camp_name[0:4]) + '_A-EML')
+        reminder_html = mail_html
+        lead_regex = re.compile(
+            r'<!-- Lead START --> (.*?)( |)&&( |)(.*?) <!-- Lead END -->', re.UNICODE)
+        if lead_regex.search(mail_html):
+            mail_html = lead_regex.sub(r'\g<1>', mail_html)
+            reminder_html = lead_regex.sub(r'\g<4>', reminder_html)
     else:
         mail_name = ('_'.join(camp_name[0:4]) + '_EML')
+        mail_html = re.sub(
+            r'<!-- Lead START --> (.*?) <!-- Lead END -->', r'\g<1>', mail_html)
+
     mail_id = api.eloqua_create_email(mail_name, mail_html)
 
     if not reminder:
         return mail_id
 
-    if abTest:
-        reminder_html = mail_html
-    else:
+    if not ab_test:
         regex_mail_preheader = re.compile(
             r'<!--pre-start.*?pre-end-->', re.UNICODE)
         while True:
@@ -212,7 +219,7 @@ def campaign_first_mail(main_lp_url='', mail_html='', camp_name='', abTest=False
             reminder_html = mail_html
 
     # Create e-mail reminder
-    if abTest:
+    if ab_test:
         reminder_name = ('_'.join(camp_name[0:4]) + '_B-EML')
     else:
         reminder_name = ('_'.join(camp_name[0:4]) + '_REM-EML')
@@ -750,9 +757,6 @@ def alert_campaign():
     # Get short part of campaign_name to differentiate type
     diff_name = '_'.join([campaign_name[2], campaign_name[3].split('-')[0]])
 
-    # Checks if campaign is built with externally generated alert HTML
-    alert_mail = True if diff_name.startswith('RET_LA') else False
-
     # Sets iterations counter based on data from naming.json
     if diff_name in naming[source_country]['mail']['multi_campaigns'].keys():
         iterations = int(naming[source_country]['mail']
@@ -761,13 +765,13 @@ def alert_campaign():
         iterations = 1
 
     # Asks whether campaign will implement A/B Testing
-    print(f'\n{Fore.YELLOW}» Do you want to A/B Test? '
+    print(f'{Fore.YELLOW}» Do you want to A/B Test? '
           f'{Fore.WHITE}({YES}/{NO}):', end='')
     choice = input(' ')
-    abTest = True if choice.lower() == 'y' else False
+    ab_test = True if choice.lower() == 'y' else False
 
     # Gets main e-mail HTML for simple campaign
-    mail_html = mail.alert_constructor(source_country)
+    mail_html = mail.alert_constructor(source_country, ab_test=ab_test)
 
     # Creates amount of campaigns as per iterations
     for i in range(iterations):
@@ -783,9 +787,9 @@ def alert_campaign():
             iter_camp_name = campaign_name
 
         # Creates main e-mail for simple campaign
-        if abTest:
+        if ab_test:
             mail_id, reminder_id = campaign_first_mail(
-                mail_html=mail_html, camp_name=iter_camp_name, abTest=True)
+                mail_html=mail_html, camp_name=iter_camp_name, ab_test=ab_test)
         else:
             mail_id = campaign_first_mail(
                 mail_html=mail_html, camp_name=iter_camp_name, reminder=False)
@@ -808,14 +812,14 @@ def alert_campaign():
             campaign_code = '_'.join(campaign_code)
 
         # Loads json data for campaign canvas creation and fills it with data
-        template_name = 'alert-ab-campaign' if abTest else 'alert-campaign'
+        template_name = 'alert-ab-campaign' if ab_test else 'alert-campaign'
 
         with open(file(template_name), 'r', encoding='utf-8') as f:
             campaign_json = json.load(f)
             # Change to string for easy replacing
             campaign_string = json.dumps(campaign_json)
             campaign_string = campaign_string.replace('MAIL_ID', mail_id)
-            if abTest:
+            if ab_test:
                 campaign_string = campaign_string.replace(
                     'REMINDER_ID', reminder_id)
             # Capture specific folder
